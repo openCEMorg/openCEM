@@ -1,4 +1,4 @@
-# Capacity Expansion Model for national energy market Operator #
+# Capacity Expansion Model and Optimisation #
 
 This README will documents the steps to get the model up and running in your machine
 
