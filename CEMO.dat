@@ -1,0 +1,28 @@
+# Tasmanian Polygons
+set R:= 39 40 41 42;
+
+set N:= BRC BKC SCC HY W PV CSP;
+
+set T:= 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24;
+
+set D:= Winter Summer Peak;
+
+set Inv:= 2020;
+
+param Cuns:= 5;
+
+param Csur:=-1;
+#Load Technology costs
+load 'data/CapFomVom.csv' : [R ,N,Inv] CC;
+load 'data/CapFomVom.csv' : [R ,N,Inv] CF;
+load 'data/CapFomVom.csv' : [R ,N,Inv] CV;
+
+#load maximum capacity for all technolgies and regions
+load 'data/CapFomVom.csv' : [R,N] MaxCap;
+
+#Load capacity factors for all technologies
+load 'data/CapFactor.csv' : [R, N ,T] capf;
+#load Load for all polygons
+load 'data/Load.csv' : [R,T] Ld;
+#load operating capacity
+load 'data/CapFomVom.csv' :[R,N] OpCap;

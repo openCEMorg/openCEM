@@ -1,6 +1,6 @@
 # Capacity Expansion Model and Optimisation #
 
-This README will documents the steps to get the model up and running in your machine
+Welcome to CEMO
 
 ### What is this repository for? ###
 
@@ -25,5 +25,5 @@ This README will documents the steps to get the model up and running in your mac
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
+* repository owner or administrator
 * Other community or team contact
