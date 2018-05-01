@@ -12,9 +12,10 @@ model = create_model('CEMO')
 # create a specific instance using provided data file
 instance = model.create_instance('CEMO.dat')
 # declare a solver for the model instance
-opt = SolverFactory("glpk")
+opt = SolverFactory("cbc")
+opt.options['threads'] = 6
 # instruct the solver to calculate the solution
-results = opt.solve(instance,)
+results = opt.solve(instance, tee=False, keepfiles=False)
 # rescue actual results from instance
 instance.solutions.store_to(results)
 # result object to write to json or yaml

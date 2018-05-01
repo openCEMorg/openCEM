@@ -2,4 +2,4 @@
 #
 # Run pyomo case
 
-python solve.py
+python3 solve.py
