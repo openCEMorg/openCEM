@@ -1,7 +1,7 @@
 # CEMO model structure
 from pyomo.environ import AbstractModel, Var, Param, Constraint, Objective, Set
 from pyomo.environ import NonNegativeReals
-from cemo.rules import con_loadbalance, con_maxcap, con_capfactor
+from cemo.rules import con_ldbal, con_maxcap, con_caplim, con_opcap
 from cemo.rules import obj_cost
 
 
@@ -25,13 +25,15 @@ def create_model(namestr):
     model.capf = Param(model.R, model.N, model.T,
                        default=1)  # Capacity factors
     model.MaxCap = Param(model.R, model.N)
-    model.OpCap = Param(model.R, model.N)  # operating capacity
+    model.OpCap0 = Param(model.R, model.N)  # operating capacity
 
     model.Ld = Param(model.R, model.T)  # Electrical load
 
     # @@ Variables
     model.NewCap = Var(model.R, model.N, model.Inv,
                        within=NonNegativeReals)  # New capacity
+    model.OpCap = Var(model.R, model.N, model.Inv,
+                      within=NonNegativeReals)  # Total capacity for Inv period
     model.q = Var(model.R, model.N, model.T,
                   within=NonNegativeReals)  # dispatched power
 
@@ -43,11 +45,13 @@ def create_model(namestr):
 
     # @@ Constraints
     # Load balance
-    model.ldbal = Constraint(model.T, rule=con_loadbalance)
+    model.ldbal = Constraint(model.T, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors
-    model.caplim = Constraint(model.R, model.N, model.T, rule=con_capfactor)
+    model.caplim = Constraint(model.R, model.N, model.T, rule=con_caplim)
     # Limit maximum capacity to be built in each region and each technology
-    model.maxcap = Constraint(model.R, model.N, rule=con_maxcap)
+    model.maxcap = Constraint(model.R, model.N, model.Inv, rule=con_maxcap)
+    # OpCap in existing period is previous OpCap plus NewCap
+    model.opcap = Constraint(model.R, model.N, model.Inv, rule=con_opcap)
 
     # @@ Objective
     # Minimise capital, variable and fixed costs of system

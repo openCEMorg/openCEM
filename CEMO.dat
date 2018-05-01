@@ -17,7 +17,7 @@ param Csur:=-1;
 load 'data/CEMO.db' using=sqlite3 query="SELECT R,N,Inv,CC,CF,CV FROM cost": [R ,N,Inv] CC CF CV;
 
 #load operating and maximum capacity for all technolgies and regions
-load 'data/CapFomVom.csv' : [R,N] OpCap MaxCap;
+load 'data/CapFomVom.csv' : [R,N] OpCap0 MaxCap;
 
 #Load capacity factors for all technologies
 load 'data/CapFactor.csv' : [R, N ,T] capf;
