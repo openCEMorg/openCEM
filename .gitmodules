@@ -1,0 +1,8 @@
+[submodule "cemo_data"]
+	path = cemo_data
+	url = https://bitbucket.org/itpanalyitics/cemo_data.git
+	ignore = dirty
+[submodule "cemo_db"]
+	path = cemo_db
+	url = https://bitbucket.org/itpanalyitics/cemo_db.git
+	ignore = dirty

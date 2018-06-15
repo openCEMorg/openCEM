@@ -1,6 +1,6 @@
 # Tasmanian region
 load 'cemo_db/cemo.db' using=sqlite3 format=set
-query = "SELECT id as R FROM region WHERE text_id='TAS';" : R;
+query = "SELECT id as R FROM region WHERE text_id in ('VIC','TAS');" : R;
 
 # Tasmanian planning zones
 #set Z:= 16;
@@ -8,7 +8,7 @@ load 'cemo_db/cemo.db' using=sqlite3 format=set
 query="SELECT id as Z
 FROM ntndp_zone
 WHERE region_id in
-(SELECT id FROM region WHERE text_id='TAS');": Z;
+(SELECT id FROM region WHERE text_id in ('VIC','TAS'));": Z;
 
 # Tasmanian planning zones
 #set Z:= 16;
@@ -16,7 +16,7 @@ load 'cemo_db/cemo.db' using=sqlite3 format=set
 query="SELECT region_id as R, id as Z
 FROM ntndp_zone
 WHERE region_id in
-(SELECT id FROM region WHERE text_id='TAS');": ZinR;
+(SELECT id FROM region WHERE text_id in ('VIC','TAS'));": ZinR;
 
 #Set of all unique technology identifiers
 load 'cemo_db/cemo.db' using=sqlite3 format=set
@@ -33,8 +33,9 @@ load 'cemo_db/cemo.db' using=sqlite3 format=set
 query="SELECT ntndp_zone_id, technology_type_id
 FROM capex
 WHERE year = 2020
-AND ntndp_zone_id = 16
-AND source_scenario_id = 1;": TechinZones;
+AND ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('VIC','TAS')))
+AND source_scenario_id = 1
+ORDER by ntndp_zone_id;": TechinZones;
 
 # set D:= Winter Summer Peak;
 
@@ -50,25 +51,30 @@ query="SELECT capex.ntndp_zone_id as Z,capex.technology_type_id as N,
 capex.year as Inv,capex.capex as CC, opex.fom as CF, opex.vom as CV
 FROM capex
 INNER JOIN opex ON capex.technology_type_id = opex.technology_type_id
-WHERE capex.year=2020 AND capex.source_scenario_id =1 AND ntndp_zone_id ==16
+WHERE capex.year=2020 AND capex.source_scenario_id =1
+AND ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('VIC','TAS')))
 AND opex.source_id = 1;": [Z,N,Inv] CC CF CV;
 
 #load operating and maximum capacity for all technolgies and regions
-load 'data/CapFomVom.csv' : [Z,N] OpCap0 MaxCap;
+load 'data/MCOC_TASVIC.csv' : [Z,N] OpCap0 MaxCap;
 
 #Load capacity factors for all technologies
 #load 'data/CapFactor.csv' : [Z, N ,T] capf;
 load 'cemo_db/cemo.db' using=sqlite3
-query="SELECT ntndp_zone_id as Z,technology_type_id as N,timestamp as T,mw as capf
-FROM wind_and_solar_traces
+query="SELECT ntndp_zone_id as Z,technology_type_id as N,timestamp as T,mw as capf,  wind_bubble_id
+FROM wind_and_solar_traces data
+INNER JOIN (SELECT   ntndp_zone_id as a,technology_type_id as b
+	FROM capex
+	WHERE year = 2020
+	AND ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('VIC','TAS')))
+	AND source_scenario_id = 1
+	order by ntndp_zone_id) as pair
+	ON  pair.a = data.ntndp_zone_id AND pair.b =data.technology_type_id
 WHERE timestamp in (SELECT DISTINCT timestamp
 FROM demand_and_rooftop_traces
 WHERE  timestamp BETWEEN '2020-01-01 00:00:01' AND '2020-01-02 00:00:00'
 AND timestamp NOT LIKE '%:30:%')
-AND ntndp_zone_id in (SELECT id FROM ntndp_zone WHERE name ='Tasmania')
-AND technology_type_id in
-(SELECT technology_type_id FROM capex WHERE ntndp_zone_id IN (SELECT id FROM ntndp_zone WHERE name=='Tasmania'))
-AND wind_bubble_id ==21;" : [Z,N,T] capf;
+AND wind_bubble_id NOT IN (14,22,23,24)" : [Z,N,T] capf;
 
 #load Load for all polygons
 load 'cemo_db/cemo.db' using=sqlite3
@@ -80,4 +86,4 @@ FROM demand_and_rooftop_traces
 WHERE  timestamp BETWEEN '2020-01-01 00:00:01' AND '2020-01-02 00:00:00'
 AND timestamp NOT LIKE '%:30:%')
 AND demand.source_scenario_id =1
-AND demand.region_id IN (4)": [R,T] Ld;
+AND demand.region_id IN (4,5)": [R,T] Ld;

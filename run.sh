@@ -2,4 +2,4 @@
 #
 # Run pyomo case
 
-python3 solve.py
+python3 solve.py --name CEMO --plot
