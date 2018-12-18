@@ -3,19 +3,63 @@ import pytest
 from pyomo.environ import value
 
 
-def test_solver(solver, instance):
-    assert solver.solve(instance)
-
-
-@pytest.mark.parametrize("zone,tech,inv", [
-    (16, 1, 2020),
-    (16, 2, 2020),
-    (16, 8, 2020),
-    (16, 12, 2020),
+@pytest.mark.parametrize("zone,tech", [
+    (16, 1),
+    (16, 2),
+    (16, 8),
+    (16, 12),
 ])
-def test_capacities(solution, benchmark, zone, tech, inv):
-    assert value(solution.NewCap[zone, tech, inv]) \
-        == value(benchmark.NewCap[zone, tech, inv])
+def test_capacities(solution, benchmark, zone, tech):
+    assert value(solution.gen_cap_new[zone, tech]) \
+        == pytest.approx(value(benchmark.gen_cap_new[zone, tech]))
+
+
+@pytest.mark.parametrize("zone,time", [
+    (16, '2020-01-02 10:00:00'),
+    (16, '2020-01-02 14:00:00'),
+    (16, '2020-01-02 15:00:00'),
+    (16, '2020-01-02 16:00:00'),
+    (16, '2020-01-02 17:00:00'),
+
+])
+@pytest.mark.parametrize("tech", [1, 2, 8, 12])
+def test_dispatch(solution, benchmark, zone, time, tech):
+    assert value(solution.gen_disp[zone, tech, time]) \
+        == pytest.approx(value(benchmark.gen_disp[zone, tech, time]))
+
+
+@pytest.mark.parametrize("zone,time", [
+    (9, '2020-01-03 03:00:00'),
+    (9, '2020-01-03 04:00:00'),
+    (9, '2020-01-03 05:00:00'),
+    (9, '2020-01-04 23:00:00'),
+])
+@pytest.mark.parametrize("tech", [15])
+def test_storage(solution, benchmark, zone, time, tech):
+    assert value(solution.stor_charge[zone, tech, time]) \
+        == pytest.approx(value(benchmark.stor_charge[zone, tech, time]))
+
+
+@pytest.mark.parametrize("zone,time", [
+    (16, '2020-01-03 10:00:00'),
+    (16, '2020-01-03 11:00:00'),
+    (16, '2020-01-03 12:00:00'),
+])
+@pytest.mark.parametrize("tech", [13])
+def test_hybrid(solution, benchmark, zone, time, tech):
+    assert value(solution.hyb_disp[zone, tech, time]) \
+        == pytest.approx(value(benchmark.hyb_disp[zone, tech, time]))
+
+
+@pytest.mark.parametrize("tfrom,tto,time", [
+    (4, 5, '2020-01-02 14:00:00'),
+    (4, 5, '2020-01-02 15:00:00'),
+    (4, 5, '2020-01-02 16:00:00'),
+    (4, 5, '2020-01-02 17:00:00')
+])
+def test_transmission(solution, benchmark, tfrom, tto, time):
+    assert value(solution.intercon_disp[tfrom, tto, time]
+                 ) == value(benchmark.intercon_disp[tfrom, tto, time])
 
 
 def test_problemsize(solution, benchmark):
@@ -25,6 +69,6 @@ def test_problemsize(solution, benchmark):
 
 
 def test_objective(solution, benchmark):
-    assert pytest.approx(value(solution.Obj) == value(benchmark.Obj))
+    assert value(solution.Obj) == pytest.approx(value(benchmark.Obj))
 
-# TODO access values above from yaml file instead of hardcoded here
+# DONE access values above from yaml or pickle file instead of hardcoded here

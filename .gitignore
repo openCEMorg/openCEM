@@ -5,3 +5,5 @@
 *__pycache__*
 *pytest_cache*
 __init__.py
+*.log
+*.gz

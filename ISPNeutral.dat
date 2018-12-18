@@ -1,0 +1,302 @@
+# NEM NTNDP/ISP template scenario
+set regions:= 1 2 3 4 5;
+set zones:= 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16;
+set zones_in_regions:=
+1 5
+1 6
+1 7
+1 8
+2 1
+2 2
+2 3
+2 4
+3 13
+3 14
+3 15
+4 16
+5 9
+5 10
+5 11
+5 12
+;
+
+# Set of all unique technology identifiers in ISP dataset
+set all_tech:= 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20;
+
+# Set of notional interconnectors between regions
+set region_intercons:=
+4 5
+5 4
+5 1
+1 5
+3 5
+5 3
+1 2
+2 1;
+
+# proportioning factors and transmission limits
+param : intercon_prop_factor intercon_trans_limit :=
+4 5 0.66 480
+5 4 0.0 480
+5 1 0.0 700
+1 5 0.2 400
+3 5 0.0 850
+5 3 0.5 870
+1 2 0.61 360
+2 1 0.0 1175
+;
+
+set fuel_gen_tech := [fueltechset]; # REVIEW are these necessary
+
+set retire_gen_tech := [retiretechset]; # REVIEW are these necessary
+
+set hyb_tech:= [hybtechset]; # REVIEW are these necessary
+
+set nobuild_gen_tech := [nobuildset]; # REVIEW are these necessary
+#Set of storage technologies
+set stor_tech := [stortechset];
+
+# Set of generator technologies available in each zone
+set gen_tech_in_zones :=
+[gentech];
+
+# Set of generator technologies that can be retired by the model
+set retire_gen_tech_in_zones :=
+[retiretech];
+
+# Set of emitting/fuel generator technologies
+set fuel_gen_tech_in_zones :=
+[fueltech];
+
+# Set of renewable energy generator technologies
+set re_gen_tech_in_zones :=
+[regentech];
+
+#Set of storage technologies in each zones
+set stor_tech_in_zones :=
+[stortech];
+
+# Set of hybrid technologies available in each zone
+set hyb_tech_in_zones :=
+[hybtech];
+
+# Fuel costs and heat rates
+load 'data/FuelandHeat.csv' : [all_tech] fuel_emit_rate;
+
+#Ordered set of timestams to retrieve traces for dispatch calculations
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(fuel.price) as cost_fuel
+FROM fuel_price fuel
+INNER JOIN capacity cap ON cap.id=fuel.capacity_id
+WHERE fuel.year=2020 AND fuel.fuel_scenario_id =3
+AND (cap.ntndp_zone_id,cap.technology_type_id) in
+[fueltechdb]
+group by zones,all_tech;" :[zones,all_tech] cost_fuel;
+
+#Ordered set of timestams to retrieve traces for dispatch calculations
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(fuel.price) as fuel_heat_rate
+FROM fuel_price fuel
+INNER JOIN capacity cap ON cap.id=fuel.capacity_id
+AND (cap.ntndp_zone_id,cap.technology_type_id) in
+[fueltechdb]
+group by zones,all_tech;" :[zones,all_tech] fuel_heat_rate;
+
+
+# Roundt trip efficiency for storage technology_type_id
+param : stor_rt_eff stor_charge_hours :=
+14 0.8 6
+15 0.7 2
+;
+
+
+param : hyb_col_mult hyb_charge_hours :=
+13 1 0.001
+;
+
+param hydro_gen_mwh_limit:= 16 8305000
+5 6000000
+12 6000000
+;
+
+# Cost of unserved power $/MW
+param cost_unserved:= 980000;
+
+# Cost of transmission $/MW
+param cost_trans:= 50;
+
+#Ordered set of timestams to retrieve traces for dispatch calculations
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+format=set
+query="SELECT DISTINCT cast(timestamp AS CHAR)
+FROM demand_and_rooftop_traces
+WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+AND MINUTE(timestamp)=0;" :t;
+
+# Build costs for gentech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
+1000*capex AS cost_gen_build
+FROM capex
+WHERE year=XXXX
+AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
+  SELECT MAX(demand_scenario_id), ntndp_zone_id, technology_type_id
+  FROM capex
+  WHERE demand_scenario_id IN (3,1)
+  AND (ntndp_zone_id, technology_type_id) IN
+  [gentechdb]
+  GROUP BY ntndp_zone_id,technology_type_id
+  );": [zones,all_tech] cost_gen_build;
+
+# Build costs for stortech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
+1000*capex AS cost_stor_build
+FROM capex
+WHERE year=XXXX
+AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
+  SELECT MAX(demand_scenario_id), ntndp_zone_id, technology_type_id
+  FROM capex
+  WHERE demand_scenario_id IN (3,1)
+  AND (ntndp_zone_id, technology_type_id) IN
+  [stortechdb]
+  GROUP BY ntndp_zone_id,technology_type_id
+  );": [zones,all_tech] cost_stor_build;
+
+# Build costs for hybtech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
+1000*capex AS cost_hyb_build
+FROM capex
+WHERE year=XXXX
+AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
+  SELECT MAX(demand_scenario_id), ntndp_zone_id, technology_type_id
+  FROM capex
+  WHERE demand_scenario_id IN (3,1)
+  AND (ntndp_zone_id, technology_type_id) IN
+  [hybtechdb]
+  GROUP BY ntndp_zone_id,technology_type_id
+  );": [zones,all_tech] cost_hyb_build;
+
+# FOM VOM costs for gentech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT technology_type_id AS all_tech, 1000*fom AS cost_gen_fom, vom AS cost_gen_vom
+FROM opex WHERE (source_id, technology_type_id) in
+  (SELECT MAX(source_id),technology_type_id
+   FROM opex where technology_type_id in ([gentechlist]) GROUP BY technology_type_id);": [all_tech] cost_gen_fom cost_gen_vom;
+
+# FOM VOM costs for stortech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_stor_fom, vom AS cost_stor_vom
+FROM opex WHERE (source_id, technology_type_id) in
+  (SELECT MAX(source_id),technology_type_id
+   FROM opex where technology_type_id in ([stortechlist]) GROUP BY technology_type_id);": [all_tech] cost_stor_fom cost_stor_vom;
+
+# FOM VOM costs for hybtech
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_hyb_fom, vom AS cost_hyb_vom
+FROM opex WHERE (source_id, technology_type_id) in
+  (SELECT MAX(source_id),technology_type_id
+   FROM opex where technology_type_id in ([hybtechlist]) GROUP BY technology_type_id);": [all_tech] cost_hyb_fom cost_hyb_vom;
+
+#Starting capacity (either cfrom capacity table or carry forward from previous)
+[carryforwardcap]
+
+# Exogenously commissioned capacity
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_exo
+from capacity
+where (ntndp_zone_id,technology_type_id) in
+[gentechdb] and commissioning_year >WWWW and commissioning_year<=XXXX
+group by zones,all_tech;" : [zones,all_tech] gen_cap_exo;
+
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_exo
+from capacity
+where (ntndp_zone_id,technology_type_id) in
+[stortechdb] and commissioning_year >WWWW and commissioning_year<=XXXX
+group by zones,all_tech;" : [zones,all_tech] stor_cap_exo;
+
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_exo
+from capacity
+where (ntndp_zone_id,technology_type_id) in
+[hybtechdb] and commissioning_year >WWWW and commissioning_year<=XXXX
+group by zones,all_tech;" : [zones,all_tech] hyb_cap_exo;
+
+
+# Exogenously retired capacity
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as ret_gen_cap_exo
+from capacity
+where (ntndp_zone_id,technology_type_id) in
+[retiretechdb] and retirement_year >WWWW and retirement_year<=XXXX
+group by zones,all_tech;" : [zones,all_tech] ret_gen_cap_exo;
+
+#capacity factors for technologies with traces
+# TODO FIXME  check that the MAX statemen correctly retrieves the desired scenario
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,cast(timestamp AS CHAR) AS t,mw AS gen_cap_factor, source_id
+FROM wind_and_solar_traces
+WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+AND MINUTE(timestamp)=0
+AND (source_id, ntndp_zone_id, technology_type_id) in (
+        SELECT max(source_id), ntndp_zone_id, technology_type_id
+        FROM wind_and_solar_traces data
+        WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+        AND MINUTE(timestamp)=0
+        AND (ntndp_zone_id, technology_type_id) IN [gentechdb]
+        GROUP BY ntndp_zone_id, technology_type_id)
+GROUP BY zones,all_tech,t;" : [zones,all_tech,t] gen_cap_factor;
+
+# TODO  check that the MAX statemen correctly retrieves the desired scenario
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="
+SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,cast(timestamp AS CHAR) AS t,mw AS hyb_cap_factor, source_id
+FROM wind_and_solar_traces
+WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+AND MINUTE(timestamp)=0
+AND (source_id, ntndp_zone_id, technology_type_id) in (
+        SELECT max(source_id), ntndp_zone_id, technology_type_id
+        FROM wind_and_solar_traces data
+        WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+        AND MINUTE(timestamp)=0
+        AND (ntndp_zone_id, technology_type_id) IN [hybtechdb]
+        GROUP BY ntndp_zone_id, technology_type_id)
+GROUP BY zones,all_tech,t;" : [zones,all_tech,t] hyb_cap_factor;
+
+#Demand for for all regions for the given time interval
+# TODO  check that the MAX statemen correctly retrieves the desired scenario
+# TODO tidy up operational demand query
+load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
+user=cemo_select password=cemo_password using=pymysql
+query="SELECT cast(poe.timestamp AS CHAR) AS t, poe.region_id AS regions, (poe.poe10 -0*roof.rooftop_solar) AS region_net_demand
+FROM demand_and_rooftop_traces poe
+INNER JOIN (SELECT timestamp, region_id, rooftop_solar FROM demand_and_rooftop_traces
+WHERE timestamp BETWEEN '2020-03-01 00:00:01' AND '2020-03-08 00:00:00'
+AND MINUTE(timestamp)=0
+AND demand_scenario_id =3) roof
+ON poe.timestamp = roof.timestamp AND poe.region_id = roof.region_id
+AND poe.demand_scenario_id =3
+AND poe.region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'))
+order BY regions,t;": [regions,t] region_net_demand;

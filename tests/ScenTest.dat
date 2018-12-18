@@ -1,0 +1,21 @@
+# generated template template DO NOT EDIT
+set Stages := FS SS;
+
+set Nodes:= Root S1Node S2Node S3Node S4Node S5Node S6Node ;
+
+param NodeStage:= Root FS S1Node SS S2Node SS S3Node SS S4Node SS S5Node SS S6Node SS ;
+
+set Children[Root]:= S1Node S2Node S3Node S4Node S5Node S6Node ;
+
+param ConditionalProbability := Root 1.0 S1Node 0.019230769230769232 S2Node 0.019230769230769232 S3Node 0.9038461538461539 S4Node 0.019230769230769232 S5Node 0.019230769230769232 S6Node 0.019230769230769232 ;
+
+set Scenarios := S1 S2 S3 S4 S5 S6 ;
+
+param ScenarioLeafNode := S1 S1Node S2 S2Node S3 S3Node S4 S4Node S5 S5Node S6 S6Node ;
+
+set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];
+
+set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];
+
+param StageCost := FS FSCost
+                   SS SSCost;

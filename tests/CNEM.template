@@ -1,0 +1,185 @@
+# NEM NTNDP/ISP template scenario
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query = "SELECT id as R FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS');" : R;
+
+# Set of planning zones
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query="SELECT id as Z
+FROM ntndp_zone
+WHERE region_id in
+(SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'));": Z;
+
+# Set of zones per NEM region
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query="SELECT region_id as R, id as Z
+FROM ntndp_zone
+WHERE region_id in
+(SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'));": ZinR;
+
+# Set of notional interconnectors between regions
+set TransLines:=
+4 5
+5 4
+5 1
+1 5
+3 5
+5 3
+1 2
+2 1;
+
+# proportioning factors and transmission limits
+param : Pfac TMax :=
+4 5 0.66 480
+5 4 0.0 480
+5 1 0.0 700
+1 5 0.2 400
+3 5 0.0 850
+5 3 0.5 870
+1 2 0.61 360
+2 1 0.0 1175
+;
+
+# Fuel costs and heat rates
+load 'data/FuelandHeat.csv' : [N] Cfuel Hrate Emmissionrate;
+
+# Set of all unique technology identifiers in NTNDP dataset
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query="select id as N from technology_type;" :N;
+
+set Nemit := 1 2 3 4 5 6 7 8;
+
+#Set of storage technologies
+set S := 14 15;
+
+#Set of storage technologies in each zones
+set StorinZones :=
+4 14
+4 15
+6 14
+6 15
+10 14
+10 15
+14 14
+14 15
+16 14
+16 15
+;
+# Roundt trip efficiency for storage technology_type_id
+param : RTEff ChHours :=
+14 0.8 6
+15 0.7 2
+;
+
+param : CCS CFS CVS :=
+4 14 1355080 5000 5
+6 14 1355080 5000 5
+10 14 1355080 5000 5
+14 14 1355080 5000 5
+16 14 1355080 5000 5
+4 15 1010060 0 0
+6 15 1010060 0 0
+10 15 1010060 0 0
+14 15 1010060 0 0
+16 15 1010060 0 0
+
+;
+# Set of technologies available in each zone
+# Based on techs that have capex avaialable
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query="SELECT DISTINCT ntndp_zone_id, technology_type_id
+FROM capex
+WHERE ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS')))
+AND source_scenario_id = 1
+ORDER by ntndp_zone_id;": TechinZones;
+
+#Ordered set of timestams to retrieve traces for dispatch calculations
+load 'cemo_db/cemo.db' using=sqlite3 format=set
+query="SELECT DISTINCT timestamp
+FROM demand_and_rooftop_traces
+WHERE timestamp BETWEEN
+AND timestamp NOT LIKE '%:30:%';" :T;
+
+set Nhyb:= 13;
+
+set HybTechinZones :=
+3 13
+5 13
+10 13
+13 13
+16 13
+;
+
+param : CCH CFH CVH :=
+3 13 2731590 75600 5.99
+5 13 2731590 75600 5.99
+10 13 2731590 75600 5.99
+13 13 2731590 75600 5.99
+16 13 2731590 75600 5.99
+;
+
+param : HMul HyHours :=
+13 2.5 6
+;
+
+# Cost of unserved power $/MW
+param Cuns:= 980000;
+
+# Cost of transmission $/MW
+param Ctran:= 220;
+
+# Cost of emissions $/kg
+param Cemit:= 0.023;
+
+# Capital Cost, Fixed Costs, Variable Costs
+load 'cemo_db/cemo.db' using=sqlite3
+query="SELECT capex.ntndp_zone_id as Z,capex.technology_type_id as N,
+1000*capex.capex as CC, 1000*opex.fom as CF, opex.vom as CV
+FROM capex
+INNER JOIN opex ON capex.technology_type_id = opex.technology_type_id
+WHERE capex.year=2020 AND capex.source_scenario_id=1
+AND ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS')))
+AND opex.source_id = 1;": [Z,N] CC CF CV;
+
+#maximum capacity for all technolgies and regions
+load 'data/MCOC_TASVIC.csv' : [Z,N] MaxCap;
+
+#operating capacity for all technologies and regions
+load 'data/OpCap0.json' : [Z,N] OpCap0 OpStCap0 OpHyCap0;
+
+#capacity factors for technologies with traces
+load 'cemo_db/cemo.db' using=sqlite3
+query="SELECT ntndp_zone_id as Z,technology_type_id as N,timestamp as T,mw as capf,  wind_bubble_id
+FROM wind_and_solar_traces data
+INNER JOIN (SELECT DISTINCT ntndp_zone_id as a,technology_type_id as b
+	FROM capex
+	WHERE ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS')))
+	AND source_scenario_id = 1
+	order by ntndp_zone_id) as pair
+	ON  pair.a = data.ntndp_zone_id AND pair.b =data.technology_type_id
+WHERE timestamp in (SELECT DISTINCT timestamp
+FROM demand_and_rooftop_traces
+WHERE timestamp BETWEEN
+AND timestamp NOT LIKE '%:30:%')
+AND wind_bubble_id NOT IN (14,22,23,24)" : [Z,N,T] capf;
+
+#Demand for for all regions for the given time interval
+load 'cemo_db/cemo.db' using=sqlite3
+query="SELECT ntndp_zone_id as Z,technology_type_id+4 as N,timestamp as T,mw as capfh,  wind_bubble_id
+FROM wind_and_solar_traces data
+WHERE timestamp in (SELECT DISTINCT timestamp
+FROM demand_and_rooftop_traces
+WHERE timestamp BETWEEN
+AND timestamp NOT LIKE '%:30:%')
+AND ntndp_zone_id in (3,5,10,13,16) and technology_type_id = 9" : [Z,N,T] capfh;
+
+#Demand for for all regions for the given time interval
+load 'cemo_db/cemo.db' using=sqlite3
+query="select poe.timestamp as T, poe.region_id as R, (poe.poe10 -roof.rooftop_solar) as Ld
+from demand_and_rooftop_traces poe
+inner join (select timestamp, region_id, rooftop_solar from demand_and_rooftop_traces
+WHERE timestamp BETWEEN
+and timestamp not like '%:30:%'
+and source_scenario_id =1) roof
+on poe.timestamp = roof.timestamp and poe.region_id = roof.region_id
+and poe.source_scenario_id =1
+and poe.region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'))": [R,T] Ld;
