@@ -1,6 +1,19 @@
 # TAS VIC test case
 #SETS
 load 'tests/CTV_trans.json': regions zones zones_in_regions all_tech gen_tech_in_zones t;
+#PARAMETERS
+# Build costs (must match tech in zones)
+load 'tests/CTV_trans.json' : [zones,all_tech] cost_gen_build gen_cap_initial stor_cap_initial hyb_cap_initial;
+
+#FOM and VOM costs
+load 'tests/CTV_trans.json' : [all_tech] cost_gen_fom cost_gen_vom;
+
+#capacity factors for technologies with traces
+load 'tests/CTV_trans.json': [zones,all_tech,t] gen_cap_factor hyb_cap_factor;
+
+#Demand for for all regions for the given time interval
+load 'tests/CTV_trans.json': [regions,t] region_net_demand;
+
 # Set of notional interconnectors between regions
 set region_intercons:=
 4 5
@@ -99,16 +112,3 @@ param cost_trans:= 50;
 
 # Cost of emissions $/kg
 param cost_emit:= 0.23;
-
-#PARAMETERS
-# Build costs (must match tech in zones)
-load 'tests/CTV_trans.json' : [zones,all_tech] cost_gen_build gen_cap_initial stor_cap_initial hyb_cap_initial;
-
-#FOM and VOM costs
-load 'tests/CTV_trans.json' : [all_tech] cost_gen_fom cost_gen_vom;
-
-#capacity factors for technologies with traces
-load 'tests/CTV_trans.json': [zones,all_tech,t] gen_cap_factor hyb_cap_factor;
-
-#Demand for for all regions for the given time interval
-load 'tests/CTV_trans.json': [regions,t] region_net_demand;

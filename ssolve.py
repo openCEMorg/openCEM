@@ -9,7 +9,7 @@ __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
 
-from cemo.core import create_model
+from cemo.model import create_model
 from pyomo.opt import SolverFactory, TerminationCondition
 import cemo.utils
 import argparse

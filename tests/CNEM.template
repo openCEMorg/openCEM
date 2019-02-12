@@ -39,9 +39,6 @@ param : Pfac TMax :=
 2 1 0.0 1175
 ;
 
-# Fuel costs and heat rates
-load 'data/FuelandHeat.csv' : [N] Cfuel Hrate Emmissionrate;
-
 # Set of all unique technology identifiers in NTNDP dataset
 load 'cemo_db/cemo.db' using=sqlite3 format=set
 query="select id as N from technology_type;" :N;
@@ -139,12 +136,6 @@ INNER JOIN opex ON capex.technology_type_id = opex.technology_type_id
 WHERE capex.year=2020 AND capex.source_scenario_id=1
 AND ntndp_zone_id in (SELECT id from ntndp_zone where region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS')))
 AND opex.source_id = 1;": [Z,N] CC CF CV;
-
-#maximum capacity for all technolgies and regions
-load 'data/MCOC_TASVIC.csv' : [Z,N] MaxCap;
-
-#operating capacity for all technologies and regions
-load 'data/OpCap0.json' : [Z,N] OpCap0 OpStCap0 OpHyCap0;
 
 #capacity factors for technologies with traces
 load 'cemo_db/cemo.db' using=sqlite3

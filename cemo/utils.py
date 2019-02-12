@@ -1,12 +1,14 @@
 # Utility scripts for openCEM
+import locale
 import sys
+
+import matplotlib.pyplot as plt
 import numpy as np
 from pyomo.environ import value
-import cemo.rules
-import cemo.const
-import matplotlib.pyplot as plt
-import locale
 from si_prefix import si_format
+
+import cemo.const
+import cemo.rules
 
 locale.setlocale(locale.LC_ALL, '')
 
@@ -44,27 +46,7 @@ def _techsinregion(instance, region):
 
 
 def pallette(instance, techsinregion):
-    pal = [(161 / 255, 135 / 255, 111 / 255, 1),  # biomass
-           (251 / 255, 177 / 255, 98 / 255, 1),  # ccgt
-           (251 / 255, 177 / 255, 98 / 255, 0.75),  # ccgt_sc
-           (25 / 255, 25 / 255, 25 / 255, 1),  # coal_sc
-           (25 / 255, 25 / 255, 25 / 255, 0.75),  # coal_sc_scc
-           (137 / 255, 87 / 255, 45 / 255, 1),  # brown_coal_sc
-           (137 / 255, 87 / 255, 45 / 255, 0.75),   # brown_coal_sc_scc
-           (253 / 255, 203 / 255, 148 / 255, 1),  # ocgt
-           (220 / 255, 205 / 255, 0, 0.6),  # PV DAT
-           (220 / 255, 205 / 255, 0 / 255, 0.8),  # PV fixed
-           (220 / 255, 205 / 255, 0 / 255, 1),  # PV SAT
-           (67 / 255, 116 / 255, 14 / 255, 1),  # Wind
-           (1, 209 / 255, 26 / 255, 1),  # CST 6h duck yellow
-           (137 / 255, 174 / 255, 207 / 255, 1),  # PHES 6 h darker blue
-           (43 / 255, 161 / 255, 250 / 255, 1),  # Battery some weird red
-           (240 / 255, 79 / 255, 35 / 255, 1),  # recip engine, ugly gray
-           (128 / 255, 191 / 255, 1, 1),  # Wind high light blue
-           (75 / 255, 130 / 255, 178 / 255, 1),  # Hydro vibrant blue
-           (241 / 255, 140 / 255, 31 / 255, 1),  # Gas thermal weird purple
-           (0 / 255, 96 / 255, 1, 1)  # pumps vibrant blue
-           ]
+    pal = cemo.const.PALETTE
     return [pal[k - 1] for k in techsinregion]
 
 
@@ -190,29 +172,32 @@ def plotcapacity(instance):
     plt.show()
 
 
-def _printcosts(instance):
+def _printcosts(inst):
     print("Total Cost:\t %20s" %
-          locale.currency(value(instance.Obj - cemo.rules.cost_shadow(instance)), grouping=True))
-    print("Capital cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_capital(instance)),
+          locale.currency(value(inst.Obj - cemo.rules.cost_shadow(inst)), grouping=True))
+    print("Build cost:\t %20s" %
+          locale.currency(value(sum(cemo.rules.cost_capital(inst, z) - inst.cost_cap_carry_forward[z] for z in inst.zones)),
+                          grouping=True))
+    print("Repayment cost:\t %20s" %
+          locale.currency(value(sum(inst.cost_cap_carry_forward[z] for z in inst.zones)),
                           grouping=True))
     print("Operating cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_operating(instance)),
+          locale.currency(value(cemo.rules.cost_operating(inst)),
                           grouping=True))
     print("Fixed cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_fixed(instance)),
+          locale.currency(value(cemo.rules.cost_fixed(inst)),
                           grouping=True))
     print("Transm. cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_transmission(instance)),
+          locale.currency(value(cemo.rules.cost_transmission(inst)),
                           grouping=True))
     print("Unserved cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_unserved(instance)),
+          locale.currency(value(cemo.rules.cost_unserved(inst)),
                           grouping=True))
     print("Emission cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_emissions(instance)),
+          locale.currency(value(cemo.rules.cost_emissions(inst)),
                           grouping=True))
     print("Retirmt cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_retirement(instance)),
+          locale.currency(value(cemo.rules.cost_retirement(inst)),
                           grouping=True))
 
 
@@ -227,8 +212,7 @@ def _printunserved(instance):
     uns = np.zeros(5, dtype=float)
     for r in instance.regions:
         uns[r - 1] = 100.0 * sum(value(instance.unserved[r, t])
-                                 for t in instance.t) \
-            / sum(value(instance.region_net_demand[r, t]) for t in instance.t)
+                                 for t in instance.t) / sum(value(instance.region_net_demand[r, t]) for t in instance.t)
 
     print('Unserved %:' + str(uns))
 
@@ -240,28 +224,29 @@ def _printcapacity(instance):
     disptotal = [0] * len(instance.all_tech)
     capftotal = [0] * len(instance.all_tech)
     nperz = [0] * len(instance.all_tech)
+    idx = list(instance.all_tech)
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
-            techtotal[n - 1] += value(instance.gen_cap_op[z, n])
-            disptotal[n - 1] += value(sum(instance.gen_disp[z, n, t]
-                                          for t in instance.t))
-            capftotal[n - 1] += value(sum(instance.gen_cap_factor[z, n, t]
-                                          for t in instance.t))
-            nperz[n - 1] += 1
+            techtotal[idx.index(n)] += value(instance.gen_cap_op[z, n])
+            disptotal[idx.index(n)] += value(sum(instance.gen_disp[z, n, t]
+                                                 for t in instance.t))
+            capftotal[idx.index(n)] += value(sum(instance.gen_cap_factor[z, n, t]
+                                                 for t in instance.t))
+            nperz[idx.index(n)] += 1
         for s in instance.stor_tech_per_zone[z]:
-            techtotal[s - 1] += value(instance.stor_cap_op[z, s])
-            disptotal[s - 1] += value(sum(instance.stor_disp[z, s, t]
-                                          for t in instance.t))
-            capftotal[s - 1] += 0.5 * hours
-            nperz[s - 1] += 1
+            techtotal[idx.index(s)] += value(instance.stor_cap_op[z, s])
+            disptotal[idx.index(s)] += value(sum(instance.stor_disp[z, s, t]
+                                                 for t in instance.t))
+            capftotal[idx.index(s)] += 0.5 * hours
+            nperz[idx.index(s)] += 1
 
         for h in instance.hyb_tech_per_zone[z]:
-            techtotal[h - 1] += value(instance.hyb_cap_op[z, h])
-            disptotal[h - 1] += value(sum(instance.hyb_disp[z, h, t]
-                                          for t in instance.t))
-            capftotal[h - 1] += value(sum(instance.hyb_cap_factor[z, h, t]
-                                          for t in instance.t))
-            nperz[h - 1] += 1
+            techtotal[idx.index(h)] += value(instance.hyb_cap_op[z, h])
+            disptotal[idx.index(h)] += value(sum(instance.hyb_disp[z, h, t]
+                                                 for t in instance.t))
+            capftotal[idx.index(h)] += value(sum(instance.hyb_cap_factor[z, h, t]
+                                                 for t in instance.t))
+            nperz[idx.index(h)] += 1
 
     NEMcap = sum(techtotal)
     NEMdis = sum(disptotal)
@@ -271,13 +256,13 @@ def _printcapacity(instance):
           ))
 
     for j in instance.all_tech:
-        if techtotal[j - 1] > 0:
+        if techtotal[idx.index(j)] > 0:
             print("%17s: %7sW | dispatch: %7sWh | avg cap factor: %.2f(%.2f)" % (
                 tname[j],
-                si_format(techtotal[j - 1] * 1e6, precision=1),
-                si_format(disptotal[j - 1] * 1e6, precision=1),
-                disptotal[j - 1] / hours / techtotal[j - 1],
-                capftotal[j - 1] / hours / nperz[j - 1]
+                si_format(techtotal[idx.index(j)] * 1e6, precision=1),
+                si_format(disptotal[idx.index(j)] * 1e6, precision=1),
+                disptotal[idx.index(j)] / hours / techtotal[idx.index(j)],
+                capftotal[idx.index(j)] / hours / nperz[idx.index(j)]
             ))
 
 

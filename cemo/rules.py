@@ -1,58 +1,8 @@
 # Module to host all the rules for the constraints in the abstract model
-import calendar
 
 from pyomo.environ import Constraint
 
 import cemo.const
-
-
-def init_AdjustYearFactor(model):
-    ystr = model.t.first()
-    year = int(ystr[:4])
-    if calendar.isleap(year):
-        hours = 8784
-    else:
-        hours = 8760
-    return hours / len(model.t)
-
-
-# TODO is fuel price per zone too?
-def init_default_fuel_price(model, z, n):
-    return cemo.const.DEFAULT_FUEL_PRICE.get(n, 100.0)
-
-
-def init_default_heat_rate(model, zone, tech):
-    return cemo.const.DEFAULT_HEAT_RATE.get(tech, 15.0)
-
-
-def init_default_fuel_emit_rate(model, tech):
-    return cemo.const.DEFAULT_FUEL_EMIT_RATE.get(tech, 800)
-
-
-def init_cost_retire(model, tech):
-    return cemo.const.DEFAULT_RETIREMENT_COST.get(tech, 60000.0)
-
-
-def init_default_lifetime(model, tech):
-    return cemo.const.DEFAULT_TECH_LIFETIME.get(tech, 30.0)
-
-
-def init_gen_build_limit(model, zone, tech):
-    return cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech, 100000)
-
-
-def init_fcr(model, tech):
-    return model.all_tech_discount_rate / (
-        (model.all_tech_discount_rate + 1)**model.all_tech_lifetime[tech] -
-        1) + model.all_tech_discount_rate
-
-
-def init_cap_factor(model, zone, tech, time):
-    return cemo.const.DEFAULT_CAP_FACTOR.get(tech, 0)
-
-
-def init_max_hydro(model, zone):
-    return cemo.const.DEFAULT_HYDRO_MWH_MAX.get(zone, 0)
 
 
 def ScanForTechperZone(model):
@@ -161,10 +111,21 @@ def con_region_ret(model, r):
     )
 
 
+def con_max_mwh_as_cap_factor(model, zone, tech):
+    '''Define a maximum MWh output as a capacity factor cap for a zone and technology'''
+    cap_factor = cemo.const.MAX_MWH_CAP_FACTOR.get(zone).get(tech, 1)
+    if cap_factor < 1:
+        return sum(model.gen_disp[zone, tech, t]
+                   for t in model.t)\
+            <= cap_factor * model.gen_cap_op[zone, tech] * 8760 /\
+            model.year_correction_factor
+    return Constraint.Skip
+
+
 def con_maxmhw(model, z, n):
     if n == 18:  # hydro only
         return sum(model.gen_disp[z, n, t] for t in model.t)\
-                <= model.hydro_gen_mwh_limit[z] / model.year_correction_factor
+            <= model.hydro_gen_mwh_limit[z] / model.year_correction_factor
     return Constraint.Skip
 
 
@@ -349,19 +310,17 @@ def con_uns(model, r):
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
-def cost_capital(model):
+def cost_capital(model, z):
     return sum(model.cost_gen_build[z, n] * (model.gen_cap_new[z, n] + model.gen_cap_exo[z, n])
                * model.fixed_charge_rate[n]
-               for z in model.zones
                for n in model.gen_tech_per_zone[z])\
         + sum(model.cost_stor_build[z, s] * (model.stor_cap_new[z, s] + model.stor_cap_exo[z, s])
               * model.fixed_charge_rate[s]
-              for z in model.zones
               for s in model.stor_tech_per_zone[z])\
         + sum(model.cost_hyb_build[z, h] * (model.hyb_cap_new[z, h] + model.hyb_cap_exo[z, h])
               * model.fixed_charge_rate[h]
-              for z in model.zones
-              for h in model.hyb_tech_per_zone[z])
+              for h in model.hyb_tech_per_zone[z])\
+        + model.cost_cap_carry_forward[z]
 
 
 def cost_fixed(model):
@@ -434,7 +393,7 @@ def cost_shadow(model):
 
 def obj_cost(model):
     """Objective function as total annualised cost for model"""
-    return cost_capital(model)\
+    return sum(cost_capital(model, z) for z in model.zones)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
         + cost_retirement(model) + cost_shadow(model)

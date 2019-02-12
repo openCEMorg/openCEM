@@ -1,60 +1,4 @@
 # NEM NTNDP/ISP template scenario
-set regions:= 1 2 3 4 5;
-set zones:= 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16;
-set zones_in_regions:=
-1 5
-1 6
-1 7
-1 8
-2 1
-2 2
-2 3
-2 4
-3 13
-3 14
-3 15
-4 16
-5 9
-5 10
-5 11
-5 12
-;
-
-# Set of all unique technology identifiers in ISP dataset
-set all_tech:= 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20;
-
-# Set of notional interconnectors between regions
-set region_intercons:=
-4 5
-5 4
-5 1
-1 5
-3 5
-5 3
-1 2
-2 1;
-
-# proportioning factors and transmission limits
-param : intercon_prop_factor intercon_trans_limit :=
-4 5 0.66 480
-5 4 0.0 480
-5 1 0.0 700
-1 5 0.2 400
-3 5 0.0 850
-5 3 0.5 870
-1 2 0.61 360
-2 1 0.0 1175
-;
-
-set fuel_gen_tech := [fueltechset]; # REVIEW are these necessary
-
-set retire_gen_tech := [retiretechset]; # REVIEW are these necessary
-
-set hyb_tech:= [hybtechset]; # REVIEW are these necessary
-
-set nobuild_gen_tech := [nobuildset]; # REVIEW are these necessary
-#Set of storage technologies
-set stor_tech := [stortechset];
 
 # Set of generator technologies available in each zone
 set gen_tech_in_zones :=
@@ -80,21 +24,18 @@ set stor_tech_in_zones :=
 set hyb_tech_in_zones :=
 [hybtech];
 
-# Fuel costs and heat rates
-load 'data/FuelandHeat.csv' : [all_tech] fuel_emit_rate;
-
-#Ordered set of timestams to retrieve traces for dispatch calculations
+#Retrieve fuel costs for defined technologies
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
 user=cemo_select password=cemo_password using=pymysql
 query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(fuel.price) as cost_fuel
 FROM fuel_price fuel
 INNER JOIN capacity cap ON cap.id=fuel.capacity_id
-WHERE fuel.year=2020 AND fuel.fuel_scenario_id =3
+WHERE fuel.year=XXXX AND fuel.fuel_scenario_id =3
 AND (cap.ntndp_zone_id,cap.technology_type_id) in
 [fueltechdb]
 group by zones,all_tech;" :[zones,all_tech] cost_fuel;
 
-#Ordered set of timestams to retrieve traces for dispatch calculations
+#Retrieve fuel heat rates for default technologies
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
 user=cemo_select password=cemo_password using=pymysql
 query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(fuel.price) as fuel_heat_rate
@@ -103,29 +44,6 @@ INNER JOIN capacity cap ON cap.id=fuel.capacity_id
 AND (cap.ntndp_zone_id,cap.technology_type_id) in
 [fueltechdb]
 group by zones,all_tech;" :[zones,all_tech] fuel_heat_rate;
-
-
-# Roundt trip efficiency for storage technology_type_id
-param : stor_rt_eff stor_charge_hours :=
-14 0.8 6
-15 0.7 2
-;
-
-
-param : hyb_col_mult hyb_charge_hours :=
-13 1 0.001
-;
-
-param hydro_gen_mwh_limit:= 16 8305000
-5 6000000
-12 6000000
-;
-
-# Cost of unserved power $/MW
-param cost_unserved:= 980000;
-
-# Cost of transmission $/MW
-param cost_trans:= 50;
 
 #Ordered set of timestams to retrieve traces for dispatch calculations
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
@@ -251,7 +169,7 @@ where (ntndp_zone_id,technology_type_id) in
 group by zones,all_tech;" : [zones,all_tech] ret_gen_cap_exo;
 
 #capacity factors for technologies with traces
-# TODO FIXME  check that the MAX statemen correctly retrieves the desired scenario
+# TODO FIXME  check that the MAX statement correctly retrieves the desired scenario
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
 user=cemo_select password=cemo_password using=pymysql
 query="
@@ -268,7 +186,7 @@ AND (source_id, ntndp_zone_id, technology_type_id) in (
         GROUP BY ntndp_zone_id, technology_type_id)
 GROUP BY zones,all_tech,t;" : [zones,all_tech,t] gen_cap_factor;
 
-# TODO  check that the MAX statemen correctly retrieves the desired scenario
+# TODO  check that the MAX statement correctly retrieves the desired scenario
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
 user=cemo_select password=cemo_password using=pymysql
 query="
@@ -286,7 +204,7 @@ AND (source_id, ntndp_zone_id, technology_type_id) in (
 GROUP BY zones,all_tech,t;" : [zones,all_tech,t] hyb_cap_factor;
 
 #Demand for for all regions for the given time interval
-# TODO  check that the MAX statemen correctly retrieves the desired scenario
+# TODO  check that the MAX statement correctly retrieves the desired scenario
 # TODO tidy up operational demand query
 load "cemo.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=cemo
 user=cemo_select password=cemo_password using=pymysql

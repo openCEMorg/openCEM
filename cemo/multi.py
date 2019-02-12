@@ -5,12 +5,13 @@ import json
 import os.path
 import tempfile
 
+import pandas as pd
 from pyomo.opt import SolverFactory
 
 import cemo.const
 from cemo.cluster import ClusterRun, InstanceCluster
-from cemo.core import create_model
-from cemo.jsonify import json_carry_fwd_cap, jsonify
+from cemo.jsonify import json_carry_forward_cap, jsonify
+from cemo.model import create_model
 from cemo.utils import printstats
 
 
@@ -76,7 +77,7 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', tmpdir=tempfile.mkdtemp() + '/'):
+    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/'):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -86,6 +87,7 @@ class SolveTemplate:
 
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
+        # TODO use pathvalidate to prevent illegal solution file names
         self.Years = json.loads(Scenario['Years'])
         # Create NEM wide ret constraint based on data
         if config.has_option('Scenario', 'nemret'):
@@ -94,9 +96,6 @@ class SolveTemplate:
             self.nemret = None
 
         if config.has_option('Scenario', 'regionret'):
-            if config.has_option('Scenario', 'nemret'):
-                raise Exception(
-                    "Cannot have both NEM and Region RET constraints")
             self.regionret = dict(json.loads(Scenario['regionret']))
         else:
             self.regionret = None
@@ -116,12 +115,17 @@ class SolveTemplate:
 
         Advanced = config['Advanced']
         self.Template = Advanced['Template']
+        if config.has_option('Advanced', 'custom_costs'):
+            self.custom_costs = Advanced['custom_costs']
+        else:
+            self.custom_costs = None
         self.cluster = Advanced.getboolean('cluster')
         self.cluster_max_d = int(Advanced['cluster_sets'])
         self.techs = dict(json.loads(Advanced['all_tech_per_zone']))
 
         self.tmpdir = tmpdir
         self.solver = solver
+        self.log = log
         # initialisation functions
         self.tracetechs()
 
@@ -150,7 +154,7 @@ class SolveTemplate:
 
     @property
     def cost_emit(self):
-        return self._discountrate
+        return self._cost_emit
 
     @cost_emit.setter
     def cost_emit(self, data):
@@ -216,6 +220,17 @@ class SolveTemplate:
         if not os.path.isfile(a):
             raise OSError("openCEM-Template: File not found")
         self._Template = a
+
+    @property
+    def custom_costs(self):
+        return self._custom_costs
+
+    @custom_costs.setter
+    def custom_costs(self, a):
+        if a is not None:
+            if not os.path.isfile(a):
+                raise OSError("openCEM-Template: File not found")
+        self._custom_costs = a
 
     def tracetechs(self):
         self.fueltech = {}
@@ -285,22 +300,53 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
     def carry_forward_cap_costs(self, year):
         '''Save total annualised capital costs in carry forward json'''
-        carry_fwd_cost = "#Carry forward annualised capital costs\n"
+        carry_fwd_cost = ''
         if self.Years.index(year):
+            carry_fwd_cost = "#Carry forward annualised capital costs\n"
             prevyear = self.Years[self.Years.index(year) - 1]
             carry_fwd_cost += "load '" + self.tmpdir + "gen_cap_op" + \
                 str(prevyear) + \
                 ".json' : cost_cap_carry_forward;\n"
-        else:
-            carry_fwd_cost += "param cost_cap_carry_forward:=0;\n"
-
         return carry_fwd_cost
 
-    def generateyeartemplate(self, year):
+    def produce_custom_costs(self, year):
+        custom_costs = '\n'
+        keywords = {
+            'cost_gen_build': 'zonetech',
+            'cost_hyb_build': 'zonetech',
+            'cost_stor_build': 'zonetech',
+            'cost_fuel': 'zonetech',
+            'cost_gen_fom': 'tech',
+            'cost_gen_vom': 'tech',
+            'cost_hyb_fom': 'tech',
+            'cost_hyb_vom': 'tech',
+            'cost_stor_fom': 'tech',
+            'cost_stor_vom': 'tech'}
+        if self.custom_costs is not None:
+            costs = pd.read_csv(self.custom_costs)
+            for key in keywords.keys():
+                cost = costs[
+                    (costs['year'] == int(year)) & (costs['name'] == key)
+                ]
+                if not cost.empty:
+                    custom_costs += '#Custom cost entry for ' + key + '\n'
+                    custom_costs += 'param ' + key + ':=\n'
+                    if keywords[key] == 'tech':
+                        custom_costs += cost[['tech', 'value']].to_string(header=False, index=False)
+                    else:
+                        custom_costs += cost[['zone', 'tech', 'value']
+                                             ].to_string(header=False, index=False)
+                    custom_costs += '\n;\n'
+
+        return custom_costs
+
+    def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
         date1 = datetime.datetime(year, 1, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
         date2 = datetime.datetime(year, 12, 31, 23, 0, 0)
+        if test:
+            date2 = datetime.datetime(year, 1, 3, 23, 0, 0)
         strd2 = "'" + str(date2) + "'\n"
         drange = "WHERE timestamp BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.tmpdir + 'Sim' + str(year) + '.dat'
@@ -311,6 +357,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             + "param cost_emit:= " + str(self.cost_emit) + ";\n"
         opcap0 = self.carryforwardcap(year)
         carry_fwd_cap = self.carry_forward_cap_costs(year)
+        custom_costs = self.produce_custom_costs(year)
 
         if self.nemret:
             nemret = "\n # NEM wide RET\n"\
@@ -385,6 +432,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     if 'WHERE timestamp BETWEEN' in line:
                         line = drange
                     fo.write(line)
+                fo.write(custom_costs)
                 fo.write(fcr)
                 fo.write(cemit)
                 fo.write(carry_fwd_cap)
@@ -404,6 +452,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         Assemble full simulation output as metadata+ full year results in each simulated year
         """
         for y in self.Years:
+            if self.log:
+                print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
             dcfName = self.generateyeartemplate(y)
             # Solve full year capacity and dispatch instance
@@ -426,20 +476,24 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     regionret=regionret_enable,
                     emitlimit=emitrate_enable,
                     solver=self.solver,
-                    log=False).run_cluster()
+                    log=self.log).run_cluster()
                 inst = setinstancecapacity(inst, ccap)
 
             # Solve the model (or just dispatch if capacity has been solved)
             opt = SolverFactory(self.solver)
-            opt.solve(inst)
+            if self.log:
+                print("openCEM multi: Starting full year dispatch simulation")
+            opt.solve(inst, tee=self.log)
 
             # Carry forward operating capacity to next Inv period
-            opcap = json_carry_fwd_cap(inst)
+            opcap = json_carry_forward_cap(inst)
             if y != self.Years[-1]:
                 with open(self.tmpdir + 'gen_cap_op' + str(y) + '.json',
                           'w') as op:
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
+            if self.log:
+                print("openCEM multi: Saving year %s results into temporary file" % y)
             out = jsonify(inst)
             with open(self.tmpdir + str(y) + '.json', 'w') as jo:
                 json.dump(out, jo)
@@ -448,6 +502,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
             del inst  # to keep memory down
         # Merge JSON output for all investment periods
+        if self.log:
+            print("openCEM multi: Saving final results to JSON file")
         self.mergejsonyears()
 
     def mergejsonyears(self):
@@ -457,8 +513,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             with open(self.tmpdir + str(y) + '.json', 'r') as f:
                 yeardata = {str(y): json.load(f)}
             data.update(yeardata)
-
-        with open(self.Name + '_sol.json', 'w') as fo:
+        # Save json output named after .cfg file
+        with open(self.cfgfile + '.json', 'w') as fo:
             json.dump(data, fo)
 
     def generate_metadata(self):
@@ -479,5 +535,14 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         }
         if self.description is not None:
             meta.update({"Description": self.description})
+        if self.nemret is not None:
+            meta.update({"NEM wide RET": self.nemret})
+        if self.regionret is not None:
+            meta.update({"Regional based RET": self.regionret})
+        if self.emitlimit is not None:
+            meta.update({"System emission limit": self.emitlimit})
+        if self.custom_costs is not None:
+            costs = pd.read_csv(self.custom_costs)
+            meta.update({"Custom costs": costs.to_dict(orient='records')})
 
         return {'meta': meta}

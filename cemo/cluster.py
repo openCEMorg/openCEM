@@ -2,6 +2,7 @@
 import datetime
 import json
 import subprocess
+import shutil
 import sys
 import tempfile
 from collections import deque
@@ -268,27 +269,29 @@ class ClusterRun:
         parCondProb += ';'
         setScenarios += ';'
         paramScenLeaf += ';'
-        reps = {
-            'control file': 'generated template',
+        template = {
+            'control file': '# generated template DO NOT EDIT',
+            'stages':'set Stages := FS SS;',
             'setNodesrep': setNodes,
             'paramNodesrep': paramNodeStage,
             'setChildRootrep': setChildRoot,
             'parCondProbrep': parCondProb,
             'setScenariosrep': setScenarios,
-            'paramScenLeafrep': paramScenLeaf
+            'paramScenLeafrep': paramScenLeaf,
+            'setstagevars1': 'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'setstagevars2': 'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'stagecost':'param StageCost := FS FSCost SS SSCost;',
         }
-        with open('data/Scenariodat.template', 'rt') as fin:
-            with open(self.tmpdir + '/ScenarioStructure.dat', 'wt') as fo:
-                for line in fin:
-                    for i, j in reps.items():
-                        line = line.replace(i, j)
+        with open(self.tmpdir + '/ScenarioStructure.dat', 'wt') as fo:
+            for t in template:
+                    line = template[t]+'\n\n'
                     fo.write(line)
 
     def _gen_ref_model(self):
         # Not pretty but it will do
         with open(self.tmpdir + '/ReferenceModel.py', 'wt') as fo:
             refmodel = "# Temporary openCEM model instance for ReferenceModel.py\n"
-            refmodel += "from cemo.core import create_model\n"
+            refmodel += "from cemo.model import create_model\n"
             refmodel += "model = create_model('openCEM',\n"
             refmodel += "                     unslim=True,\n"
             refmodel += "                     emitlimit=" + str(
@@ -313,11 +316,11 @@ class ClusterRun:
         if self.log:
             cmd.append("--output-solver-log")
             cmd.append("--traceback")
-            stdout = subprocess.STDOUT
+            stdout = subprocess.PIPE
 
         proc = subprocess.run(cmd, stdout=stdout)
         if proc.returncode == 0:
-            subprocess.run(["mv", "ef_solution.json", self.tmpdir])
+            shutil.move("ef_solution.json", self.tmpdir)
         else:
             sys.exit(proc.returncode)
 

@@ -1,7 +1,7 @@
 # Common fixtures for test suite
 import pytest
 import pickle
-from cemo.core import create_model
+from cemo.model import create_model
 from pyomo.opt import SolverFactory
 from pyomo.environ import DataPortal
 # IDEA maybe we should have a NEM wide test
@@ -12,7 +12,7 @@ from pyomo.environ import DataPortal
                     'CTV_trans',
                 ])
 def model(request):
-    return create_model(request.param, unslim=True, emitlimit=True, nemret=True)
+    return create_model(request.param, unslim=True, emitlimit=True, nemret=False)
 
 
 @pytest.fixture(scope="session")

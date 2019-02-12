@@ -14,7 +14,8 @@ __email__ = "andrew.hall@itpau.com.au"
 __status__ = "Development"
 
 from pyomo.environ import value
-from cemo.rules import cost_shadow, cost_capital
+
+from cemo.rules import cost_capital, cost_shadow
 
 
 def jsonify(inst):
@@ -82,6 +83,7 @@ def jsonify(inst):
                inst.hyb_col_mult.name: fill_scalar_key_param(inst.hyb_col_mult),
                inst.hyb_charge_hours.name: fill_scalar_key_param(inst.hyb_charge_hours),
                inst.fuel_emit_rate.name: fill_scalar_key_param(inst.fuel_emit_rate),
+               inst.cost_cap_carry_forward.name: fill_scalar_key_param(inst.cost_cap_carry_forward),
 
                # params with scalar value
                inst.cost_unserved.name: inst.cost_unserved.value,
@@ -89,7 +91,6 @@ def jsonify(inst):
                inst.cost_trans.name: inst.cost_trans.value,
                inst.all_tech_discount_rate.name: inst.all_tech_discount_rate.value,
                inst.year_correction_factor.name: inst.year_correction_factor.value,
-               inst.cost_cap_carry_forward.name: inst.cost_cap_carry_forward.value,
 
 
            },
@@ -128,7 +129,7 @@ def jsonify(inst):
         out['params'].update({inst.nem_ret_ratio.name: inst.nem_ret_ratio.value})
     if hasattr(inst, 'region_ret_ratio'):
         out['params'].update(
-            {inst.region_ret_ratio.name: fill_scalar_key_param(inst.region_ret_ratio['m'])})
+            {inst.region_ret_ratio.name: fill_scalar_key_param(inst.region_ret_ratio)})
     return out
 
 
@@ -153,14 +154,14 @@ def jsoninit(inst):
     return out
 
 
-def json_carry_fwd_cap(inst):
+def json_carry_forward_cap(inst):
     '''Produce JSON output of capacity data to carry forward to next investment period'''
     out = {
         inst.gen_cap_initial.name: fill_complex_var(inst.gen_cap_op),
         inst.stor_cap_initial.name: fill_complex_var(inst.stor_cap_op),
         inst.hyb_cap_initial.name: fill_complex_var(inst.hyb_cap_op),
-        inst.cost_cap_carry_forward.name: inst.cost_cap_carry_forward.value\
-        + value(cost_capital(inst)),
+        inst.cost_cap_carry_forward.name: [{"index": z, "value": value(cost_capital(inst, z))}
+                                           for z in inst.zones]
     }
     return out
 

@@ -23,7 +23,7 @@ To run openCEM, you need to install Python 3, a development version of Pyomo and
 
 ### Python 3
 
-openCEM runs on Python 3, refer to your OS on how to install it in your computer. In addition you will need the following Python packages
+openCEM runs on Python 3, refer to your OS on how to install it in your computer. In addition you will need the following Python packages:
 
 - NumPy
 - SciPy
@@ -32,23 +32,9 @@ openCEM runs on Python 3, refer to your OS on how to install it in your computer
 - si_prefix
 - pytest
 - matplotlib
+- Pyomo (version 5.6.1 or later)
 
-### Pyomo
-
-An official Pyomo package containing openCEM specific features has not yet been released. Until then, please install Pyomo using a terminal (or Python console)
-
-- Clone or download a developmental vesion of pyomo
-
-  ```bash
-  $ git clone https://github.com/jotaigna/pyomo.git
-  ```
-
-- Build and install using `setup.py`
-
-  ```bash
-  $ cd pyomo
-  $ python setup.py build install
-  ```
+Note: These can be installed via pip or anaconda. Pyomo needs to be source from `conda-forge`.
 
 ### Solver
 
@@ -56,10 +42,13 @@ Thanks to Pyomo, openCEM supports a range of open source and commercial solvers.
 
 Note: [Click here](https://www.coin-or.org/download/binary/OptimizationSuite/COIN-OR-1.7.4-win32-msvc9.exe) to download the recommended windows installer
 
+Note 2: Users experiencing issues with the windows installer can replace the file `cbc.exe` in their systems with that found in [this binary](https://bintray.com/coin-or/download/download_file?file_path=Cbc-2.9-win32-msvc14.zip)
+
+Note 3: Anaconda binaries exist for linux and mac via the `conda-forge` project `coincbc`
+
 Other solvers supported by openCEM:
 
 - cbc (open source, no binary constraints)
-- glpk (open source)
 - Gurobi (commercial)
 - CPLEX (commercial)
 
@@ -81,6 +70,14 @@ In a python console run the command `pytest` from the openCEM installation direc
 64 passed in 7.38 seconds
 ```
 
+If the suite is to be run with a solver different than the default, this must be passed as an option to pytest. For example, using GLPK:
+
+```sh
+~/opencem $ pytest --solver=glpk
+................................................................   [100%]
+64 passed in 7.38 seconds
+```
+
 ## Usage
 
 ### Basic usage
@@ -93,15 +90,19 @@ To run a configured scenario, type the following command on a console
 $ ./msolve.py Sample.cfg
 ```
 
+Note: Solvers other than the default must be specified by passing the `--solver` option.
+
 openCEM will process the configuration file and run a simulation. At the end of each simulated year it will print a summary of capacity and dispatch decisions for that period. When finished, openCEM it will save the entire set of results in a JSON file.
 
 ### Configuration file
 
 The following explains the purpose of each field in the configuration file. See the file `Sample.cfg` for usage examples and appropriate values. Users can edit files and make multiple copies to manage a range of scenarios. Configuration files uses the Python `configparse` module to import parameters to simulations, therefore observe basic from `configparse` rules for formatting configuration files.
 
+_NOTE_: Results will be written in JSON format using the name of the configuration file as its prefix, e.g. `Sample.cfg.json`
+
 #### `Name`
 
-The field `Name` gives each simulation a unique name, which is used as an identifier for simulations and to name the result file. For example the name "ISP_Neutral" will result in the output file named `ISP_Neutral_sol.json`. Ths field must be specified.
+The field `Name` gives each simulation a descriptive name, which is used as an identifier for simulations.This field must be specified.
 
 #### `Years`
 
@@ -138,9 +139,31 @@ The field `cost_emit` specifies a cost penalty for emissions in dollars per kg o
 
 **For advanced users only. Do not modify**. The `Template` field specifies the scope of the simulation and the sources of data used. The template `ISPNeutral.dat` configures the model to take technology costs, fuel costs and demand projections from the AEMO ISP data and from the NTNDP data for legacy technologies.
 
+#### `custom_costs`
+
+**For advanced users only. Modify with care**. The `custom_costs` field allows users to specify a csv file with overriding values for specific input costs. Values must be specified for each year in the simulation and for the specific cost category, zone and technology. The csv file must contain information in columns as:
+
+```
+year, name, zone, tech, value
+2025, cost_fuel, 13, 1, 1.3
+2030, cost_fuel, 13, 1, 1.31
+2035, cost_fuel, 13, 1, 1.31
+2040, cost_fuel, 13, 1, 1.32
+2045, cost_fuel, 13, 1, 1.33
+```
+
+The list of supported costs is:
+
+- `cost_gen_build`, `cost_hyb_build`, `cost_stor_build`
+- `cost_fuel`
+- `cost_gen_fom`, `cost_stor_fom`, `cost_hyb_fom`
+- `cost_gen_vom`, `cost_stor_vom`, `cost_hyb_vom`
+
+Note: Non fuel operating costs are defined per technology only, therefore zone data will be ignored.
+
 #### `cluster`
 
-**For advanced users only. Do not modify**. The field `cluster` enables/disables time slicing dispatch data for a capacity expansion calculation using a combination of reduced dispatch periods. Demand data for each simulated is split into week periods (Mon-Sun 168 hours) and grouped using hierachical clustering. Capacity calculations are done using a stochastic program (Pyomo PySP).
+**For advanced users only. Do not modify**. The field `cluster` enables/disables time slicing dispatch data for a capacity expansion calculation using a combination of reduced dispatch periods. Demand data for each simulated is split into week periods (Mon-Sun 168 hours) and grouped using hierarchical clustering. Capacity calculations are done using a stochastic program (Pyomo PySP).
 
 #### `cluster_sets`
 

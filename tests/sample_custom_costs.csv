@@ -1,0 +1,15 @@
+year,name,zone,tech,value
+2020,cost_gen_fom,13,1,1111
+2020,cost_gen_fom,13,2,2222
+2025,cost_gen_fom,13,1,3333
+2025,cost_gen_fom,13,2,4444
+2020,cost_gen_vom,13,1,5555
+2020,cost_gen_vom,13,2,6666
+2025,cost_gen_vom,13,1,7777
+2025,cost_gen_vom,13,2,8888
+2020,cost_gen_build,12,1,999999
+2020,cost_stor_build,13,14,999999
+2025,cost_gen_build,12,1,888888
+2025,cost_stor_build,13,14,888888
+2030,cost_gen_build,12,1,777777
+2030,cost_stor_build,13,14,777777

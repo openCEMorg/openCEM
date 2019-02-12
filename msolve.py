@@ -50,10 +50,10 @@ parser.add_argument(
 
 # Zip and upload result to custom directory
 parser.add_argument(
-    "--dir",
-    help="Copy results to folder",
-    type=str,
-    metavar='DIR')
+    "--log",
+    help="Request solver logging and traceback information",
+    action='store_true'
+)
 
 # parse arguments into args structure
 args = parser.parse_args()
@@ -61,16 +61,10 @@ args = parser.parse_args()
 # Read configuration file name from
 cfgfile = args.config
 # create Multi year simulation
-X = SolveTemplate(cfgfile, solver=args.solver)
+X = SolveTemplate(cfgfile, solver=args.solver, log=args.log)
 # instruct the solver to launch the multi year simulation
 print("openCEM msolve.py: Runtime %s (pre solver)" % str(
     datetime.timedelta(seconds=(time.time() - start_time))))
 X.solve()
 print("openCEM msolve.py: Runtime %s (post solver)" % str(
     datetime.timedelta(seconds=(time.time() - start_time))))
-
-if args.dir:
-    outname = X.Name + "_sol.json"
-    subprocess.run(["gzip", outname])
-    outname = outname + ".gz"
-    shutil.copy2(outname, args.dir)
