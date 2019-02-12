@@ -7,3 +7,4 @@
 __init__.py
 *.log
 *.gz
+.coverage
