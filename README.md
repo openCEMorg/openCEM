@@ -19,7 +19,7 @@ This repository contains the development version of openCEM. You can download an
 
 ## Installation
 
-To run openCEM, you need to install Python 3, a development version of Pyomo and a solver. To download openCEM
+To run openCEM, you need to install Python 3 and a number of dependencies, a solver and a copy of openCEM. Instructions for all below.
 
 ### Python 3
 
