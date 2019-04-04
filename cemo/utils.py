@@ -1,4 +1,12 @@
-# Utility scripts for openCEM
+""" Utility scripts for openCEM"""
+__author__ = "José Zapata"
+__copyright__ = "Copyright 2018, ITP Renewables, Australia"
+__credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
+__license__ = "GPLv3"
+__version__ = "0.9.2"
+__maintainer__ = "José Zapata"
+__email__ = "jose.zapata@itpau.com.au"
+__status__ = "Development"
 import locale
 import sys
 
@@ -13,7 +21,7 @@ import cemo.rules
 locale.setlocale(locale.LC_ALL, '')
 
 
-def printonly(instance, key):
+def printonly(instance, key):  # pragma: no cover
     if key == "all":
         instance.pprint()  # pprint whole instance
     else:
@@ -33,7 +41,7 @@ def _get_textid(table):
     return switch.get(table, lambda: "Name list not found")
 
 
-def _techsinregion(instance, region):
+def _techsinregion(instance, region):  # pragma: no cover
     techsinregion = set()
     # Populate with intersecton of .gen_tech_per_zone set for all zones in region
     for z in instance.zones_per_region[region]:
@@ -42,15 +50,13 @@ def _techsinregion(instance, region):
         techsinregion = techsinregion | instance.stor_tech_per_zone[z]()
     return sorted(techsinregion, key=lambda x: cemo.const.DISPLAY_ORDER.index(x))
 
-# TODO copy colour scheme from openCEM website
 
-
-def pallette(instance, techsinregion):
+def palette(instance, techsinregion):  # pragma: no cover
     pal = cemo.const.PALETTE
-    return [pal[k - 1] for k in techsinregion]
+    return [pal[k] for k in techsinregion]
 
 
-def plotresults(instance):
+def plotresults(instance):  # pragma: no cover
     """ Process results to plot.
      Feel free to improve the efficiency of this code
     """
@@ -100,7 +106,7 @@ def plotresults(instance):
             ax = fig.add_subplot(2, 2, r)
         else:
             ax = fig.add_subplot(3, 2, r)
-        palr = pallette(instance, techsinregion)
+        palr = palette(instance, techsinregion)
         ax.stackplot(ts, q_z_r, colors=palr)  # dispatch values
         ax.plot(ts, load, color='black')  # Put load on top
         ax.legend(plabels)  # put labels
@@ -110,7 +116,7 @@ def plotresults(instance):
     plt.show()
 
 
-def plotcapacity(instance):
+def plotcapacity(instance):  # pragma: no cover
     """ Stacked plot of capacities
      Feel free to improve the efficiency of this code
     """
@@ -156,7 +162,7 @@ def plotcapacity(instance):
         ExCap_r = gen_cap_op_r - gen_cap_new_r
         width = 0.35
         # Plotting instructions
-        colour = pallette(instance, techsinregion)
+        colour = palette(instance, techsinregion)
         if r % 2 == 0:
             ax = fig.add_subplot(2, 2, r)
         else:
@@ -204,7 +210,7 @@ def _printcosts(inst):
 def _printemissionrate(instance):
     emrate = sum(value(cemo.rules.emissions(instance, r))
                  for r in instance.regions) /\
-        sum(value(cemo.rules.dispatch(instance, r)) for r in instance.regions)
+        (sum(value(cemo.rules.dispatch(instance, r)) for r in instance.regions)+1.0e-12)
     print("Total Emission rate: %s kg/MWh" % str(emrate))
 
 
@@ -275,7 +281,7 @@ def printstats(instance):
     print("End of results for %s" % instance.name, flush=True)
 
 
-def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):
+def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):  # pragma: no cover
     # Plot cluster result from full set of weeks, cluster weeks and weights
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots

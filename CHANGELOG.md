@@ -2,6 +2,25 @@
 
 Notable changes to openCEM
 
+## [0.9.2] - 2019-03-31
+
+### Added
+
+- Linearised unit commitment constraints for less flexible generator technologies
+- Minimum dispatchable constraints
+- Minimum renewable dispatchable constraints
+- Carbon price is now a pathway instead of a single value
+
+### Updated
+
+- Redirected to new standard database schema
+- Default values for technologies
+- Unit tests and coverage
+
+### Removed
+
+- Bugs and pylint warnings
+
 ## [0.9.1] - 2019-02-12
 
 ### Added

@@ -24,10 +24,9 @@ def test_cluster_size(cluster_no):
 # TODO make a separate test suite for cluster run
 
 
-def test_cluster_data_files():
+def test_cluster_data_files(model_options):
     clus = cemo.cluster.CSVCluster(max_d=6)
-    a = cemo.cluster.ClusterRun(
-        clus, 'tests/CNEM.template', emitlimit=True)
+    a = cemo.cluster.ClusterRun(clus, 'tests/CNEM.template', model_options)
     a._gen_dat_files()
     with open(a.tmpdir + '/S5.dat') as ff:
         fromfile = ff.readlines()
@@ -38,19 +37,16 @@ def test_cluster_data_files():
     assert d.ratio() >= 0.994
 
 
-def test_cluster_gen_scenario_struct():
+def test_cluster_gen_scenario_struct(model_options):
     clus = cemo.cluster.CSVCluster(max_d=6)
-    a = cemo.cluster.ClusterRun(
-        clus, 'tests/CNEM.template', emitlimit=True)
+    a = cemo.cluster.ClusterRun(clus, 'tests/CNEM.template', model_options)
     a._gen_scen_struct()
-    assert filecmp.cmp(a.tmpdir + '/ScenarioStructure.dat',
-                       'tests/ScenTest.dat')
+    assert filecmp.cmp(a.tmpdir + '/ScenarioStructure.dat', 'tests/ScenTest.dat')
 
 
-def test_cluster_gen_ref_model(temp_data_dir):
+def test_cluster_gen_ref_model(temp_data_dir, model_options):
     clus = cemo.cluster.CSVCluster()
-    a = cemo.cluster.ClusterRun(
-        clus, 'tests/CNEM.template', emitlimit=True)
+    a = cemo.cluster.ClusterRun(clus, 'tests/CNEM.template', model_options)
     a._gen_ref_model()
     assert filecmp.cmp(a.tmpdir + '/ReferenceModel.py',
                        'tests/ReferenceModel.py')

@@ -1,10 +1,10 @@
 # Common fixtures for test suite
-import pytest
 import pickle
-from cemo.model import create_model
+
+import pytest
 from pyomo.opt import SolverFactory
-from pyomo.environ import DataPortal
-# IDEA maybe we should have a NEM wide test
+
+from cemo.model import create_model
 
 
 @pytest.fixture(scope="session",
@@ -12,14 +12,31 @@ from pyomo.environ import DataPortal
                     'CTV_trans',
                 ])
 def model(request):
-    return create_model(request.param, unslim=True, emitlimit=True, nemret=False)
+    return create_model(request.param,
+                        unslim=True,
+                        emitlimit=True,
+                        nem_disp_ratio=True,
+                        nem_re_disp_ratio=True,
+                        nem_ret_ratio=True,
+                        nem_ret_gwh=True,
+                        region_ret_ratio=True)
+
+
+@pytest.fixture(scope="session")
+def model_options():
+    options = {}
+    options.update({'emitlimit': True})
+    options.update({'nem_ret_gwh': False})
+    options.update({'nem_ret_ratio': False})
+    options.update({'region_ret_ratio': False})
+    options.update({'nem_disp_ratio': False})
+    options.update({'nem_re_disp_ratio': False})
+    return options
 
 
 @pytest.fixture(scope="session")
 def instance(model):
-    DataPath = 'tests/' + model.name + '.json'
-    data = DataPortal()
-    data.load(filename=DataPath)
+    data = 'tests/' + model.name + '.dat'
     return model.create_instance(data)
 
 

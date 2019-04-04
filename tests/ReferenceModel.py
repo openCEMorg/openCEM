@@ -3,5 +3,7 @@ from cemo.model import create_model
 model = create_model('openCEM',
                      unslim=True,
                      emitlimit=True,
-                     nemret=False,
-                     regionret=False)
+                     nem_ret_ratio=False,
+                     nem_ret_gwh=False,
+                     region_ret_ratio=False,
+                     nem_disp_ratio=False)

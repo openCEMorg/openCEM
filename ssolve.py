@@ -1,131 +1,146 @@
 #!/usr/bin/env python3
-"""solve.py: Single model solver for openCEM"""
-__version__ = "0.1.1"
+"""solve.py: Single model template solver for openCEM"""
+__version__ = "0.9.2"
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
-__license__ = "?GPL"
+__license__ = "GPLv3"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
 
-from cemo.model import create_model
-from pyomo.opt import SolverFactory, TerminationCondition
-import cemo.utils
 import argparse
+import datetime
 import pickle
 import sys
 import time
-import datetime
+
+from pyomo.opt import SolverFactory, TerminationCondition
+
+import cemo.utils
+from cemo.model import create_model
+
+
+def check_arg(config_file, parameter):
+    '''Parse .dat file for parameters that enable constraints'''
+    with open(config_file + '.dat', 'r') as file:
+        for line in file:
+            if parameter in line:
+                return True
+        return False
+
 
 # start the clock on the run
-start_time = time.time()
+START_TIME = time.time()
 
 # create parser object
-parser = argparse.ArgumentParser(description="openCEM single model solver")
+PARSER = argparse.ArgumentParser(description="openCEM single model solver")
 
 # Single simulation option using a data command file
-parser.add_argument("name",
+PARSER.add_argument("name",
                     help="Specify name of data command file.\n"
                     + " Do not include data command file extension `.dat`",
                     type=str,
                     metavar='NAME')
 
 # Obtain a solver name from command line, default cbc
-parser.add_argument("--solver",
+PARSER.add_argument("--solver",
                     help="Specify solver used by model."
                     + " For Pyomo supported solvers installed in your system ",
                     type=str,
                     metavar='SOLVER',
                     default="cbc")
 # Produce only a printout of the instance and exist
-parser.add_argument("--printonly",
+PARSER.add_argument("--printonly",
                     help="Produce model.STR.pprint() output and exit."
                     + " STR=all produces entire model output. Debugging only",
                     type=str,
                     metavar='STR')
 # Produce a text output of model in Yaml
-parser.add_argument("--yaml",
+PARSER.add_argument("--yaml",
                     help="Produce YAML output for the model named NAME.yaml",
                     action="store_true")
 # Produce pickle output of instance
-parser.add_argument("--pickle",
+PARSER.add_argument("--pickle",
                     help="Produce Pickle of instantiated model object NAME.p",
                     action="store_true")
 # Produce a plot
-parser.add_argument("-p", "--plot",
+PARSER.add_argument("-p", "--plot",
                     help="Produce a simple plot of model results",
                     action="store_true")
-parser.add_argument("-u", "--unserved",
+PARSER.add_argument("-u", "--unserved",
                     help="Enforce USE hard constraints",
                     action="store_true")
-parser.add_argument("-e", "--emissions",
-                    help="Enforce Total emisssions hard constraints",
-                    action="store_true")
-parser.add_argument("-r", "--results",
+PARSER.add_argument("-r", "--results",
                     help="Print an abridged model result",
                     action="store_true")
 # Include additional output
-parser.add_argument("-v", "--verbose",
+PARSER.add_argument("-v", "--verbose",
                     help="Print additional output, e.g. solver output",
                     action="store_true")
 
 # parse arguments into args structure
-args = parser.parse_args()
+ARGS = PARSER.parse_args()
 
 # Model name comes from command line
-modelName = args.name
+MODEL_NAME = ARGS.name
 
 # create cemo model
-# TODO expose nemret and regionrate to args
-model = create_model(modelName, unslim=args.unserved, emitlimit=args.emissions)
+MODEL = create_model(MODEL_NAME,
+                     unslim=ARGS.unserved,
+                     emitlimit=check_arg(MODEL_NAME, 'nem_year_emit_limit'),
+                     nem_disp_ratio=check_arg(MODEL_NAME, 'nem_disp_ratio'),
+                     nem_ret_ratio=check_arg(MODEL_NAME, 'nem_ret_ratio'),
+                     nem_ret_gwh=check_arg(MODEL_NAME, 'nem_ret_gwh'),
+                     region_ret_ratio=check_arg(MODEL_NAME, 'region_ret_ratio'),
+                     nem_re_disp_ratio=check_arg(MODEL_NAME, 'nem_re_disp_ratio'))
 # create a specific instance using file modelName.dat
 try:
-    instance = model.create_instance(modelName + '.dat')
+    INSTANCE = MODEL.create_instance(MODEL_NAME + '.dat')
 except Exception as ex:
     print("openCEM solve.py: ", ex)
     sys.exit(1)  # exit gracefully if file does not exist
 
 # Produce only a debugging printout of model and then exit
-if args.printonly:
-    cemo.utils.printonly(instance, args.printonly)  # print requested keys
+if ARGS.printonly:
+    cemo.utils.printonly(INSTANCE, ARGS.printonly)  # print requested keys
     sys.exit(0)  # exit with no error
 
 # declare a solver for the model instance
-opt = SolverFactory(args.solver)
+OPT = SolverFactory(ARGS.solver)
 
 # Use multiple threads for CBC solver (if available)
 # TODO pass solver options via command line interface
-if args.solver == "cbc":
-    opt.options['threads'] = 4
-    opt.options['ratio'] = 0.0001
+if ARGS.solver == "cbc":
+    OPT.options['threads'] = 4
+    OPT.options['ratio'] = 0.0001
 
 # instruct the solver to calculate the solution
 print("openCEM solve.py: Runtime %s (pre solver)" %
-      str(datetime.timedelta(seconds=(time.time() - start_time)))
+      str(datetime.timedelta(seconds=(time.time() - START_TIME)))
       )
-results = opt.solve(instance, tee=args.verbose, keepfiles=False)
+RESULTS = OPT.solve(INSTANCE, tee=ARGS.verbose, keepfiles=False)
 print("openCEM solve.py: Runtime %s (post solver)" %
-      str(datetime.timedelta(seconds=(time.time() - start_time)))
+      str(datetime.timedelta(seconds=(time.time() - START_TIME)))
       )
-print("openCEM solve.py: Solver status %s" % results.solver.status)
-if results.solver.termination_condition == TerminationCondition.infeasible:
+print("openCEM solve.py: Solver status %s" % RESULTS.solver.status)
+if RESULTS.solver.termination_condition == TerminationCondition.infeasible:
     print("openCEM solve.py: Problem infeasible, no solution found.")
     sys.exit(1)
 # Produce YAML output of model results
-if args.yaml:
+if ARGS.yaml:
     # rescue actual results from instance
-    instance.solutions.store_to(results)
+    INSTANCE.solutions.store_to(RESULTS)
     # result object to write to json or yaml
-    results.write(filename=modelName + '.yaml', format='yaml')
+    RESULTS.write(filename=MODEL_NAME + '.yaml', format='yaml')
 
 # Produce pickle output of entire instance object
-if args.pickle:
-    pickle.dump(instance, open(modelName + '.p', 'wb'))
+if ARGS.pickle:
+    pickle.dump(INSTANCE, open(MODEL_NAME + '.p', 'wb'))
 
-if args.results:
-    cemo.utils.printstats(instance)
+if ARGS.results:
+    cemo.utils.printstats(INSTANCE)
 # Produce local plot of results
-if args.plot:
-    cemo.utils.plotresults(instance)
-    cemo.utils.plotcapacity(instance)
+if ARGS.plot:
+    cemo.utils.plotresults(INSTANCE)
+    cemo.utils.plotcapacity(INSTANCE)

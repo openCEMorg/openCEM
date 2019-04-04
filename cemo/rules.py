@@ -1,5 +1,12 @@
-# Module to host all the rules for the constraints in the abstract model
-
+"""Module to host all the rules applied to model"""
+__author__ = "José Zapata"
+__copyright__ = "Copyright 2018, ITP Renewables, Australia"
+__credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
+__license__ = "GPLv3"
+__version__ = "0.9.2"
+__maintainer__ = "José Zapata"
+__email__ = "jose.zapata@itpau.com.au"
+__status__ = "Development"
 from pyomo.environ import Constraint
 
 import cemo.const
@@ -12,8 +19,14 @@ def ScanForTechperZone(model):
         model.retire_gen_tech_per_zone[i].add(j)
     for (i, j) in model.fuel_gen_tech_in_zones:
         model.fuel_gen_tech_per_zone[i].add(j)
+    for (i, j) in model.commit_gen_tech_in_zones:
+        model.commit_gen_tech_per_zone[i].add(j)
     for (i, j) in model.re_gen_tech_in_zones:
         model.re_gen_tech_per_zone[i].add(j)
+    for (i, j) in model.disp_gen_tech_in_zones:
+        model.disp_gen_tech_per_zone[i].add(j)
+    for (i, j) in model.re_disp_gen_tech_in_zones:
+        model.re_disp_gen_tech_per_zone[i].add(j)
 
 
 def ScanForStorageperZone(model):
@@ -27,22 +40,20 @@ def ScanForHybridperZone(model):
 
 
 def ScanForZoneperRegion(model):
+    '''Generate tuples of zones in regions based on default or configured data'''
     for (i, j) in model.zones_in_regions:
-        model.zones_per_region[i].add(j)
+        if i in model.regions:
+            model.zones_per_region[i].add(j)
 
 
 def ScanForTransLineperRegion(model):
+    '''Generate (source,target) interconnector tuples based on default or configured data'''
     for (i, j) in model.region_intercons:
         model.intercon_per_region[i].add(j)
 
 
-def emissions(model, r):
-    return sum(model.fuel_emit_rate[n] * model.gen_disp[z, n, t]
-               for z in model.zones_per_region[r]
-               for n in model.fuel_gen_tech_per_zone[z] for t in model.t)
-
-
 def dispatch(model, r):
+    '''calculate sum of all dispatch'''
     return sum(model.gen_disp[z, n, t]
                for z in model.zones_per_region[r]
                for n in model.gen_tech_per_zone[z]
@@ -57,7 +68,19 @@ def dispatch(model, r):
               for t in model.t)
 
 
-def con_nem_wide_ret(model):
+def emissions(model, r):
+    '''calculate emissions in kg'''
+    return (sum(model.fuel_emit_rate[n] * model.gen_disp[z, n, t]
+                for z in model.zones_per_region[r]
+                for n in model.fuel_gen_tech_per_zone[z]
+                for t in model.t) +
+            sum(model.fuel_emit_rate[n] * model.gen_disp_com_p[z, n, t]
+                for z in model.zones_per_region[r]
+                for n in model.commit_gen_tech_per_zone[z]
+                for t in model.t))
+
+
+def con_nem_ret_ratio(model):
     return sum(model.gen_disp[z, n, t]
                for r in model.regions
                for z in model.zones_per_region[r]
@@ -86,7 +109,82 @@ def con_nem_wide_ret(model):
     )
 
 
-def con_region_ret(model, r):
+# TODO a more transparent method to scale gwh from config file to mwh in model
+
+
+def con_nem_ret_gwh(model):
+    return sum(model.gen_disp[z, n, t]
+               for r in model.regions
+               for z in model.zones_per_region[r]
+               for n in model.re_gen_tech_per_zone[z]
+               for t in model.t
+               )\
+        + sum(model.hyb_disp[z, h, t]
+              for r in model.regions
+              for z in model.zones_per_region[r]
+              for h in model.hyb_tech_per_zone[z]
+              for t in model.t
+              )\
+        >= model.nem_ret_gwh * 1000 / model.year_correction_factor
+
+
+def con_nem_disp_ratio(model, r, t):
+    return sum(model.gen_disp[z, n, t]
+               for z in model.zones_per_region[r]
+               for n in model.disp_gen_tech_per_zone[z]
+               )\
+        + sum(model.stor_disp[z, s, t]
+              for z in model.zones_per_region[r]
+              for s in model.stor_tech_per_zone[z]
+              )\
+        + sum(model.hyb_disp[z, h, t]
+              for z in model.zones_per_region[r]
+              for h in model.hyb_tech_per_zone[z]
+              )\
+        >= model.nem_disp_ratio * (sum(model.gen_disp[z, n, t]
+                                       for z in model.zones_per_region[r]
+                                       for n in model.gen_tech_per_zone[z]
+                                       )
+                                   + sum(model.stor_disp[z, s, t]
+                                         for z in model.zones_per_region[r]
+                                         for s in model.stor_tech_per_zone[z]
+                                         )
+                                   + sum(model.hyb_disp[z, h, t]
+                                         for z in model.zones_per_region[r]
+                                         for h in model.hyb_tech_per_zone[z]
+                                         )
+                                   )
+
+
+def con_nem_re_disp_ratio(model, r, t):
+    return sum(model.gen_disp[z, n, t]
+               for z in model.zones_per_region[r]
+               for n in model.re_disp_gen_tech_per_zone[z]
+               )\
+        + sum(model.stor_disp[z, s, t]
+              for z in model.zones_per_region[r]
+              for s in model.stor_tech_per_zone[z]
+              )\
+        + sum(model.hyb_disp[z, h, t]
+              for z in model.zones_per_region[r]
+              for h in model.hyb_tech_per_zone[z]
+              )\
+        >= model.nem_re_disp_ratio * (sum(model.gen_disp[z, n, t]
+                                          for z in model.zones_per_region[r]
+                                          for n in model.gen_tech_per_zone[z]
+                                          )
+                                      + sum(model.stor_disp[z, s, t]
+                                            for z in model.zones_per_region[r]
+                                            for s in model.stor_tech_per_zone[z]
+                                            )
+                                      + sum(model.hyb_disp[z, h, t]
+                                            for z in model.zones_per_region[r]
+                                            for h in model.hyb_tech_per_zone[z]
+                                            )
+                                      )
+
+
+def con_region_ret_ratio(model, r):
     return sum(model.gen_disp[z, n, t]
                for z in model.zones_per_region[r]
                for n in model.re_gen_tech_per_zone[z]
@@ -123,6 +221,7 @@ def con_max_mwh_as_cap_factor(model, zone, tech):
 
 
 def con_maxmhw(model, z, n):
+    '''limit maximum generation over a period, scaled to yearly'''
     if n == 18:  # hydro only
         return sum(model.gen_disp[z, n, t] for t in model.t)\
             <= model.hydro_gen_mwh_limit[z] / model.year_correction_factor
@@ -197,120 +296,133 @@ def con_ldbal(model, r, t):
         + sum(model.stor_disp[z, s, t]
               for z in model.zones_per_region[r] for s in model.stor_tech_per_zone[z])\
         == model.region_net_demand[r, t]\
-        + sum((1 + model.intercon_prop_factor[r, p]) * model.intercon_disp[r, p, t]
+        + sum((1.0 + model.intercon_prop_factor[r, p]) * model.intercon_disp[r, p, t]
               for p in model.intercon_per_region[r])\
         + sum(model.stor_charge[z, s, t]
               for z in model.zones_per_region[r] for s in model.stor_tech_per_zone[z])\
         + model.surplus[r, t]
 
 
-def con_maxcap(model, z, n):  # z and n come both from TechinZones
+def con_maxcap(model, z, n):
+    '''Prevent resulting operational capacity to exceed build limits'''
     return model.gen_cap_op[z, n] <= model.gen_build_limit[z, n]
 
 
-def con_caplim(model, z, n, t):  # z and n come both from TechinZones
-    return model.gen_disp[z, n, t] \
-        <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
-
-
 def con_emissions(model):
-    '''Emission constraint for the NEM in GT/y for total emissions'''
+    '''Emission constraint for the NEM in MT/y for total emissions'''
     return model.year_correction_factor * sum(
         emissions(model, r)
         for r in model.regions) <= 1e9 * model.nem_year_emit_limit
 
 
 def con_slackretire(model, z, n):
+    '''Adjust for exogenous retires exceeding existing capacity'''
     return model.gen_cap_initial[z, n] - model.ret_gen_cap_exo[
         z, n] + model.gen_cap_ret_neg[z, n] >= 0
 
 
-def con_opcap(model, z, n):  # z and n come both from TechinZones
+def con_slackbuild(model, z, n):
+    '''Adjust for exogenous builds exceding build limits'''
+    return model.gen_cap_initial[z, n] + model.gen_cap_exo[
+        z, n] - model.gen_cap_exo_neg[z, n] <= model.gen_build_limit[z, n]
 
+
+def con_opcap(model, z, n):  # z and n come both from TechinZones
+    '''Calculate operating capacity as the net of model and exogenous decisions'''
     if n in model.nobuild_gen_tech:
         if n in model.retire_gen_tech:
             return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
-                + model.gen_cap_exo[z, n]\
+                + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
                 - model.gen_cap_ret[z, n] - \
                 (model.ret_gen_cap_exo[z, n] - model.gen_cap_ret_neg[z, n])
-        else:
-            return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
-                + model.gen_cap_exo[z, n]
+        return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
+            + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])
 
     else:
         if n in model.retire_gen_tech:
             return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
-                + model.gen_cap_exo[z, n]\
+                + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
                 + model.gen_cap_new[z, n]\
                 - model.gen_cap_ret[z, n] - \
                 (model.ret_gen_cap_exo[z, n] - model.gen_cap_ret_neg[z, n])
-        else:
-            return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n]\
-                + model.gen_cap_exo[z, n]\
-                + model.gen_cap_new[z, n]
+        return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n]\
+            + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
+            + model.gen_cap_new[z, n]
 
 
 def con_stcap(model, z, s):  # z and n come both from TechinZones
     if s in model.nobuild_gen_tech:
         return model.stor_cap_op[z, s] == model.stor_cap_initial[z, s] \
             + model.stor_cap_exo[z, s]
-    else:
-        return model.stor_cap_op[z, s] == model.stor_cap_initial[z, s]\
-            + model.stor_cap_exo[z, s]\
-            + model.stor_cap_new[z, s]
-
-    if s in model.nobuild_gen_tech:
-        if s in model.retire_gen_tech:
-            return model.gen_cap_op[z, s] == model.gen_cap_initial[z, s] \
-                + model.gen_cap_exo[z, s]\
-                - model.gen_cap_ret[z, s] - \
-                (model.ret_gen_cap_exo[z, s] - model.gen_cap_ret_neg[z, s])
-        else:
-            return model.gen_cap_op[z, s] == model.gen_cap_initial[z, s] \
-                + model.gen_cap_exo[z, s]
+    return model.stor_cap_op[z, s] == model.stor_cap_initial[z, s]\
+        + model.stor_cap_exo[z, s]\
+        + model.stor_cap_new[z, s]
 
 
 def con_hycap(model, z, h):  # z and n come both from TechinZones
     if h in model.nobuild_gen_tech:
         return model.hyb_cap_op[z, h] == model.hyb_cap_initial[z, h] \
             + model.hyb_cap_exo[z, h]
-    else:
-        return model.hyb_cap_op[z, h] == model.hyb_cap_initial[z, h]\
-            + model.hyb_cap_exo[z, h]\
-            + model.hyb_cap_new[z, h]
+    return model.hyb_cap_op[z, h] == model.hyb_cap_initial[z, h]\
+        + model.hyb_cap_exo[z, h]\
+        + model.hyb_cap_new[z, h]
 
 
-# IDEA generate set as to reduce delta variables
-def con_ramp_up(model, z, n, t):
-    if cemo.const.DEFAULT_GEN_RAMP_PENALTY.get(n) is not None:
-        if t == model.t.first():
-            # cemo.const.DEFAULT_GEN_RAMP_RATE.get(n)
-            return model.gen_disp[z, n, t] - model.gen_disp[
-                z, n, model.t.last()] <= model.ramp_up_delta[z, n, t]
-        # cemo.const.DEFAULT_GEN_RAMP_RATE.get(n)
-        return model.gen_disp[z, n, t] - model.gen_disp[
-            z, n, model.t.prev(t)] <= model.ramp_up_delta[z, n, t]
-    return Constraint.Skip
+def con_caplim(model, z, n, t):  # z and n come both from TechinZones
+    '''Dispatch within the hourly limit on capacity factor for operating capacity'''
+    if cemo.const.GEN_COMMIT['penalty'].get(n) is not None:
+        return model.gen_disp_com[
+            z, n, t] <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+    return model.gen_disp[z, n, t] \
+        <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
 
 
-def con_ramp_down(model, z, n, t):
-    if cemo.const.DEFAULT_GEN_RAMP_PENALTY.get(n) is not None:
-        if t == model.t.first():
-            # cemo.const.DEFAULT_GEN_RAMP_RATE.get(n)
-            return model.gen_disp[z, n, model.t.last(
-            )] - model.gen_disp[z, n, t] <= model.ramp_dn_delta[z, n, t]
-        # cemo.const.DEFAULT_GEN_RAMP_RATE.get(n)
-        return model.gen_disp[z, n, model.t.prev(t)] - model.gen_disp[
-            z, n, t] <= model.ramp_dn_delta[z, n, t]
-    return Constraint.Skip
+def con_min_load_commit(model, z, n, t):
+    '''Dispatch at least min% pct of committed capacity'''
+    mincap = cemo.const.GEN_COMMIT['mincap'].get(n)
+    return model.gen_disp[z, n, t] >= mincap * model.gen_disp_com[z, n, t]
+
+
+def con_disp_ramp_down(model, z, n, t):
+    '''dispatch less than ramp down commitment'''
+    ramp_dn = cemo.const.GEN_COMMIT['rate down'].get(n)
+    return model.gen_disp[z, n, t] <= model.gen_disp_com[z, n, t] +\
+        (ramp_dn - 1) * model.gen_disp_com_m[z, n, model.t.nextw(t)]
+
+
+def con_disp_ramp_up(model, z, n, t):
+    '''dispatch less than ramp up commitment'''
+    ramp_up = cemo.const.GEN_COMMIT['rate up'].get(n)
+    return model.gen_disp[z, n, t] <= model.gen_disp_com[z, n, model.t.prevw(t)] + \
+        ramp_up * model.gen_disp_com_p[z, n, t]
+
+
+def con_ramp_down_uptime(model, z, n, t):
+    '''commitment ramp down must respect up-time minimum'''
+    return model.gen_disp_com_m[z, n, t] <= model.gen_disp_com_s[z, n, t]
+
+
+def con_uptime_commitment(model, z, n, t):
+    '''capacity that can be switched off, observing up-time'''
+    uptime = cemo.const.GEN_COMMIT['uptime'].get(n)
+    return model.gen_disp_com_s[z, n, t] == model.gen_disp_com_s[z, n, model.t.prevw(t)] +\
+        model.gen_disp_com_p[z, n, model.t.prevw(t, k=uptime)] - model.gen_disp_com_m[z, n, t]
+
+
+def con_committed_cap(model, z, n, t):
+    '''Committed capacity for each time step'''
+    return model.gen_disp_com[z, n, t] == model.gen_disp_com[z, n, model.t.prevw(t)] -\
+        model.gen_disp_com_m[z, n, t] + model.gen_disp_com_p[z, n, model.t.prevw(t)]
 
 
 def con_uns(model, r):
+    '''constraint limiting unserved energy'''
     return sum(model.unserved[r, t] for t in model.t) \
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
 def cost_capital(model, z):
+    '''calculate build costs'''
     return sum(model.cost_gen_build[z, n] * (model.gen_cap_new[z, n] + model.gen_cap_exo[z, n])
                * model.fixed_charge_rate[n]
                for n in model.gen_tech_per_zone[z])\
@@ -324,6 +436,7 @@ def cost_capital(model, z):
 
 
 def cost_fixed(model):
+    ''' calculate FOM costs'''
     return sum(model.cost_gen_fom[n] * model.gen_cap_op[z, n]
                for z in model.zones
                for n in model.gen_tech_per_zone[z])\
@@ -347,13 +460,19 @@ def cost_operating(model):
             for t in model.t) +
         sum(model.cost_fuel[z, f] * model.fuel_heat_rate[z, f] *
             model.gen_disp[z, f, t] for z in model.zones
-            for f in model.fuel_gen_tech_per_zone[z] for t in model.t) + sum(
-                model.cost_stor_vom[s] * model.stor_disp[z, s, t]
-                for z in model.zones for s in model.stor_tech_per_zone[z]
-                for t in model.t) + sum(
-                    model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
-                    for z in model.zones for h in model.hyb_tech_per_zone[z]
-                    for t in model.t))
+            for f in model.fuel_gen_tech_per_zone[z]
+            for t in model.t) +
+        sum(model.cost_stor_vom[s] * model.stor_disp[z, s, t]
+            for z in model.zones for s in model.stor_tech_per_zone[z]
+            for t in model.t) +
+        sum(model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
+            for z in model.zones
+            for h in model.hyb_tech_per_zone[z] for t in model.t) +
+        sum(model.cost_fuel[z, n] *
+            cemo.const.GEN_COMMIT['penalty'].get(n, 0) * model.gen_disp_com_p[z, n, t]
+            for z in model.zones
+            for n in model.commit_gen_tech_per_zone[z]
+            for t in model.t))
 
 
 def cost_transmission(model):
@@ -377,18 +496,11 @@ def cost_shadow(model):
     return 10000000 * sum(model.gen_cap_ret_neg[z, n]
                           for z in model.zones
                           for n in model.retire_gen_tech_per_zone[z])\
+        + 10000000 * sum(model.gen_cap_exo_neg[z, n]
+                         for z in model.zones
+                         for n in model.gen_tech_per_zone[z])\
         + 10000 * sum(model.surplus[r, t] for r in model.regions
-                      for t in model.t)\
-        + model.year_correction_factor * (
-        sum(cemo.const.DEFAULT_GEN_RAMP_PENALTY.get(n, 0) * model.ramp_up_delta[z, n, t]
-            for z in model.zones
-            for n in model.gen_tech_per_zone[z]
-            for t in model.t)
-        + sum(cemo.const.DEFAULT_GEN_RAMP_PENALTY.get(n, 0) * model.ramp_dn_delta[z, n, t]
-              for z in model.zones
-              for n in model.gen_tech_per_zone[z]
-              for t in model.t)
-    )
+                      for t in model.t)
 
 
 def obj_cost(model):

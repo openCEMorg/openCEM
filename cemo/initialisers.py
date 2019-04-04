@@ -1,19 +1,39 @@
-# Module to host initialisers for sets and parameters
-# TODO is fuel price per zone too?
+"""Module to host initialisers for sets and parameters"""
+__author__ = "José Zapata"
+__copyright__ = "Copyright 2018, ITP Renewables, Australia"
+__credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
+__license__ = "GPLv3"
+__version__ = "0.9.2"
+__maintainer__ = "José Zapata"
+__email__ = "jose.zapata@itpau.com.au"
+__status__ = "Development"
 import calendar
 
 import cemo.const
 
 
-def init_AdjustYearFactor(model):
+def init_year_correction_factor(model):
     '''Calculate factor to adjust dispatch periods different to 8760 hours'''
-    ystr = model.t.first()
+    ystr = model.t.last()
     year = int(ystr[:4])
+    hours = 8760
     if calendar.isleap(year):
         hours = 8784
-    else:
-        hours = 8760
     return hours / len(model.t)
+
+
+def init_zones_in_regions(model):
+    '''Return zones in region tuples for declared regions'''
+    for i in cemo.const.ZONES_IN_REGIONS:
+        if i[0] in model.regions and i[1] in model.zones:
+            yield i
+
+
+def init_region_intercons(model):
+    '''Return regional interconnectors for declared regions'''
+    for i in cemo.const.REGION_INTERCONS:
+        if i[0] in model.regions and i[1] in model.regions:
+            yield i
 
 
 def init_stor_rt_eff(model, tech):
@@ -76,7 +96,7 @@ def init_fcr(model, tech):
 
 
 def init_cap_factor(model, zone, tech, time):
-    return cemo.const.DEFAULT_CAP_FACTOR.get(tech, 0)
+    return cemo.const.GEN_CAP_FACTOR.get(tech, 0)
 
 
 def init_max_hydro(model, zone):

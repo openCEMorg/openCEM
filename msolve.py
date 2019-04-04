@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""solve.py: Single model solver for openCEM"""
-__version__ = "0.1.1"
+"""msolve.py: Multi year solution wrapper openCEM"""
+__version__ = "0.9.2"
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
-__license__ = "?GPL"
+__license__ = "GPLv3"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
@@ -12,8 +12,6 @@ __status__ = "Development"
 import argparse
 import datetime
 import os
-import shutil
-import subprocess
 import time
 
 from cemo.multi import SolveTemplate
@@ -52,16 +50,31 @@ parser.add_argument(
 parser.add_argument(
     "--log",
     help="Request solver logging and traceback information",
-    action='store_true'
-)
+    action='store_true')
+
+parser.add_argument(
+    "-k",
+    "--keepfiles",
+    help=
+    "Save generated files onto a folder with the same name as the configuration file",
+    action='store_true')
 
 # parse arguments into args structure
 args = parser.parse_args()
 
 # Read configuration file name from
 cfgfile = args.config
+
 # create Multi year simulation
 X = SolveTemplate(cfgfile, solver=args.solver, log=args.log)
+
+# make a temporary directoy
+if args.keepfiles:
+    path = cfgfile.split(".")[0] + '/'
+    if not os.path.exists(path):
+        os.mkdir(path)
+    X.tmpdir = path
+
 # instruct the solver to launch the multi year simulation
 print("openCEM msolve.py: Runtime %s (pre solver)" % str(
     datetime.timedelta(seconds=(time.time() - start_time))))

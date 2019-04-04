@@ -7,8 +7,8 @@ The format has been determined in consultation with Jose Zapata.
 __author__ = "Andrew Hall"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["Andrew Hall", "José Zapata"]
-__license__ = "?GPL"
-__version__ = "0.0.1"
+__license__ = "GPLv3"
+__version__ = "0.9.2"
 __maintainer__ = "Andrew Hall"
 __email__ = "andrew.hall@itpau.com.au"
 __status__ = "Development"
@@ -103,16 +103,13 @@ def jsonify(inst):
                inst.hyb_cap_op.name: fill_complex_var(inst.hyb_cap_op),
                inst.gen_cap_ret.name: fill_complex_var(inst.gen_cap_ret),
                inst.gen_cap_ret_neg.name: fill_complex_var(inst.gen_cap_ret_neg),
+               inst.gen_cap_exo_neg.name: fill_complex_var(inst.gen_cap_exo_neg),
                inst.gen_disp.name: fill_complex_var(inst.gen_disp),
                inst.stor_disp.name: fill_complex_var(inst.stor_disp),
-               # REVIEW do we need this?
                inst.stor_charge.name: fill_complex_var(inst.stor_charge),
                inst.hyb_disp.name: fill_complex_var(inst.hyb_disp),
-               # REVIEW do we need this?
                inst.hyb_charge.name: fill_complex_var(inst.hyb_charge),
-               # REVIEW do we need this
                inst.stor_level.name: fill_complex_var(inst.stor_level),
-               # REVIEW do we need this?
                inst.hyb_level.name: fill_complex_var(inst.hyb_level),
                inst.unserved.name: fill_complex_var(inst.unserved),
                inst.surplus.name: fill_complex_var(inst.surplus),
@@ -127,9 +124,15 @@ def jsonify(inst):
         out['params'].update({inst.nem_year_emit_limit.name: inst.nem_year_emit_limit.value})
     if hasattr(inst, 'nem_ret_ratio'):
         out['params'].update({inst.nem_ret_ratio.name: inst.nem_ret_ratio.value})
+    if hasattr(inst, 'nem_ret_gwh'):
+        out['params'].update({inst.nem_ret_gwh.name: inst.nem_ret_gwh.value})
     if hasattr(inst, 'region_ret_ratio'):
         out['params'].update(
             {inst.region_ret_ratio.name: fill_scalar_key_param(inst.region_ret_ratio)})
+    if hasattr(inst, 'nem_disp_ratio'):
+        out['params'].update({inst.nem_disp_ratio.name: inst.nem_disp_ratio.value})
+    if hasattr(inst, 'nem_re_disp_ratio'):
+        out['params'].update({inst.nem_re_disp_ratio.name: inst.nem_re_disp_ratio.value})
     return out
 
 

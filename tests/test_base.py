@@ -1,5 +1,5 @@
 # openCEM tests for basic instantiation
-import pytest
+
 
 def test_model_creation(model, benchmark):
     assert model.name == benchmark.name, "Test model name does not match saved data"
