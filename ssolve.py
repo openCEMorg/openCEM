@@ -95,11 +95,7 @@ MODEL = create_model(MODEL_NAME,
                      region_ret_ratio=check_arg(MODEL_NAME, 'region_ret_ratio'),
                      nem_re_disp_ratio=check_arg(MODEL_NAME, 'nem_re_disp_ratio'))
 # create a specific instance using file modelName.dat
-try:
-    INSTANCE = MODEL.create_instance(MODEL_NAME + '.dat')
-except Exception as ex:
-    print("openCEM solve.py: ", ex)
-    sys.exit(1)  # exit gracefully if file does not exist
+INSTANCE = MODEL.create_instance(MODEL_NAME + '.dat')
 
 # Produce only a debugging printout of model and then exit
 if ARGS.printonly:
