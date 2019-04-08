@@ -49,7 +49,7 @@ def roundup(cap):
     Catching small negative numbers due to solver numerical tolerance.
     Let big negative numners pass to raise exception.
     '''
-    if cap > -1e-6 and cap < 0:
+    if -1e-6 < cap < 0:
         return 0
     return round(cap, 2)
 
