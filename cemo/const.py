@@ -225,8 +225,7 @@ DEFAULT_BUILD_LIMIT = {
         17: 0,
     },
     5: {
-        11: 4000 + 3000 + 1000 +
-        29.9,  # Brkn hill + 1/2 of Murray R + 1/2 of Riverland + existing
+        11: 4000 + 3000 + 1000 + 29.9,  # Brkn hill + 1/2 of Murray R + 1/2 of Riverland + existing
         12: 1870 + 1620 + 232.5 + 0,
         17: 620 + 527.5 + 77.5 + 199,  #
     },
