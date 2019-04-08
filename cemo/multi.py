@@ -339,7 +339,7 @@ class SolveTemplate:
 
     def tracetechs(self):  # TODO refactor this and how tech sets populate template
         self.fueltech = {}
-        self.committech ={}
+        self.committech = {}
         self.regentech = {}
         self.dispgentech = {}
         self.redispgentech = {}

@@ -48,7 +48,7 @@ def test_storage(solution, benchmark, zone, time, tech):
 @pytest.mark.parametrize("tech", [13])
 def test_hybrid(solution, benchmark, zone, time, tech):
     assert value(solution.hyb_disp[zone, tech, time]) \
-        == pytest.approx(value(benchmark.hyb_disp[zone, tech, time]),abs=1e-11)
+        == pytest.approx(value(benchmark.hyb_disp[zone, tech, time]), abs=1e-11)
 
 
 @pytest.mark.parametrize("tfrom,tto,time", [
