@@ -285,7 +285,7 @@ def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
     # Plot cluster result from full set of weeks, cluster weeks and weights
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots
-    f, axarr = plt.subplots(row, col, sharex=True)
+    axarr = plt.subplots(row, col, sharex=True)[1]
     # Plot each observation in their respective cluster plot
     for i in range(cluster.periods):
         axarr.flat[cluster.cluster[i] -
