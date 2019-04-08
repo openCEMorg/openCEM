@@ -281,7 +281,7 @@ def printstats(instance):
     print("End of results for %s" % instance.name, flush=True)
 
 
-def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):  # pragma: no cover
+def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
     # Plot cluster result from full set of weeks, cluster weeks and weights
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots
@@ -302,6 +302,10 @@ def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):  # pragma: no cover
                            marker='+')  # closest observation
     # make yrange the same in all plots
     for ax in axarr.flat:
-        ax.set_ylim(ylim[0], ylim[1])
+        if ylim is None:
+	        # default
+            ax.set_ylim(5500, 16000)
+        else:
+            ax.set_ylim(ylim[0], ylim[1])
     # Show results
     plt.show(figsize=(14, 9))
