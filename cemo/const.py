@@ -186,7 +186,7 @@ DEFAULT_RETIREMENT_COST = {
     11: 20975.96,
     12: 10487.98,
     16: 52439.9,
-    19: 52439.9  # FIXME Sould this be 10k like for gas?
+    19: 52439.9  # FIXME Should this be 10k like for gas?
 }
 
 DEFAULT_TECH_LIFETIME = {
