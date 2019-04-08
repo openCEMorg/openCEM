@@ -338,16 +338,15 @@ def con_opcap(model, z, n):  # z and n come both from TechinZones
         return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
             + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])
 
-    else:
-        if n in model.retire_gen_tech:
-            return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
-                + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
-                + model.gen_cap_new[z, n]\
-                - model.gen_cap_ret[z, n] - \
-                (model.ret_gen_cap_exo[z, n] - model.gen_cap_ret_neg[z, n])
-        return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n]\
+    if n in model.retire_gen_tech:
+        return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n] \
             + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
-            + model.gen_cap_new[z, n]
+            + model.gen_cap_new[z, n]\
+            - model.gen_cap_ret[z, n] - \
+            (model.ret_gen_cap_exo[z, n] - model.gen_cap_ret_neg[z, n])
+    return model.gen_cap_op[z, n] == model.gen_cap_initial[z, n]\
+        + (model.gen_cap_exo[z, n] - model.gen_cap_exo_neg[z, n])\
+        + model.gen_cap_new[z, n]
 
 
 def con_stcap(model, z, s):  # z and n come both from TechinZones
