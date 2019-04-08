@@ -211,7 +211,7 @@ def _printemissionrate(instance):
     emrate = sum(value(cemo.rules.emissions(instance, r))
                  for r in instance.regions) /\
         (sum(value(cemo.rules.dispatch(instance, r)) for r in instance.regions)+1.0e-12)
-    print("Total Emission rate: %s kg/MWh" % str(emrate))
+    print("Total Emission rate: %6.3f kg/MWh" % emrate)
 
 
 def _printunserved(instance):

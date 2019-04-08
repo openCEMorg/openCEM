@@ -19,5 +19,5 @@ Unserved cost:	                $0.00
 Emission cost:	                $0.00
 Retirmt cost:	                $0.00
 Unserved %:[0. 0. 0. 0. 0.]
-Total Emission rate: 516.5884733858522 kg/MWh
+Total Emission rate: 516.588 kg/MWh
 End of results for CTV_trans
