@@ -48,7 +48,7 @@ def _techsinregion(instance, region):  # pragma: no cover
         techsinregion = techsinregion | instance.gen_tech_per_zone[z]()
         techsinregion = techsinregion | instance.hyb_tech_per_zone[z]()
         techsinregion = techsinregion | instance.stor_tech_per_zone[z]()
-    return sorted(techsinregion, key=lambda x: cemo.const.DISPLAY_ORDER.index(x))
+    return sorted(techsinregion, key=cemo.const.DISPLAY_ORDER.index)
 
 
 def palette(instance, techsinregion):  # pragma: no cover
