@@ -48,7 +48,7 @@ def _techsinregion(instance, region):  # pragma: no cover
         techsinregion = techsinregion | instance.gen_tech_per_zone[z]()
         techsinregion = techsinregion | instance.hyb_tech_per_zone[z]()
         techsinregion = techsinregion | instance.stor_tech_per_zone[z]()
-    return sorted(techsinregion, key=lambda x: cemo.const.DISPLAY_ORDER.index(x))
+    return sorted(techsinregion, key=cemo.const.DISPLAY_ORDER.index)
 
 
 def palette(instance, techsinregion):  # pragma: no cover
@@ -281,11 +281,11 @@ def printstats(instance):
     print("End of results for %s" % instance.name, flush=True)
 
 
-def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):  # pragma: no cover
+def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
     # Plot cluster result from full set of weeks, cluster weeks and weights
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots
-    f, axarr = plt.subplots(row, col, sharex=True)
+    axarr = plt.subplots(row, col, sharex=True)[1]
     # Plot each observation in their respective cluster plot
     for i in range(cluster.periods):
         axarr.flat[cluster.cluster[i] -
@@ -302,6 +302,10 @@ def plotcluster(cluster, row=3, col=4, ylim=[5500, 16000]):  # pragma: no cover
                            marker='+')  # closest observation
     # make yrange the same in all plots
     for ax in axarr.flat:
-        ax.set_ylim(ylim[0], ylim[1])
+        if ylim is None:
+            # default
+            ax.set_ylim(5500, 16000)
+        else:
+            ax.set_ylim(ylim[0], ylim[1])
     # Show results
     plt.show(figsize=(14, 9))

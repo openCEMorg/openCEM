@@ -138,10 +138,10 @@ def jsonify(inst):
 
 def jsoninit(inst):
     '''Produce JSON output sufficient to initialise a cemo model'''
-    input = jsonify(inst)
+    inp = jsonify(inst)
     out = {}
-    out.update(input['sets'])
-    out.update(input['params'])
+    out.update(inp['sets'])
+    out.update(inp['params'])
 
     del out['zones_per_region']
     del out['gen_tech_per_zone']

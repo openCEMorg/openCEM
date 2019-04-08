@@ -49,7 +49,7 @@ def roundup(cap):
     Catching small negative numbers due to solver numerical tolerance.
     Let big negative numners pass to raise exception.
     '''
-    if cap > -1e-6 and cap < 0:
+    if -1e-6 < cap < 0:
         return 0
     return round(cap, 2)
 
@@ -119,12 +119,12 @@ class SolveTemplate:
             self.nem_re_disp_ratio = json.loads(Scenario['nem_re_disp_ratio'])
         # Keep track of policy options to configure model instances down the line
         self.model_options = {
-            'nem_ret_ratio': (True if self.nem_ret_ratio is not None else False),
-            'nem_ret_gwh': (True if self.nem_ret_gwh is not None else False),
-            'region_ret_ratio': (True if self.region_ret_ratio is not None else False),
-            'emitlimit': (True if self.emitlimit is not None else False),
-            'nem_disp_ratio': (True if self.nem_disp_ratio is not None else False),
-            'nem_re_disp_ratio': (True if self.nem_re_disp_ratio is not None else False),
+            'nem_ret_ratio': self.nem_ret_ratio is not None,
+            'nem_ret_gwh': self.nem_ret_gwh is not None,
+            'region_ret_ratio': self.region_ret_ratio is not None,
+            'emitlimit': self.emitlimit is not None,
+            'nem_disp_ratio': self.nem_disp_ratio is not None,
+            'nem_re_disp_ratio': self.nem_re_disp_ratio is not None
         }
 
         self.discountrate = Scenario['discountrate']
