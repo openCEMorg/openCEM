@@ -35,7 +35,7 @@ parser.add_argument(
     "config",
     help="Specify a configuration file for simulation" +
     " Note: Python configuration files named CONFIG.cfg",
-    type=lambda f: valid_file(f),
+    type=valid_file,
     metavar='CONFIG')
 # Obtain a solver name from command line, default cbc
 parser.add_argument(
