@@ -303,7 +303,7 @@ def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
     # make yrange the same in all plots
     for ax in axarr.flat:
         if ylim is None:
-	        # default
+            # default
             ax.set_ylim(5500, 16000)
         else:
             ax.set_ylim(ylim[0], ylim[1])
