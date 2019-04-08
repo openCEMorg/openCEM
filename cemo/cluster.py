@@ -42,12 +42,12 @@ class ClusterData:
                  firstdow=4,
                  lastdow=3,
                  max_d=12,
-                 regions=[1, 2, 3, 4, 5],
+                 regions=None,
                  maxsynth=False):
         self.firstdow = firstdow  # Day of week starting period
         self.lastdow = lastdow  # Day of week ending period`
         self.max_d = max_d  # Maximum number of clusters
-        self.regions = regions  # NEM region tuple
+        self.regions = range(1, 6) if regions is None else regions  # NEM region tuple
         self.maxsynth = maxsynth
 
         # make week pattern into a list
