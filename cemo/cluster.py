@@ -113,13 +113,13 @@ class ClusterData:
 
         return X1
 
-    def _calc_Xsynth(self, max=False):
+    def _calc_Xsynth(self, max_p=False):
         # empty array of synthetic individual in each cluster
         self.Xsynth = np.empty((self.max_d, self.nplen))
 
         for k in range(self.max_d):
             # calculate synthetic individual per clusters
-            if max:
+            if max_p:
                 self.Xsynth[k] = self.Xclus[k].max(axis=0)[:self.nplen]
             else:
                 self.Xsynth[k] = self.Xclus[k].mean(axis=0)[:self.nplen]
@@ -140,7 +140,7 @@ class ClusterData:
             self.Xclus[self.cluster[j] - 1] \
                 = np.row_stack((self.Xclus[self.cluster[j] - 1], X2[j, :]))
         # genereate Xsynth (by default is the max of all features in cluster)
-        self._calc_Xsynth(max=self.maxsynth)
+        self._calc_Xsynth(max_p=self.maxsynth)
 
         # Obtain the date index for the observation in each cluster
         # closest to their respective cluster mean
