@@ -61,14 +61,14 @@ def test_multi_bad_file(option, value):
 
 def test_multi_template_first():
     '''Tests generate first year template by comparing to known good result'''
-    X = SolveTemplate(cfgfile='tests/Sample.cfg')
+    X = SolveTemplate(cfgfile='tests/Sample.cfg',tmpdir='')
     X.generateyeartemplate(X.Years[0], test=True)
     assert filecmp.cmp(X.tmpdir + 'Sim2020.dat', 'tests/Sim2020.dat')
 
 
 def test_multi_template_second():
     '''Tests generate second (and later) year template by comparing to known good result'''
-    X = SolveTemplate(cfgfile='tests/Sample.cfg')
+    X = SolveTemplate(cfgfile='tests/Sample.cfg',tmpdir='')
     X.generateyeartemplate(X.Years[1], test=True)
     with open(X.tmpdir + 'Sim2025.dat') as ff:
         fromfile = ff.readlines()
