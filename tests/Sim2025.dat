@@ -572,7 +572,7 @@ FROM opex WHERE (source_id, technology_type_id) in
    FROM opex where technology_type_id in (13) GROUP BY technology_type_id);": [all_tech] cost_hyb_fom cost_hyb_vom;
 
 #Starting capacity (either cfrom capacity table or carry forward from previous)
-load '/tmp/tmpy2njl9hu/gen_cap_op2020.json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial;
+load 'gen_cap_op2020.json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial;
 
 # Exogenously commissioned capacity
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
@@ -665,7 +665,7 @@ param cost_gen_build:=
 #Custom cost entry for cost_stor_build
 param cost_stor_build:=
 13 14  888888.00
-5 21 2000000.00
+ 5 21 2000000.00
 ;
 #Custom cost entry for cost_gen_fom
 param cost_gen_fom:=
@@ -688,15 +688,15 @@ param cost_stor_vom:=
 
 #Exogenous capacity entry gen_cap_exo
 param gen_cap_exo:=
-8  12  500
+8 12     500.00
 ;
 #Exogenous capacity entry stor_cap_exo
 param stor_cap_exo:=
-5  21  2000
+5 21    2000.00
 ;
 #Exogenous capacity entry ret_gen_cap_exo
 param ret_gen_cap_exo:=
-8  4  600
+8 4     600.00
 ;
 
 #Discount rate for project
@@ -704,7 +704,7 @@ param all_tech_discount_rate := 0.06;
 #Cost of emissions $/Mhw
 param cost_emit:= 0.023;
 #Carry forward annualised capital costs
-load '/tmp/tmpy2njl9hu/gen_cap_op2020.json' : cost_cap_carry_forward;
+load 'gen_cap_op2020.json' : cost_cap_carry_forward;
 
  # NEM wide RET
 param nem_ret_ratio :=0.2;

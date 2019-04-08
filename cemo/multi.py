@@ -496,7 +496,12 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     exogenous_capacity += '#Exogenous capacity entry ' + key + '\n'
                     exogenous_capacity += 'param ' + key + ':=\n'
                     exogenous_capacity += cap[['zone', 'tech', 'value']
-                                              ].to_string(header=False, index=False)
+                                              ].to_string(header=False, index=False,
+                                                          formatters={
+                                                              'zone': lambda x: '%i' % x,
+                                                              'tech': lambda x: '%i' % x,
+                                                              'value': lambda x: '%10.2f' % x,
+                                                          })
                     exogenous_capacity += '\n;\n'
 
         return exogenous_capacity
