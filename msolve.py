@@ -55,8 +55,7 @@ parser.add_argument(
 parser.add_argument(
     "-k",
     "--keepfiles",
-    help=
-    "Save generated files onto a folder with the same name as the configuration file",
+    help="Save generated files onto a folder with the same name as the configuration file",
     action='store_true')
 
 # parse arguments into args structure
