@@ -1,25 +1,29 @@
+'''Test suite for jsonify module'''
+
 import json
 
 from cemo.jsonify import jsoninit
 
-def sort_func(x):
-    if type(x) is not int:
-        if type(x)==dict:
-            return x['index']
-    return x
 
-def dumped_data(x):
-    if type(x) not in [int,float,str]:
-        return json.dumps(sorted(x,key=sort_func))
-    return json.dumps(x)
+def sort_func(entry):
+    '''Sort list of dictionaries by index'''
+    if not isinstance(entry, int):
+        if isinstance(entry, dict):
+            return entry['index']
+    return entry
+
+
+def dumped_data(entry):
+    '''create sorted dumps of dictionary'''
+    if not isinstance(entry, (int, float, str)):
+        return json.dumps(sorted(entry, key=sort_func))
+    return json.dumps(entry)
+
 
 def test_json_init(solution):
+    '''Assert that generated jsoninit of solution matches known output'''
     data = jsoninit(solution)
-    with open('jsoninit_test.json', 'w') as f:
-        json.dump(data, f, indent=2)
-    with open('tests/jsoninit_test.json', 'r') as f1:
-        data2 = json.load(f1)
-    for key in data.keys():
-        print(key)
-        assert dumped_data(data[key])==dumped_data(data2[key])
-
+    with open('tests/jsoninit_test.json', 'r') as known:
+        data2 = json.load(known)
+    for key in data:
+        assert dumped_data(data[key]) == dumped_data(data2[key])
