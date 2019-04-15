@@ -1,5 +1,4 @@
 '''Unit test suite for multi.py module (multi year simulations)'''
-import filecmp
 import json
 import tempfile
 from difflib import SequenceMatcher
@@ -30,15 +29,15 @@ def test_multi_conf_file_not_found():
      ('nem_re_disp_ratio', 'nem_re_disp_ratio=[0,0,0,0,0,0]')])
 def test_multi_bad_cfg(option, value):
     ''' Assert validate bad config option by replacing known bad options in sample file'''
-    temp_file = tempfile.NamedTemporaryFile()
     with open('tests/Sample.cfg') as sample:
-        with open(temp_file.name, 'w') as temp_sample:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
                 temp_sample.write(line)
-    with pytest.raises(ValueError):
-        SolveTemplate(cfgfile=temp_file.name)
+                temp_sample.flush()
+            with pytest.raises(ValueError):
+                SolveTemplate(cfgfile=temp_sample.name)
 
 
 @pytest.mark.parametrize("option,value", [
@@ -48,22 +47,28 @@ def test_multi_bad_cfg(option, value):
 ])
 def test_multi_bad_file(option, value):
     ''' Assert that multi detects missing files in config'''
-    temp_file = tempfile.NamedTemporaryFile()
     with open('tests/Sample.cfg') as sample:
-        with open(temp_file.name, 'w') as temp_sample:
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
                 temp_sample.write(line)
-    with pytest.raises(OSError):
-        SolveTemplate(cfgfile=temp_file.name)
+            temp_sample.flush()
+            with pytest.raises(OSError):
+                SolveTemplate(cfgfile=temp_sample.name)
 
 
 def test_multi_template_first():
     '''Tests generate first year template by comparing to known good result'''
     multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg')
     multi_sim.generateyeartemplate(multi_sim.Years[0], test=True)
-    assert filecmp.cmp(multi_sim.tmpdir + 'Sim2020.dat', 'tests/Sim2020.dat')
+    with open(multi_sim.tmpdir + 'Sim2020.dat') as generated_template:
+        genfile = generated_template.readlines()
+    with open('tests/Sim2020.dat') as test_template:
+        testfile = test_template.readlines()
+    # Check that they are mostly the same
+    sequence = SequenceMatcher(None, genfile, testfile)
+    assert sequence.ratio() >= 0.99999999999
 
 
 def test_multi_template_second():
