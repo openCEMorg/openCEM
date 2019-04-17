@@ -1,5 +1,6 @@
 #!/bin/python3
 # -*- coding: utf-8 -*-
+# pylint: disable=bad-continuation
 '''
 Turn an evaluated cemo model instance into a JSON object.
 The format has been determined in consultation with Jose Zapata.
@@ -121,18 +122,22 @@ def jsonify(inst):
            'objective_value': value(inst.Obj - cost_shadow(inst))
            }
     if hasattr(inst, 'nem_year_emit_limit'):
-        out['params'].update({inst.nem_year_emit_limit.name: inst.nem_year_emit_limit.value})
+        out['params'].update(
+            {inst.nem_year_emit_limit.name: inst.nem_year_emit_limit.value})
     if hasattr(inst, 'nem_ret_ratio'):
-        out['params'].update({inst.nem_ret_ratio.name: inst.nem_ret_ratio.value})
+        out['params'].update(
+            {inst.nem_ret_ratio.name: inst.nem_ret_ratio.value})
     if hasattr(inst, 'nem_ret_gwh'):
         out['params'].update({inst.nem_ret_gwh.name: inst.nem_ret_gwh.value})
     if hasattr(inst, 'region_ret_ratio'):
         out['params'].update(
             {inst.region_ret_ratio.name: fill_scalar_key_param(inst.region_ret_ratio)})
     if hasattr(inst, 'nem_disp_ratio'):
-        out['params'].update({inst.nem_disp_ratio.name: inst.nem_disp_ratio.value})
+        out['params'].update(
+            {inst.nem_disp_ratio.name: inst.nem_disp_ratio.value})
     if hasattr(inst, 'nem_re_disp_ratio'):
-        out['params'].update({inst.nem_re_disp_ratio.name: inst.nem_re_disp_ratio.value})
+        out['params'].update(
+            {inst.nem_re_disp_ratio.name: inst.nem_re_disp_ratio.value})
     return out
 
 
@@ -150,9 +155,9 @@ def jsoninit(inst):
     del out['hyb_tech_per_zone']
     del out['stor_tech_per_zone']
     del out['intercon_per_region']
-    for o in out:
-        if isinstance(out[o], dict):
-            out.update({o: simple_as_complex(out[o])})
+    for entry in out:
+        if isinstance(out[entry], dict):
+            out.update({entry: simple_as_complex(out[entry])})
 
     return out
 
