@@ -162,7 +162,8 @@ class SolveTemplate:
         self.all_tech = cemo.const.TECH_TYPE.keys()
         if config.has_option('Advanced', 'all_tech'):
             self.all_tech = json.loads(Advanced['all_tech'])
-        self.all_tech_per_zone = dict(json.loads(Advanced['all_tech_per_zone']))
+        self.all_tech_per_zone = dict(
+            json.loads(Advanced['all_tech_per_zone']))
 
         self.tmpdir = tmpdir
         self.solver = solver
@@ -173,6 +174,7 @@ class SolveTemplate:
     # Validate configuration file entries before continuing
     @property
     def Years(self):
+        '''Property getter for Years'''
         return self._Years
 
     @Years.setter
@@ -185,6 +187,7 @@ class SolveTemplate:
 
     @property
     def discountrate(self):
+        '''Property getter for discountrate'''
         return self._discountrate
 
     @discountrate.setter
@@ -196,6 +199,7 @@ class SolveTemplate:
 
     @property
     def cost_emit(self):
+        '''Property getter for cost_emit'''
         return self._cost_emit
 
     @cost_emit.setter
@@ -211,6 +215,7 @@ class SolveTemplate:
 
     @property
     def nem_ret_ratio(self):
+        '''Property getter for nem_ret_ratio'''
         return self._nem_ret_ratio
 
     @nem_ret_ratio.setter
@@ -226,6 +231,7 @@ class SolveTemplate:
 
     @property
     def nem_ret_gwh(self):
+        '''Property getter for nem_ret_gwh'''
         return self._nem_ret_gwh
 
     @nem_ret_gwh.setter
@@ -241,6 +247,7 @@ class SolveTemplate:
 
     @property
     def region_ret_ratio(self):
+        '''Property getter for region_ret_ratio'''
         return self._region_ret_ratio
 
     @region_ret_ratio.setter
@@ -259,6 +266,7 @@ class SolveTemplate:
 
     @property
     def emitlimit(self):
+        '''Property getter for emitlimit'''
         return self._emitrate
 
     @emitlimit.setter
@@ -275,6 +283,7 @@ class SolveTemplate:
 
     @property
     def nem_disp_ratio(self):
+        '''Property getter for nem_disp_ratio'''
         return self._nem_disp_ratio
 
     @nem_disp_ratio.setter
@@ -291,6 +300,7 @@ class SolveTemplate:
 
     @property
     def nem_re_disp_ratio(self):
+        '''Property getter for nem_re_disp_ratio'''
         return self._nem_re_disp_ratio
 
     @nem_re_disp_ratio.setter
@@ -307,6 +317,7 @@ class SolveTemplate:
 
     @property
     def Template(self):
+        '''Propery setter for Template'''
         return self._Template
 
     @Template.setter
@@ -317,6 +328,7 @@ class SolveTemplate:
 
     @property
     def custom_costs(self):
+        '''Property setter for custom_costs'''
         return self._custom_costs
 
     @custom_costs.setter
@@ -328,6 +340,7 @@ class SolveTemplate:
 
     @property
     def exogenous_capacity(self):
+        '''Property setter for exogenous_capacity'''
         return self._exogenous_capacity
 
     @exogenous_capacity.setter
@@ -338,6 +351,7 @@ class SolveTemplate:
         self._exogenous_capacity = a
 
     def tracetechs(self):  # TODO refactor this and how tech sets populate template
+        '''Reproduce sparse sets to correctly populate templates'''
         self.fueltech = {}
         self.committech = {}
         self.regentech = {}
@@ -377,6 +391,10 @@ class SolveTemplate:
             })
 
     def carryforwardcap(self, year):
+        '''Generate initial capacity for each year.
+        For the first year it is a database query of the capacity table.
+        For subsequent years it is the net carry forward capacity stored in JSON
+        in the temporary directory'''
         if self.Years.index(year):
             prevyear = self.Years[self.Years.index(year) - 1]
             opcap0 = "load '" + self.tmpdir + "gen_cap_op" + \
@@ -427,6 +445,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         return carry_fwd_cost
 
     def produce_custom_costs(self, y):
+        '''Produce custom costs in template that override costs as defined
+        in template. Custom costs are specified in the configuration file as a
+        separate csv file read with pandas.
+        Template is a pyomo data command file where parameter
+        values correspond to the last data command instruction statement'''
         year = str(y)
         custom_costs = '\n'
         keywords = {
@@ -474,6 +497,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         return custom_costs
 
     def produce_exogenous_capacity(self, year):
+        '''Produce exogenous capacity builds in template based on instructions
+         from configuration file'''
         exogenous_capacity = '\n'
         keywords = {
             'gen_cap_exo': 'zonetech',
@@ -482,7 +507,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'ret_gen_cap_exo': 'zonetech',
         }
         if self.exogenous_capacity is not None:
-            capacity = pd.read_csv(self.exogenous_capacity, skipinitialspace=True)
+            capacity = pd.read_csv(
+                self.exogenous_capacity, skipinitialspace=True)
             prevyear = self.Years[self.Years.index(year) - 1]
             for key in keywords.keys():
                 cap = capacity[
@@ -508,11 +534,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
     def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
-        date1 = datetime.datetime(year-1, 7, 1, 0, 0, 0)
+        date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
         date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
         if test:
-            date2 = datetime.datetime(year-1, 7, 3, 23, 0, 0)
+            date2 = datetime.datetime(year - 1, 7, 3, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.tmpdir + 'Sim' + str(year) + '.dat'
@@ -528,7 +554,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         cemit = ""
         if self.cost_emit:
             cemit = "#Cost of emissions $/Mhw\n"\
-                + "param cost_emit:= " + str(self.cost_emit[self.Years.index(year)]) + ";\n"
+                + "param cost_emit:= " + \
+                    str(self.cost_emit[self.Years.index(year)]) + ";\n"
 
         nem_ret_ratio = ""
         if self.nem_ret_ratio:
@@ -575,9 +602,12 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         with open(self.Template, 'rt') as fin:
             with open(dcfName, 'w') as fo:
                 for line in fin:
-                    line = line.replace('[regions]', " ".join(str(i) for i in self.regions))
-                    line = line.replace('[zones]', " ".join(str(i) for i in self.zones))
-                    line = line.replace('[alltech]', " ".join(str(i) for i in self.all_tech))
+                    line = line.replace('[regions]', " ".join(
+                        str(i) for i in self.regions))
+                    line = line.replace('[zones]', " ".join(
+                        str(i) for i in self.zones))
+                    line = line.replace('[alltech]', " ".join(
+                        str(i) for i in self.all_tech))
                     line = line.replace('XXXX', str(year))
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))
@@ -607,10 +637,13 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace(
                         '[fueltechset]', " ".join(
                             str(i) for i in cemo.const.FUEL_TECH))
-                    line = line.replace('[committech]', dclist(self.committech))
+                    line = line.replace(
+                        '[committech]', dclist(self.committech))
                     line = line.replace('[regentech]', dclist(self.regentech))
-                    line = line.replace('[dispgentech]', dclist(self.dispgentech))
-                    line = line.replace('[redispgentech]', dclist(self.redispgentech))
+                    line = line.replace(
+                        '[dispgentech]', dclist(self.dispgentech))
+                    line = line.replace(
+                        '[redispgentech]', dclist(self.redispgentech))
                     line = line.replace(
                         '[stortechset]', " ".join(
                             str(i) for i in cemo.const.STOR_TECH))
