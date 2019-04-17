@@ -1,4 +1,5 @@
 '''Hierachical clustering of demand weeks for openCEM'''
+# pylint: disable=bad-continuation
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
@@ -45,10 +46,14 @@ class ClusterData:
     '''Demand clustering class.
       It takes a financial year of demand data for 1 or multiple regions and uses
       Hierachical clustering to group weekly periods of demand.
-      Individuals consist of the concatenated hourly demand for each region in a 7 day period defined by a first day of week and last day of week range.
-      The cityblock metric is used to measure the distance between indiviuals but other metrics are possible.
-      Class returns the weight of each cluster (number of individuals) and the representative individual for the cluster.
-      representative individuals are the closest to an average for the cluster.'''
+      Individuals consist of the concatenated hourly demand for each region in
+      a 7 day period defined by a first day of week and last day of week range.
+      The cityblock metric is used to measure the distance between indiviuals
+      but other metrics are possible.
+      Class returns the weight of each cluster (number of individuals) and the
+      representative individual for the cluster. Representative individuals are
+      the closest to an average for the cluster.'''
+
     def __init__(self,
                  firstdow=4,
                  lastdow=3,
@@ -58,7 +63,8 @@ class ClusterData:
         self.firstdow = firstdow  # Day of week starting period
         self.lastdow = lastdow  # Day of week ending period`
         self.max_d = max_d  # Maximum number of clusters
-        self.regions = range(1, 6) if regions is None else regions  # NEM region tuple
+        # NEM region tuple
+        self.regions = range(1, 6) if regions is None else regions
         self.maxsynth = maxsynth
 
         # make week pattern into a list
@@ -97,7 +103,8 @@ class ClusterData:
         df.set_index([df.index.date, df.index.time], inplace=True)
         df = df.unstack()
         # top and tail year to start and finish within week interval
-        first_doy = next_weekday(datetime.date(self.year-1, 7, 1), self.firstdow)
+        first_doy = next_weekday(datetime.date(
+            self.year - 1, 7, 1), self.firstdow)
         last_doy = prev_weekday(datetime.date(self.year, 6, 30), self.lastdow)
         df = df[df.index >= pd.to_datetime(first_doy)]
         df = df[df.index <= pd.to_datetime(last_doy)]
@@ -295,8 +302,10 @@ class ClusterRun:
             'parCondProbrep': parCondProb,
             'setScenariosrep': setScenarios,
             'paramScenLeafrep': paramScenLeaf,
-            'setstagevars1': 'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
-            'setstagevars2': 'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'setstagevars1':
+            'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'setstagevars2':
+            'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
             'stagecost': 'param StageCost := FS FSCost SS SSCost;',
         }
         with open(self.tmpdir + '/ScenarioStructure.dat', 'wt') as fo:
@@ -324,8 +333,9 @@ class ClusterRun:
             fo.write(refmodel)
 
     def run_cluster(self):
-        '''Create a stochastic program to run in pyomo runef based on demand clustering.
-           The objective is to find a set of capacity expansion decisions that work across all clusters'''
+        '''Create a stochastic program to run in pyomo runef based on demand
+         clustering. The objective is to find a set of capacity expansion
+         decisions that work across all clusters'''
         self._gen_dat_files()  # generate .dat files for cluster members
         self._gen_scen_struct()  # generate .dat file for runef tree
         self._gen_ref_model()  # generate reference model for runef
