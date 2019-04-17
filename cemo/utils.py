@@ -22,6 +22,7 @@ locale.setlocale(locale.LC_ALL, '')
 
 
 def printonly(instance, key):  # pragma: no cover
+    '''pprint specified instance variable and exit'''
     if key == "all":
         instance.pprint()  # pprint whole instance
     else:
@@ -34,6 +35,7 @@ def printonly(instance, key):  # pragma: no cover
 
 
 def _get_textid(table):
+    '''Return text label for technology from const module'''
     switch = {
         'technology_type': cemo.const.TECH_TYPE,
         'region': cemo.const.REGION
@@ -52,6 +54,7 @@ def _techsinregion(instance, region):  # pragma: no cover
 
 
 def palette(instance, techsinregion):  # pragma: no cover
+    '''Return a palette of tech colours for the set of techs in region given'''
     pal = cemo.const.PALETTE
     return [pal[k] for k in techsinregion]
 
@@ -282,7 +285,7 @@ def printstats(instance):
 
 
 def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
-    # Plot cluster result from full set of weeks, cluster weeks and weights
+    '''Plot cluster result from full set of weeks, cluster weeks and weights'''
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots
     axarr = plt.subplots(row, col, sharex=True)[1]
