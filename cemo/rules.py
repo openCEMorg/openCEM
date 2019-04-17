@@ -246,27 +246,15 @@ def con_maxcharge(model, z, s, t):
 
 
 def con_storcharge(model, z, s, t):
-    if t == model.t.first():
-        return model.stor_level[z, s, t] \
-            == model.stor_level[z, s, model.t.last()]\
-            - model.stor_disp[z, s, t] + \
-            model.stor_rt_eff[s] * model.stor_charge[z, s, t]
-
     return model.stor_level[z, s, t] \
-        == model.stor_level[z, s, model.t.prev(t)] \
+        == model.stor_level[z, s, model.t.prevw(t)] \
         - model.stor_disp[z, s, t] + \
         model.stor_rt_eff[s] * model.stor_charge[z, s, t]
 
 
 def con_hybcharge(model, z, h, t):
-    if t == model.t.first():
-        return model.hyb_level[z, h, t] \
-            == model.hyb_level[z, h, model.t.last()]\
-            - model.hyb_disp[z, h, t] \
-            + model.hyb_charge[z, h, t]
-
     return model.hyb_level[z, h, t] \
-        == model.hyb_level[z, h, model.t.prev(t)] \
+        == model.hyb_level[z, h, model.t.prevw(t)] \
         - model.hyb_disp[z, h, t] \
         + model.hyb_charge[z, h, t]
 
