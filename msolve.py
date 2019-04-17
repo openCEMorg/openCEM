@@ -18,6 +18,7 @@ from cemo.multi import SolveTemplate
 
 
 def valid_file(param):
+    '''Validates configuration file has the correct extension'''
     ext = os.path.splitext(param)[1]
     if ext not in ('.cfg'):
         raise argparse.ArgumentTypeError('File must have a cfg extension')
