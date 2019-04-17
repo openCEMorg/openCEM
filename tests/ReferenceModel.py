@@ -1,4 +1,4 @@
-# Temporary openCEM model instance for ReferenceModel.py
+'''Temporary openCEM model instance for runef simulations'''
 from cemo.model import create_model
 model = create_model('openCEM',
                      unslim=True,

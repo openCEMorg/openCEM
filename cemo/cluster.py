@@ -316,7 +316,7 @@ class ClusterRun:
     def _gen_ref_model(self):
         # Not pretty but it will do
         with open(self.tmpdir + '/ReferenceModel.py', 'wt') as fo:
-            refmodel = "# Temporary openCEM model instance for ReferenceModel.py\n"
+            refmodel = "'''Temporary openCEM model instance for runef simulations'''\n"
             refmodel += "from cemo.model import create_model\n"
             refmodel += "model = create_model('openCEM',\n"
             refmodel += "                     unslim=True,\n"
