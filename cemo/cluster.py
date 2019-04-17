@@ -1,4 +1,4 @@
-"""Hierachical clustering of demand weeks for openCEM"""
+'''Hierachical clustering of demand weeks for openCEM'''
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
@@ -23,21 +23,32 @@ from scipy.spatial.distance import pdist
 import cemo.jsonify
 
 
-def next_weekday(d, weekday):
-    days_ahead = weekday - d.weekday()
+def next_weekday(date, int_weekday):
+    '''Calculate next date from given date that is a specified weekday.
+    Weekdays are specified as integers from 0 (Mon) to 6(Sun) '''
+    days_ahead = int_weekday - date.weekday()
     if days_ahead < 0:  # Target day already happened this week
         days_ahead += 7
-    return d + datetime.timedelta(days_ahead)
+    return date + datetime.timedelta(days_ahead)
 
 
-def prev_weekday(d, weekday):
-    days_behind = d.weekday() - weekday
-    if days_behind > 7:  # Target day already happened this week
-        days_behind -= 7
-    return d - datetime.timedelta(days_behind)
+def prev_weekday(date, int_weekday):
+    '''Return closest date before given date that is a specified weekday.
+    Weekdays are specified as integers from 0 (Mon) to 6(Sun) '''
+    days_behind = date.weekday() - int_weekday
+    if days_behind < 0:  # Target day already happened this week
+        days_behind += 7
+    return date - datetime.timedelta(days_behind)
 
 
 class ClusterData:
+    '''Demand clustering class.
+      It takes a financial year of demand data for 1 or multiple regions and uses
+      Hierachical clustering to group weekly periods of demand.
+      Individuals consist of the concatenated hourly demand for each region in a 7 day period defined by a first day of week and last day of week range.
+      The cityblock metric is used to measure the distance between indiviuals but other metrics are possible.
+      Class returns the weight of each cluster (number of individuals) and the representative individual for the cluster.
+      representative individuals are the closest to an average for the cluster.'''
     def __init__(self,
                  firstdow=4,
                  lastdow=3,
@@ -313,6 +324,8 @@ class ClusterRun:
             fo.write(refmodel)
 
     def run_cluster(self):
+        '''Create a stochastic program to run in pyomo runef based on demand clustering.
+           The objective is to find a set of capacity expansion decisions that work across all clusters'''
         self._gen_dat_files()  # generate .dat files for cluster members
         self._gen_scen_struct()  # generate .dat file for runef tree
         self._gen_ref_model()  # generate reference model for runef
