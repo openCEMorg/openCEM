@@ -31,7 +31,7 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         con_disp_ramp_up, con_emissions, con_hybcharge,
                         con_hycap, con_ldbal, con_max_mwh_as_cap_factor,
                         con_maxcap, con_maxcharge, con_maxchargehy, con_maxmhw,
-                        con_maxtrans, con_min_load_commit, con_nem_disp_ratio,
+                        con_max_trans, con_min_load_commit, con_nem_disp_ratio,
                         con_nem_re_disp_ratio, con_nem_ret_gwh,
                         con_nem_ret_ratio, con_opcap, con_ramp_down_uptime,
                         con_region_ret_ratio, con_slackbuild, con_slackretire,
@@ -285,7 +285,7 @@ def create_model(namestr,
 
     # @@ Constraints
     # Transmission limits
-    m.transmax = Constraint(m.region_intercons, m.t, rule=con_maxtrans)
+    m.con_max_trans = Constraint(m.zone_intercons, m.t, rule=con_max_trans)
     # Load balance
     m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors

@@ -241,9 +241,10 @@ def con_maxmhw(model, z, n):
     return Constraint.Skip
 
 
-def con_maxtrans(model, r, p, t):
-    '''limit transmission per link to be less than its maximum'''
-    return model.intercon_disp[r, p, t] <= model.intercon_trans_limit[r, p]
+def con_max_trans(model, zone_source, zone_dest, t):
+    '''constrain hourly transmission per link to be less than capacity'''
+    return model.intercon_disp[zone_source, zone_dest, t] \
+        <= model.intercon_trans_limit[zone_source, zone_dest]
 
 
 def con_chargelim(model, z, s, t):
