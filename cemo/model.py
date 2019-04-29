@@ -287,7 +287,7 @@ def create_model(namestr,
     # Transmission limits
     m.transmax = Constraint(m.region_intercons, m.t, rule=con_maxtrans)
     # Load balance
-    m.ldbal = Constraint(m.regions, m.t, rule=con_ldbal)
+    m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors
     m.caplim = Constraint(m.gen_tech_in_zones, m.t, rule=con_caplim)
     # Limit maximum capacity to be built in each region and each technology
