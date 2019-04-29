@@ -410,7 +410,7 @@ class SolveTemplate:
         else:
             opcap0 = '''#operating capacity for all technilogies and regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -420,7 +420,7 @@ group by zones,all_tech;" : [zones,all_tech] gen_cap_initial;
 
 # operating capacity for all technilogies and regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -430,7 +430,7 @@ group by zones,all_tech;" : [zones,all_tech] stor_cap_initial;
 
 # operating capacity for all technilogies and regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
