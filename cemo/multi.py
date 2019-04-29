@@ -34,6 +34,13 @@ def sql_tech_pairs(techset):
     return "(" + ", ".join(map(str, out)) + ")"
 
 
+def sql_tech_list(tech_list):
+    """Format technology lists as a set for SQL query statement"""
+    if len(tech_list) == 0:
+        tech_list.append(99)  # return non empty set to preserve query syntax if list is empty
+    return ", ".join(map(str, tech_list))
+
+
 def dclist(techset):
     """Generate a technology set for a data command statement"""
     out = ""
@@ -611,24 +618,22 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('XXXX', str(year))
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))
-                    line = line.replace(
-                        '[gentechlist]', ", ".join(
-                            str(i) for i in cemo.const.GEN_TECH if i in self.all_tech))
                     line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
+                    line = line.replace('[gentechlist]',
+                                        sql_tech_list([tech for tech in cemo.const.GEN_TECH
+                                                       if tech in self.all_tech]))
                     line = line.replace('[stortech]', dclist(self.stortech))
-                    line = line.replace(
-                        '[stortechlist]', ", ".join(
-                            str(i) for i in cemo.const.STOR_TECH if i in self.all_tech))
                     line = line.replace('[stortechdb]', sql_tech_pairs(self.stortech))
+                    line = line.replace('[stortechlist]', sql_tech_list([
+                        tech for tech in cemo.const.STOR_TECH if tech in self.all_tech]))
                     line = line.replace('[hybtech]', dclist(self.hybtech))
-                    line = line.replace(
-                        '[hybtechlist]', ", ".join(
-                            str(i) for i in cemo.const.HYB_TECH if i in self.all_tech))
                     line = line.replace('[hybtechdb]', sql_tech_pairs(self.hybtech))
+                    line = line.replace('[hybtechlist]', sql_tech_list(
+                        [tech for tech in cemo.const.HYB_TECH if tech in self.all_tech]))
                     line = line.replace('[retiretech]',
                                         dclist(self.retiretech))
                     line = line.replace('[retiretechdb]',
-                                        sqllist(self.retiretech))
+                                        sql_tech_pairs(self.retiretech))
                     line = line.replace(
                         '[retiretechset]', " ".join(
                             str(i) for i in cemo.const.RETIRE_TECH))
