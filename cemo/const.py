@@ -86,6 +86,87 @@ REGION_INTERCONS = [
     (2, 1),
 ]
 
+ZONE_INTERCONS = {
+    1: {
+        2: {'loss': 0, 'limit': 1}
+    },
+    2: {
+        1: {'loss': 0, 'limit': 1},
+        3: {'loss': 0, 'limit': 1},
+        4: {'loss': 0, 'limit': 1}
+    },
+    3: {
+        2: {'loss': 0, 'limit': 1},
+        4: {'loss': 0, 'limit': 1},
+        8: {'loss': 0, 'limit': 1},
+    },
+    4: {
+        2: {'loss': 0, 'limit': 1},
+        3: {'loss': 0, 'limit': 1},
+        8: {'loss': 0, 'limit': 1},
+    },
+    5: {
+        6: {'loss': 0, 'limit': 1},
+        11: {'loss': 0, 'limit': 1},
+        12: {'loss': 0, 'limit': 1},
+        13: {'loss': 0, 'limit': 1},
+    },
+    6: {
+        5: {'loss': 0, 'limit': 1},
+        7: {'loss': 0, 'limit': 1},
+        12: {'loss': 0, 'limit': 1},
+    },
+    7: {
+        6: {'loss': 0, 'limit': 1},
+        8: {'loss': 0, 'limit': 1},
+    },
+    8: {
+        3: {'loss': 0, 'limit': 1},
+        4: {'loss': 0, 'limit': 1},
+        7: {'loss': 0, 'limit': 1},
+    },
+    9: {
+        10: {'loss': 0, 'limit': 1e10},
+        16: {'loss': 0.5, 'limit': 500},
+    },
+    10: {
+        9: {'loss': 0, 'limit': 1e10},
+        11: {'loss': 0, 'limit': 1e10},
+        12: {'loss': 0, 'limit': 1e10},
+        15: {'loss': 0, 'limit': 1e10},
+        16: {'loss': 0, 'limit': 0},
+    },
+    11: {
+        5: {'loss': 0, 'limit': 1e10},
+        10: {'loss': 0, 'limit': 1e10},
+        12: {'loss': 0, 'limit': 1e10},
+        13: {'loss': 0, 'limit': 1e10},
+    },
+    12: {
+        5: {'loss': 0, 'limit': 1e10},
+        6: {'loss': 0, 'limit': 1e10},
+        10: {'loss': 0, 'limit': 1e10},
+        11: {'loss': 0, 'limit': 1e10},
+    },
+    13: {
+        5: {'loss': 0, 'limit': 0},
+        11: {'loss': 0, 'limit': 1},
+        14: {'loss': 0, 'limit': 1},
+    },
+    14: {
+        13: {'loss': 0, 'limit': 1},
+        15: {'loss': 0, 'limit': 1},
+    },
+    15: {
+        10: {'loss': 0, 'limit': 1},
+        14: {'loss': 0, 'limit': 1},
+    },
+    16: {
+        9: {'loss': 0, 'limit': 500},
+        10: {'loss': 0, 'limit': 0},
+    }
+}
+
 INTERCON_PROP_FACTOR = {
     1: {
         2: 0.61,
