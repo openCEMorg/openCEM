@@ -20,11 +20,11 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_gen_build_limit, init_hyb_charge_hours,
                                init_hyb_col_mult, init_intercon_prop_factor,
                                init_intercon_trans_limit, init_max_hydro,
-                               init_region_intercons, init_stor_charge_hours,
+                               init_zone_intercons, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
                                init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
-                        ScanForTechperZone, ScanForTransLineperRegion,
+                        ScanForTechperZone, build_intercon_per_zone,
                         ScanForZoneperRegion, con_caplim, con_chargelim,
                         con_chargelimhy, con_committed_cap, con_dischargelim,
                         con_dischargelimhy, con_disp_ramp_down,
@@ -91,7 +91,7 @@ def create_model(namestr,
     # Set listing storage avaialable per zone (like a sparsity pattern)
     m.stor_tech_in_zones = Set(dimen=2)
     # Set listing transmission lines to other regions in each region
-    m.region_intercons = Set(dimen=2, initialize=init_region_intercons)
+    m.zone_intercons = Set(dimen=2, initialize=init_zone_intercons)
 
     # sparse sets built by build actions
     # Returns a list of planning zones for each region in R
@@ -113,7 +113,7 @@ def create_model(namestr,
     # Returns a tuple with emitting techs in each zone
     m.hyb_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
     # returns a tuple with transmission links in each region
-    m.intercon_per_region = Set(m.regions, initialize=[])
+    m.intercon_per_zone = Set(m.zones, initialize=[])
 
     # @@ Build actions
     # Scan TechinZones and populate ?_gen_tech_per_zone
@@ -122,8 +122,8 @@ def create_model(namestr,
     m.HpZ_build = BuildAction(rule=ScanForHybridperZone)
     # Scan ZinR and populate ZperR
     m.ZpR_build = BuildAction(rule=ScanForZoneperRegion)
-    # Scan TransLines and populate intercon_per_region
-    m.TrpR_build = BuildAction(rule=ScanForTransLineperRegion)
+    # Scan TransLines and populate intercon_per_zone
+    m.intercon_build = BuildAction(rule=build_intercon_per_zone)
     # Scan StorinZones and populate stor_tech_per_zone
     m.SpZ_build = BuildAction(rule=ScanForStorageperZone)
 
@@ -186,7 +186,7 @@ def create_model(namestr,
         m.fuel_gen_tech, initialize=init_default_fuel_emit_rate)
     # proportioning factors for notional interconnectors
     m.intercon_prop_factor = Param(
-        m.region_intercons, initialize=init_intercon_prop_factor)
+        m.zone_intercons, initialize=init_intercon_prop_factor)
 
     m.gen_cap_factor = Param(
         m.gen_tech_in_zones, m.t,
@@ -218,7 +218,7 @@ def create_model(namestr,
     m.hydro_gen_mwh_limit = Param(m.zones, initialize=init_max_hydro)
     # Transmission line limits
     m.intercon_trans_limit = Param(
-        m.region_intercons, initialize=init_intercon_trans_limit)
+        m.zone_intercons, initialize=init_intercon_trans_limit)
 
     # carry forward capital costs
     m.cost_cap_carry_forward = Param(m.zones, default=0)
@@ -281,7 +281,7 @@ def create_model(namestr,
     m.surplus = Var(
         m.regions, m.t, within=NonNegativeReals)  # surplus power (if any)
 
-    m.intercon_disp = Var(m.region_intercons, m.t, within=NonNegativeReals)
+    m.intercon_disp = Var(m.zone_intercons, m.t, within=NonNegativeReals)
 
     # @@ Constraints
     # Transmission limits

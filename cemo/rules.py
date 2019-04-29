@@ -49,10 +49,10 @@ def ScanForZoneperRegion(model):
             model.zones_per_region[i].add(j)
 
 
-def ScanForTransLineperRegion(model):
-    '''Generate (source,target) interconnector tuples based on default or configured data'''
-    for (i, j) in model.region_intercons:
-        model.intercon_per_region[i].add(j)
+def build_intercon_per_zone(model):
+    '''Generate (source,target) interconnector tuples based on default or supplied data'''
+    for (i, j) in model.zone_intercons:
+        model.intercon_per_zone[i].add(j)
 
 
 def dispatch(model, r):
