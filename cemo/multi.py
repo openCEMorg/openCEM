@@ -23,14 +23,14 @@ from cemo.model import create_model
 from cemo.utils import printstats
 
 
-def sqllist(techset):
-    """Generate a technology set for SQL statement"""
+def sql_tech_pairs(techset):
+    """Format zone,tech pairs as a set for SQL query statement"""
     out = []
     for i in techset.keys():
         for j in techset[i]:
             out.append((i, j))
     if not out:
-        out.append((99, 99))  # preserve query syntax if list is empty
+        out.append((99, 99))  # return non empty set to preserve query syntax if list is empty
     return "(" + ", ".join(map(str, out)) + ")"
 
 
@@ -407,7 +407,7 @@ user=select password=select_password using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
-''' + sqllist(self.gentech) + '''
+''' + sql_tech_pairs(self.gentech) + '''
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] gen_cap_initial;
 
@@ -417,7 +417,7 @@ user=select password=select_password using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
-''' + sqllist(self.stortech) + '''
+''' + sql_tech_pairs(self.stortech) + '''
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] stor_cap_initial;
 
@@ -427,7 +427,7 @@ user=select password=select_password using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
-''' + sqllist(self.hybtech) + '''
+''' + sql_tech_pairs(self.hybtech) + '''
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 '''
@@ -611,20 +611,20 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('XXXX', str(year))
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))
-                    line = line.replace('[gentechdb]', sqllist(self.gentech))
                     line = line.replace(
                         '[gentechlist]', ", ".join(
                             str(i) for i in cemo.const.GEN_TECH if i in self.all_tech))
+                    line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
                     line = line.replace('[stortech]', dclist(self.stortech))
-                    line = line.replace('[stortechdb]', sqllist(self.stortech))
                     line = line.replace(
                         '[stortechlist]', ", ".join(
                             str(i) for i in cemo.const.STOR_TECH if i in self.all_tech))
+                    line = line.replace('[stortechdb]', sql_tech_pairs(self.stortech))
                     line = line.replace('[hybtech]', dclist(self.hybtech))
-                    line = line.replace('[hybtechdb]', sqllist(self.hybtech))
                     line = line.replace(
                         '[hybtechlist]', ", ".join(
                             str(i) for i in cemo.const.HYB_TECH if i in self.all_tech))
+                    line = line.replace('[hybtechdb]', sql_tech_pairs(self.hybtech))
                     line = line.replace('[retiretech]',
                                         dclist(self.retiretech))
                     line = line.replace('[retiretechdb]',
@@ -633,7 +633,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         '[retiretechset]', " ".join(
                             str(i) for i in cemo.const.RETIRE_TECH))
                     line = line.replace('[fueltech]', dclist(self.fueltech))
-                    line = line.replace('[fueltechdb]', sqllist(self.fueltech))
+                    line = line.replace('[fueltechdb]', sql_tech_pairs(self.fueltech))
                     line = line.replace(
                         '[fueltechset]', " ".join(
                             str(i) for i in cemo.const.FUEL_TECH))
