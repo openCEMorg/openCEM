@@ -277,7 +277,7 @@ def create_model(namestr,
         m.hyb_tech_in_zones, m.t,
         within=NonNegativeReals)  # Charge level for storage
 
-    m.unserved = Var(m.regions, m.t, within=NonNegativeReals)  # unserved power
+    m.unserved = Var(m.zones, m.t, within=NonNegativeReals)  # unserved power
     m.surplus = Var(
         m.regions, m.t, within=NonNegativeReals)  # surplus power (if any)
 

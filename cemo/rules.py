@@ -427,7 +427,7 @@ def con_committed_cap(model, z, n, t):
 
 def con_uns(model, r):
     '''constraint limiting unserved energy'''
-    return sum(model.unserved[r, t] for t in model.t) \
+    return sum(model.unserved[z, t] for z in model.zones_per_region[r] for t in model.t) \
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
@@ -461,7 +461,10 @@ def cost_fixed(model):
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
     return model.year_correction_factor * model.cost_unserved * sum(
-        model.unserved[r, t] for r in model.regions for t in model.t)
+        model.unserved[z, t]
+        for r in model.regions
+        for z in model.zones_per_region[r]
+        for t in model.t)
 
 
 def cost_operating(model):
