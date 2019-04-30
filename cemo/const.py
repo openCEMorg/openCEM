@@ -85,6 +85,91 @@ REGION_INTERCONS = [
     (1, 2),
     (2, 1),
 ]
+# Source Modelling Transmission Frameworks Review (EPR0019) Roam Consulting,
+# Table 4.4, 2029-2030 values, adapted to openCEM zones
+ZONE_DEMAND_PCT = {
+    1: {
+        'peak': 0.08,
+        'off peak': 0.18,
+        'prov': 'QLD'
+    },
+    2: {
+        'peak': 0.19,
+        'off peak': 0.31,
+        'prov': 'QLD'
+    },
+    3: {
+        'peak': 0.16,
+        'off peak': 0.15,
+        'prov': 'QLD'
+    },
+    4: {
+        'peak': 0.57,
+        'off peak': 0.36,
+        'prov': 'QLD'
+    },
+    5: {
+        'peak': 0.05,
+        'off peak': 0.07,
+        'prov': 'NSW'
+    },
+    6: {
+        'peak': 0.06,
+        'off peak': 0.05,
+        'prov': 'ACT'
+    },
+    7: {
+        'peak': 0.83,
+        'off peak': 0.84,
+        'prov': 'NSW'
+    },
+    8: {
+        'peak': 0.06,
+        'off peak': 0.04,
+        'prov': 'NSW'
+    },
+    9: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'VIC'
+
+    },
+    10: {
+        'peak': 0.82,
+        'off peak': 0.81,
+        'prov': 'VIC'
+    },
+    11: {
+        'peak': 0.08,
+        'off peak': 0.07,
+        'prov': 'VIC'
+    },
+    12: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'VIC'
+    },
+    13: {
+        'peak': 0.36,
+        'off peak': 0.55,
+        'prov': 'SA'
+    },
+    14: {
+        'peak': 0.59,
+        'off peak': 0.39,
+        'prov': 'SA'
+    },
+    15: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'SA'
+    },
+    16: {
+        'peak': 1.0,
+        'off peak': 1.0,
+        'prov': 'TAS'
+    }
+}
 
 ZONE_INTERCONS = {
     1: {
