@@ -58,7 +58,6 @@ def init_stor_charge_hours(model, tech):
 def init_zone_demand_factors(model, zone, timestamp):
     dt = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
     is_holiday = dt.date() not in holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov'))
-    print(is_holiday)
     is_peak = 'off peak'
     if dt.weekday() < 5 and 8 <= dt.hour < 20 and is_holiday:
         is_peak = 'peak'
@@ -77,7 +76,7 @@ def init_hyb_charge_hours(model, tech):
     return cemo.const.DEFAULT_HYB_PROPS["charge_hours"].get(tech, 0)
 
 
-def init_intercon_prop_factor(model, source, dest):
+def init_intercon_loss_factor(model, source, dest):
     # pylint: disable=unused-argument
     '''Initialise interconnector proportioning factors'''
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)

@@ -18,7 +18,7 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
                                init_gen_build_limit, init_hyb_charge_hours,
-                               init_hyb_col_mult, init_intercon_prop_factor,
+                               init_hyb_col_mult, init_intercon_loss_factor,
                                init_intercon_trans_limit, init_max_hydro,
                                init_zone_intercons, init_zone_demand_factors, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
@@ -185,8 +185,8 @@ def create_model(namestr,
     m.fuel_emit_rate = Param(
         m.fuel_gen_tech, initialize=init_default_fuel_emit_rate)
     # proportioning factors for notional interconnectors
-    m.intercon_prop_factor = Param(
-        m.zone_intercons, initialize=init_intercon_prop_factor)
+    m.intercon_loss_factor = Param(
+        m.zone_intercons, initialize=init_intercon_loss_factor)
 
     m.gen_cap_factor = Param(
         m.gen_tech_in_zones, m.t,
