@@ -20,7 +20,7 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_gen_build_limit, init_hyb_charge_hours,
                                init_hyb_col_mult, init_intercon_prop_factor,
                                init_intercon_trans_limit, init_max_hydro,
-                               init_zone_intercons, init_stor_charge_hours,
+                               init_zone_intercons, init_zone_demand_factors, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
                                init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
@@ -213,6 +213,8 @@ def create_model(namestr,
     m.ret_gen_cap_exo = Param(m.retire_gen_tech_in_zones, default=0)
     # Net Electrical load (may include rooftop and EV)
     m.region_net_demand = Param(m.regions, m.t)
+    # Zone load distribution factors as a pct of region demand
+    m.zone_demand_factor = Param(m.zones, m.t, initialize=init_zone_demand_factors)
 
     # Maximum hydro energy
     m.hydro_gen_mwh_limit = Param(m.zones, initialize=init_max_hydro)

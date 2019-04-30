@@ -8,8 +8,10 @@ __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
 import calendar
+import datetime
 
 import cemo.const
+import holidays
 
 
 def init_year_correction_factor(model):
@@ -51,6 +53,16 @@ def init_stor_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for storage tech'''
     return cemo.const.DEFAULT_STOR_PROPS["charge_hours"].get(tech, 0)
+
+
+def init_zone_demand_factors(model, zone, timestamp):
+    dt = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
+    is_holiday = dt.date() not in holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov'))
+    print(is_holiday)
+    is_peak = 'off peak'
+    if dt.weekday() < 5 and 8 <= dt.hour < 20 and is_holiday:
+        is_peak = 'peak'
+    return cemo.const.ZONE_DEMAND_PCT.get(zone).get(is_peak)
 
 
 def init_hyb_col_mult(model, tech):

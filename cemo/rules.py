@@ -10,6 +10,7 @@ __status__ = "Development"
 from pyomo.environ import Constraint
 
 import cemo.const
+from cemo.utils import region_in_zone
 
 
 def ScanForTechperZone(model):
@@ -303,7 +304,7 @@ def con_ldbal(model, z, t):
         + sum(model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
         + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
         + model.unserved[z, t]\
-        == model.zone_net_demand[z, t]\
+        == model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
         + sum((1.0 + model.intercon_loss_factor[z, p]) * model.intercon_disp[z, p, t]
               for p in model.intercon_per_zone[z])\
         + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
