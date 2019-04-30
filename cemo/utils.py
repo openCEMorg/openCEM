@@ -224,12 +224,16 @@ def _printemissionrate(instance):
 
 
 def _printunserved(instance):
-    uns = np.zeros(5, dtype=float)
-    for r in instance.regions:
-        uns[r - 1] = 100.0 * sum(value(instance.unserved[r, t])
-                                 for t in instance.t) / sum(value(instance.region_net_demand[r, t]) for t in instance.t)
+    regions = list(instance.regions)
+    unserved = np.zeros(len(regions), dtype=float)
+    for region in regions:
+        unserved[regions.index(region)] \
+            = 100.0 * sum(value(instance.unserved[zone, time])
+                          for zone in instance.zones_per_region[region]
+                          for time in instance.t) \
+            / sum(value(instance.region_net_demand[region, time]) for time in instance.t)
 
-    print('Unserved %:' + str(uns))
+    print('Unserved %:' + str(unserved))
 
 
 def _printcapacity(instance):
