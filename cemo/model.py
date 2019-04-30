@@ -281,7 +281,7 @@ def create_model(namestr,
 
     m.unserved = Var(m.zones, m.t, within=NonNegativeReals)  # unserved power
     m.surplus = Var(
-        m.regions, m.t, within=NonNegativeReals)  # surplus power (if any)
+        m.zones, m.t, within=NonNegativeReals)  # surplus power (if any)
 
     m.intercon_disp = Var(m.zone_intercons, m.t, within=NonNegativeReals)
 

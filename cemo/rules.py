@@ -311,16 +311,16 @@ def con_ldbal(model, z, t):
         + model.surplus[z, t]
 
 
-def con_maxcap(model, z, n):
+def con_maxcap(model, zone, tech):
     '''Prevent resulting operational capacity to exceed build limits'''
-    return model.gen_cap_op[z, n] <= model.gen_build_limit[z, n]
+    return model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
 
 
 def con_emissions(model):
     '''Emission constraint for the NEM in MT/y for total emissions'''
     return model.year_correction_factor * sum(
-        emissions(model, r)
-        for r in model.regions) <= 1e9 * model.nem_year_emit_limit
+        emissions(model, region)
+        for region in model.regions) <= 1e9 * model.nem_year_emit_limit
 
 
 def con_slackretire(model, z, n):
@@ -496,8 +496,8 @@ def cost_operating(model):
 def cost_transmission(model):
     '''Calculate transmission flow costs'''
     return model.year_correction_factor * model.cost_trans * sum(
-        model.intercon_disp[r, p, t] for r in model.regions
-        for p in model.intercon_per_region[r] for t in model.t)
+        model.intercon_disp[zone, dest, time] for zone in model.zones
+        for dest in model.intercon_per_zone[zone] for time in model.t)
 
 
 def cost_emissions(model):
@@ -523,7 +523,7 @@ def cost_shadow(model):
         + 10000000 * sum(model.gen_cap_exo_neg[z, n]
                          for z in model.zones
                          for n in model.gen_tech_per_zone[z])\
-        + 10000 * sum(model.surplus[r, t] for r in model.regions
+        + 10000 * sum(model.surplus[z, t] for z in model.zones
                       for t in model.t)
 
 
