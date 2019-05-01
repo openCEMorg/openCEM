@@ -173,81 +173,81 @@ ZONE_DEMAND_PCT = {
 
 ZONE_INTERCONS = {
     1: {
-        2: {'loss': 0, 'limit': 1}
+        2: {'loss': 0, 'limit': 1501}
     },
     2: {
-        1: {'loss': 0, 'limit': 1},
-        3: {'loss': 0, 'limit': 1},
-        4: {'loss': 0, 'limit': 1}
+        1: {'loss': 0, 'limit': 1501},
+        3: {'loss': 0, 'limit': 1313},
+        4: {'loss': 0, 'limit': 1421}
     },
     3: {
-        2: {'loss': 0, 'limit': 1},
-        4: {'loss': 0, 'limit': 1},
-        8: {'loss': 0, 'limit': 1},
+        2: {'loss': 0, 'limit': 1313},
+        4: {'loss': 0, 'limit': 5288},
+        8: {'loss': 0, 'limit': 1078},
     },
     4: {
-        2: {'loss': 0, 'limit': 1},
-        3: {'loss': 0, 'limit': 1},
-        8: {'loss': 0, 'limit': 1},
+        2: {'loss': 0, 'limit': 1421},
+        3: {'loss': 0, 'limit': 1313},
+        8: {'loss': 0, 'limit': 234},
     },
     5: {
-        6: {'loss': 0, 'limit': 1},
-        11: {'loss': 0, 'limit': 1},
-        12: {'loss': 0, 'limit': 1},
-        13: {'loss': 0, 'limit': 1},
+        6: {'loss': 0, 'limit': 2022},
+        11: {'loss': 0, 'limit': 200},  # REVIEW Estimate thermal limit based on 265MVAR capacity
+        12: {'loss': 0, 'limit': 1300},  # REVIEW Use thermal limit worst case?
+        13: {'loss': 0, 'limit': 0},
     },
     6: {
-        5: {'loss': 0, 'limit': 1},
-        7: {'loss': 0, 'limit': 1},
-        12: {'loss': 0, 'limit': 1},
+        5: {'loss': 0, 'limit': 2022},
+        7: {'loss': 0, 'limit': 2304},
+        12: {'loss': 0, 'limit': 0},  # REVIEW Murray to Guthega is folded into 5-11 link
     },
     7: {
-        6: {'loss': 0, 'limit': 1},
-        8: {'loss': 0, 'limit': 1},
+        6: {'loss': 0, 'limit': 2304},
+        8: {'loss': 0, 'limit': 929},
     },
     8: {
-        3: {'loss': 0, 'limit': 1},
-        4: {'loss': 0, 'limit': 1},
-        7: {'loss': 0, 'limit': 1},
+        3: {'loss': 0, 'limit': 486},
+        4: {'loss': 0, 'limit': 105},
+        7: {'loss': 0, 'limit': 929},
     },
     9: {
-        10: {'loss': 0, 'limit': 1e10},
-        16: {'loss': 0.5, 'limit': 500},
+        10: {'loss': 0, 'limit': 8907},
+        16: {'loss': 0.5, 'limit': 469},
     },
     10: {
-        9: {'loss': 0, 'limit': 1e10},
-        11: {'loss': 0, 'limit': 1e10},
-        12: {'loss': 0, 'limit': 1e10},
-        15: {'loss': 0, 'limit': 1e10},
+        9: {'loss': 0, 'limit': 8907},
+        11: {'loss': 0, 'limit': 542},
+        12: {'loss': 0, 'limit': 1422},
+        15: {'loss': 0, 'limit': 460},
         16: {'loss': 0, 'limit': 0},
     },
     11: {
-        5: {'loss': 0, 'limit': 1e10},
-        10: {'loss': 0, 'limit': 1e10},
-        12: {'loss': 0, 'limit': 1e10},
-        13: {'loss': 0, 'limit': 1e10},
+        5: {'loss': 0, 'limit': 200},  # REVIEW Estimate thermal limit based on 265MVAR capacity
+        10: {'loss': 0, 'limit': 542},
+        12: {'loss': 0, 'limit': 284},
+        13: {'loss': 0, 'limit': 220},
     },
     12: {
-        5: {'loss': 0, 'limit': 1e10},
-        6: {'loss': 0, 'limit': 1e10},
-        10: {'loss': 0, 'limit': 1e10},
-        11: {'loss': 0, 'limit': 1e10},
+        5: {'loss': 0, 'limit': 1300},  # REVIEW Use thermal limit worst case?
+        6: {'loss': 0, 'limit': 0},  # REVIEW Murray to Guthega is folded into 5-11 link
+        10: {'loss': 0, 'limit': 1422},
+        11: {'loss': 0, 'limit': 284},
     },
     13: {
         5: {'loss': 0, 'limit': 0},
-        11: {'loss': 0, 'limit': 1},
-        14: {'loss': 0, 'limit': 1},
+        11: {'loss': 0, 'limit': 220},
+        14: {'loss': 0, 'limit': 537},
     },
     14: {
-        13: {'loss': 0, 'limit': 1},
-        15: {'loss': 0, 'limit': 1},
+        13: {'loss': 0, 'limit': 537},
+        15: {'loss': 0, 'limit': 547},
     },
     15: {
-        10: {'loss': 0, 'limit': 1},
-        14: {'loss': 0, 'limit': 1},
+        10: {'loss': 0, 'limit': 460},
+        14: {'loss': 0, 'limit': 547},
     },
     16: {
-        9: {'loss': 0, 'limit': 500},
+        9: {'loss': 0, 'limit': 594},
         10: {'loss': 0, 'limit': 0},
     }
 }
