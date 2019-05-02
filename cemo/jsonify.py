@@ -38,7 +38,7 @@ def jsonify(inst):
                inst.retire_gen_tech_in_zones.name: list(inst.retire_gen_tech_in_zones),
                inst.hyb_tech_in_zones.name: list(inst.hyb_tech_in_zones),
                inst.stor_tech_in_zones.name: list(inst.stor_tech_in_zones),
-               inst.region_intercons.name: list(inst.region_intercons),
+               inst.zone_intercons.name: list(inst.zone_intercons),
                # Complex sets of sets
                inst.zones_per_region.name: fill_complex_set(inst.zones_per_region),
                inst.gen_tech_per_zone.name: fill_complex_set(inst.gen_tech_per_zone),
@@ -46,7 +46,7 @@ def jsonify(inst):
                inst.retire_gen_tech_per_zone.name: fill_complex_set(inst.retire_gen_tech_per_zone),
                inst.hyb_tech_per_zone.name: fill_complex_set(inst.hyb_tech_per_zone),
                inst.stor_tech_per_zone.name: fill_complex_set(inst.stor_tech_per_zone),
-               inst.intercon_per_region.name: fill_complex_set(inst.intercon_per_region)
+               inst.intercon_per_zone.name: fill_complex_set(inst.intercon_per_zone)
            },
            'params': {
                # params with complex tuple keys
@@ -55,7 +55,7 @@ def jsonify(inst):
                inst.cost_hyb_build.name: fill_complex_param(inst.cost_hyb_build),
                inst.cost_fuel.name: fill_complex_param(inst.cost_fuel),
                inst.fuel_heat_rate.name: fill_complex_param(inst.fuel_heat_rate),
-               inst.intercon_prop_factor.name: fill_complex_param(inst.intercon_prop_factor),
+               inst.intercon_loss_factor.name: fill_complex_param(inst.intercon_loss_factor),
                inst.gen_cap_factor.name: fill_complex_param(inst.gen_cap_factor),
                inst.hyb_cap_factor.name: fill_complex_param(inst.hyb_cap_factor),
                inst.gen_build_limit.name: fill_complex_param(inst.gen_build_limit),
