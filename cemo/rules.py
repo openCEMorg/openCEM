@@ -248,6 +248,17 @@ def con_max_trans(model, zone_source, zone_dest, t):
         <= model.intercon_trans_limit[zone_source, zone_dest]
 
 
+def con_intercon_op_cap(model, zone_source, zone_dest):
+    '''Operating transmission capacity is the net of
+       - initial (or carryover)
+       - model decisions
+       -exogenous builds'''
+    return model.intercon_cap_op[zone_source, zone_dest] \
+        == model.intercon_cap_initital[zone_source, zone_dest]\
+        + model.intercon_cap_exo[zone_source, zone_dest]\
+        + model.intercon_cap_new[zone_source, zone_dest]
+
+
 def con_chargelim(model, z, s, t):
     '''limit flow of charge to storage to be less than storage nameplate capacity'''
     return model.stor_charge[z, s, t] <= model.stor_cap_op[z, s]
