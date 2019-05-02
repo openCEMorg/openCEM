@@ -443,18 +443,21 @@ def con_uns(model, r):
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
-def cost_capital(model, z):
+def cost_capital(model):
     '''calculate build costs'''
     return sum(model.cost_gen_build[z, n] * (model.gen_cap_new[z, n] + model.gen_cap_exo[z, n])
                * model.fixed_charge_rate[n]
+               for z in model.zones
                for n in model.gen_tech_per_zone[z])\
         + sum(model.cost_stor_build[z, s] * (model.stor_cap_new[z, s] + model.stor_cap_exo[z, s])
               * model.fixed_charge_rate[s]
+              for z in model.zones
               for s in model.stor_tech_per_zone[z])\
         + sum(model.cost_hyb_build[z, h] * (model.hyb_cap_new[z, h] + model.hyb_cap_exo[z, h])
               * model.fixed_charge_rate[h]
+              for z in model.zones
               for h in model.hyb_tech_per_zone[z])\
-        + model.cost_cap_carry_forward[z]
+        + sum(model.cost_cap_carry_forward[z] for z in model.zones)
 
 
 def cost_fixed(model):
@@ -540,7 +543,7 @@ def cost_shadow(model):
 
 def obj_cost(model):
     """Objective function as total annualised cost for model"""
-    return sum(cost_capital(model, z) for z in model.zones)\
+    return cost_capital(model)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
         + cost_retirement(model) + cost_shadow(model)
