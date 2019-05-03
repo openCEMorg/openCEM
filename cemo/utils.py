@@ -191,7 +191,8 @@ def _printcosts(inst):
     print("Total Cost:\t %20s" %
           locale.currency(value(inst.Obj - cemo.rules.cost_shadow(inst)), grouping=True))
     print("Build cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_capital(inst) - sum(inst.cost_cap_carry_forward[z] for z in inst.zones)),
+          locale.currency(sum(value(cemo.rules.cost_capital_per_zone(inst, zone) -
+                                    inst.cost_cap_carry_forward[zone]) for zone in inst.zones),
                           grouping=True))
     print("Repayment cost:\t %20s" %
           locale.currency(value(sum(inst.cost_cap_carry_forward[z] for z in inst.zones)),

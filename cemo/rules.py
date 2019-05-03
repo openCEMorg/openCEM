@@ -444,20 +444,25 @@ def con_uns(model, r):
 
 
 def cost_capital(model):
-    '''calculate build costs'''
-    return sum(model.cost_gen_build[z, n] * (model.gen_cap_new[z, n] + model.gen_cap_exo[z, n])
-               * model.fixed_charge_rate[n]
-               for z in model.zones
-               for n in model.gen_tech_per_zone[z])\
-        + sum(model.cost_stor_build[z, s] * (model.stor_cap_new[z, s] + model.stor_cap_exo[z, s])
-              * model.fixed_charge_rate[s]
-              for z in model.zones
-              for s in model.stor_tech_per_zone[z])\
-        + sum(model.cost_hyb_build[z, h] * (model.hyb_cap_new[z, h] + model.hyb_cap_exo[z, h])
-              * model.fixed_charge_rate[h]
-              for z in model.zones
-              for h in model.hyb_tech_per_zone[z])\
-        + sum(model.cost_cap_carry_forward[z] for z in model.zones)
+    '''calculate total build costs'''
+    return sum(cost_capital_per_zone(model, zone) for zone in model.zones)
+
+
+def cost_capital_per_zone(model, zone):
+    '''calculate build costs per zone'''
+    return sum(model.cost_gen_build[zone, tech]
+               * (model.gen_cap_new[zone, tech] + model.gen_cap_exo[zone, tech])
+               * model.fixed_charge_rate[tech]
+               for tech in model.gen_tech_per_zone[zone])\
+        + sum(model.cost_stor_build[zone, tech]
+              * (model.stor_cap_new[zone, tech] + model.stor_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.stor_tech_per_zone[zone])\
+        + sum(model.cost_hyb_build[zone, tech]
+              * (model.hyb_cap_new[zone, tech] + model.hyb_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.hyb_tech_per_zone[zone])\
+        + model.cost_cap_carry_forward[zone]
 
 
 def cost_fixed(model):

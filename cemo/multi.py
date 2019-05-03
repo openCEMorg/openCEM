@@ -441,7 +441,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         return opcap0
 
     def carry_forward_cap_costs(self, year):
-        '''Save total annualised capital costs in carry forward json'''
+        '''Fill template to retrieve carry forward annualised capital costs from gen_cap_op json'''
         carry_fwd_cost = ''
         if self.Years.index(year):
             carry_fwd_cost = "#Carry forward annualised capital costs\n"
