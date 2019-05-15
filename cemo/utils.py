@@ -203,8 +203,11 @@ def _printcosts(inst):
     print("Fixed cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_fixed(inst)),
                           grouping=True))
-    print("Transm. cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_transmission(inst)),
+    print("Trans. build cost:\t %12s" %
+          locale.currency(value(cemo.rules.cost_trans_build(inst)),
+                          grouping=True))
+    print("Trans. flow cost:\t %12s" %
+          locale.currency(value(cemo.rules.cost_trans_flow(inst)),
                           grouping=True))
     print("Unserved cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_unserved(inst)),
