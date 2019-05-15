@@ -346,7 +346,7 @@ def con_slackbuild(model, z, n):
         z, n] - model.gen_cap_exo_neg[z, n] <= model.gen_build_limit[z, n]
 
 
-def con_opcap(model, z, n):  # z and n come both from TechinZones
+def con_gen_cap(model, z, n):  # z and n come both from TechinZones
     '''Calculate operating capacity as the net of model and exogenous decisions'''
     if n in model.nobuild_gen_tech:
         if n in model.retire_gen_tech:
@@ -368,7 +368,7 @@ def con_opcap(model, z, n):  # z and n come both from TechinZones
         + model.gen_cap_new[z, n]
 
 
-def con_stcap(model, z, s):  # z and n come both from TechinZones
+def con_stor_cap(model, z, s):  # z and n come both from TechinZones
     '''Calculate Storage capacity as the net of model and exogenous decisions'''
     if s in model.nobuild_gen_tech:
         return model.stor_cap_op[z, s] == model.stor_cap_initial[z, s] \
@@ -378,7 +378,7 @@ def con_stcap(model, z, s):  # z and n come both from TechinZones
         + model.stor_cap_new[z, s]
 
 
-def con_hycap(model, z, h):  # z and n come both from TechinZones
+def con_hyb_cap(model, z, h):  # z and n come both from TechinZones
     '''Calculate Hybrid capacity as the net of model and exogenous decisions'''
     if h in model.nobuild_gen_tech:
         return model.hyb_cap_op[z, h] == model.hyb_cap_initial[z, h] \

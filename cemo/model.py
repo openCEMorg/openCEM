@@ -29,14 +29,15 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         con_chargelimhy, con_committed_cap, con_dischargelim,
                         con_dischargelimhy, con_disp_ramp_down,
                         con_disp_ramp_up, con_emissions, con_hybcharge,
-                        con_hycap, con_ldbal, con_max_mwh_as_cap_factor,
-                        con_maxcap, con_maxcharge, con_maxchargehy, con_maxmhw,
-                        con_max_trans, con_min_load_commit, con_nem_disp_ratio,
-                        con_nem_re_disp_ratio, con_nem_ret_gwh,
-                        con_nem_ret_ratio, con_opcap, con_ramp_down_uptime,
-                        con_region_ret_ratio, con_slackbuild, con_slackretire,
-                        con_stcap, con_storcharge, con_uns,
-                        con_uptime_commitment, obj_cost)
+                        con_hyb_cap, con_ldbal, con_max_mwh_as_cap_factor,
+                        con_max_trans, con_maxcap, con_maxcharge,
+                        con_maxchargehy, con_maxmhw, con_min_load_commit,
+                        con_nem_disp_ratio, con_nem_re_disp_ratio,
+                        con_nem_ret_gwh, con_nem_ret_ratio, con_gen_cap, con_intercon_cap,
+                        con_ramp_down_uptime, con_region_ret_ratio,
+                        con_slackbuild, con_slackretire, con_stor_cap,
+                        con_storcharge, con_uns, con_uptime_commitment,
+                        obj_cost)
 
 
 def create_model(namestr,
@@ -295,7 +296,7 @@ def create_model(namestr,
     # Limit maximum capacity to be built in each region and each technology
     m.maxcap = Constraint(m.gen_tech_in_zones, rule=con_maxcap)
     # gen_cap_op in existing period is previous gen_cap_op plus gen_cap_new
-    m.opcap = Constraint(m.gen_tech_in_zones, rule=con_opcap)
+    m.con_gen_cap = Constraint(m.gen_tech_in_zones, rule=con_gen_cap)
     # MaxMWh limit
     m.max_mwh = Constraint(m.gen_tech_in_zones, rule=con_maxmhw)
     # MaxMWh limit (currently only for hydro)
@@ -372,7 +373,7 @@ def create_model(namestr,
     # Maxiumum charge capacity of storage
     m.MaxCharge = Constraint(m.stor_tech_in_zones, m.t, rule=con_maxcharge)
     # StCap in existing period is previous stor_cap_op plus stor_cap_new
-    m.stcap = Constraint(m.stor_tech_in_zones, rule=con_stcap)
+    m.con_stor_cap = Constraint(m.stor_tech_in_zones, rule=con_stor_cap)
 
     # Hybrid charge/discharge dynamic
     m.HybCharDis = Constraint(m.hyb_tech_in_zones, m.t, rule=con_hybcharge)
@@ -385,7 +386,7 @@ def create_model(namestr,
     # Maxiumum charge capacity of storage
     m.MaxChargehy = Constraint(m.hyb_tech_in_zones, m.t, rule=con_maxchargehy)
     # HyCap in existing period is previous stor_cap_op plus stor_cap_new
-    m.hycap = Constraint(m.hyb_tech_in_zones, rule=con_hycap)
+    m.con_hyb_cap = Constraint(m.hyb_tech_in_zones, rule=con_hyb_cap)
 
     # @@ Objective
     # Minimise capital, variable and fixed costs of system

@@ -4,7 +4,7 @@ import pytest
 from pyomo.environ import value
 
 from cemo.initialisers import init_zone_demand_factors
-from cemo.rules import con_caplim, con_maxcap, con_opcap, dispatch
+from cemo.rules import con_caplim, con_maxcap, con_gen_cap, dispatch
 from cemo.const import ZONE_DEMAND_PCT
 
 
@@ -43,7 +43,7 @@ def test_con_caplim(solution, zone, tech, time):
 ])
 def test_con_opcap(solution, zone, tech):
     '''Assert solution computes same operating capacity as benchmark'''
-    assert pytest.approx(value(con_opcap(solution, zone, tech)))
+    assert pytest.approx(value(con_gen_cap(solution, zone, tech)))
 
 
 @pytest.mark.parametrize("region", [4, 5])
