@@ -513,6 +513,18 @@ def cost_operating(model):
 
 
 def cost_transmission(model):
+    return cost_trans_flow(model) + sum(cost_trans_build_per_zone(model, zone) for zone in model.zones)
+
+
+def cost_trans_build_per_zone(model, zone):
+    return sum(model.cost_intercon_build[zone, dest]
+               * (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
+               * model.intercon_fixed_charge_rate
+               for dest in model.intercon_per_zone[zone])\
+
+
+
+def cost_trans_flow(model):
     '''Calculate transmission flow costs'''
     return model.year_correction_factor * model.cost_trans * sum(
         model.intercon_disp[zone, dest, time] for zone in model.zones

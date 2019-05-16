@@ -168,9 +168,10 @@ def json_carry_forward_cap(inst):
         inst.gen_cap_initial.name: fill_complex_var(inst.gen_cap_op),
         inst.stor_cap_initial.name: fill_complex_var(inst.stor_cap_op),
         inst.hyb_cap_initial.name: fill_complex_var(inst.hyb_cap_op),
+        inst.intercon_cap_initial.name: fill_complex_var(inst.intercon_cap_op),
         inst.cost_cap_carry_forward.name: [
             {
-                "index": zone, "value": value(cost_capital_per_zone(inst, zone))
+                "index": zone, "value": value(cost_build_per_zone(inst, zone) + cost_trans_build_per_zone(inst, zone))
             }
             for zone in inst.zones]
     }

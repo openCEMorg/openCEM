@@ -204,7 +204,8 @@ def _printcosts(inst):
           locale.currency(value(cemo.rules.cost_fixed(inst)),
                           grouping=True))
     print("Trans. build cost:\t %12s" %
-          locale.currency(value(cemo.rules.cost_trans_build(inst)),
+          locale.currency(sum(value(cemo.rules.cost_trans_build_per_zone(inst, zone))
+                              for zone in inst.zones),
                           grouping=True))
     print("Trans. flow cost:\t %12s" %
           locale.currency(value(cemo.rules.cost_trans_flow(inst)),
