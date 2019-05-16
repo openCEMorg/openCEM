@@ -52,7 +52,7 @@ def ScanForZoneperRegion(model):
 
 def build_intercon_per_zone(model):
     '''Generate (source,target) interconnector tuples based on default or supplied data'''
-    for (i, j) in model.zone_intercons:
+    for (i, j) in model.intercons_in_zones:
         model.intercon_per_zone[i].add(j)
 
 

@@ -38,7 +38,7 @@ def jsonify(inst):
                inst.retire_gen_tech_in_zones.name: list(inst.retire_gen_tech_in_zones),
                inst.hyb_tech_in_zones.name: list(inst.hyb_tech_in_zones),
                inst.stor_tech_in_zones.name: list(inst.stor_tech_in_zones),
-               inst.zone_intercons.name: list(inst.zone_intercons),
+               inst.intercons_in_zones.name: list(inst.intercons_in_zones),
                # Complex sets of sets
                inst.zones_per_region.name: fill_complex_set(inst.zones_per_region),
                inst.gen_tech_per_zone.name: fill_complex_set(inst.gen_tech_per_zone),

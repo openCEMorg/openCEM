@@ -92,7 +92,7 @@ def create_model(namestr,
     # Set listing storage avaialable per zone (like a sparsity pattern)
     m.stor_tech_in_zones = Set(dimen=2)
     # Set listing transmission lines to other regions in each region
-    m.zone_intercons = Set(dimen=2, initialize=init_zone_intercons)
+    m.intercons_in_zones = Set(dimen=2, initialize=init_intercons_in_zones)
 
     # sparse sets built by build actions
     # Returns a list of planning zones for each region in R
@@ -205,12 +205,16 @@ def create_model(namestr,
         m.stor_tech_in_zones, default=0)  # operating capacity
     m.hyb_cap_initial = Param(
         m.hyb_tech_in_zones, default=0)  # operating capacity
+    m.intercon_cap_initial = Param(
+        m.intercons_in_zones, default=0)  # operating capacity
     # exogenous new capacity
     m.gen_cap_exo = Param(m.gen_tech_in_zones, default=0)
     # exogenous new storage capacity
     m.stor_cap_exo = Param(m.stor_tech_in_zones, default=0)
     # exogenous new hybrid capacity
     m.hyb_cap_exo = Param(m.hyb_tech_in_zones, default=0)
+    # exogenous transmission capacity
+    m.intercon_cap_exo = Param(m.intercons_in_zones, default=0)
     m.ret_gen_cap_exo = Param(m.retire_gen_tech_in_zones, default=0)
     # Net Electrical load (may include rooftop and EV)
     m.region_net_demand = Param(m.regions, m.t)
@@ -239,6 +243,8 @@ def create_model(namestr,
         within=NonNegativeReals)  # Total storage capacity
     m.hyb_cap_new = Var(m.hyb_tech_in_zones, within=NonNegativeReals)
     m.hyb_cap_op = Var(m.hyb_tech_in_zones, within=NonNegativeReals)
+    m.intercon_cap_new = Var(m.intercons_in_zones, within=NonNegativeReals)
+    m.intercon_cap_op = Var(m.intercons_in_zones, within=NonNegativeReals)
     m.gen_cap_ret = Var(
         m.retire_gen_tech_in_zones,
         within=NonNegativeReals)  # retireable capacity
@@ -284,11 +290,13 @@ def create_model(namestr,
     m.surplus = Var(
         m.zones, m.t, within=NonNegativeReals)  # surplus power (if any)
 
-    m.intercon_disp = Var(m.zone_intercons, m.t, within=NonNegativeReals)
+    m.intercon_disp = Var(m.intercons_in_zones, m.t, within=NonNegativeReals)
 
     # @@ Constraints
     # Transmission limits
-    m.con_max_trans = Constraint(m.zone_intercons, m.t, rule=con_max_trans)
+    m.con_max_trans = Constraint(m.intercons_in_zones, m.t, rule=con_max_trans)
+    # Transmission capacity balance
+    m.con_intercon_cap = Constraint(m.gen_tech_in_zones, rule=con_intercon_cap)
     # Load balance
     m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors
