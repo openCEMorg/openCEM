@@ -18,7 +18,7 @@ def init_year_correction_factor(model):
     # pylint: disable=unused-argument
     '''Calculate factor to adjust dispatch periods different to 8760 hours'''
     ystr = model.t.last()
-    year = int(ystr[:4])
+    year = int(ystr[:4])  # TODO use date time to extract year
     hours = 8760
     if calendar.isleap(year):
         hours = 8784
@@ -33,7 +33,7 @@ def init_zones_in_regions(model):
             yield i
 
 
-def init_zone_intercons(model):
+def init_intercons_in_zones(model):
     # pylint: disable=unused-argument
     '''Return zone interconnector pairs for declared zones'''
     for zone_pair in [(zone_source, zone_dest)
@@ -57,9 +57,9 @@ def init_stor_charge_hours(model, tech):
 
 def init_zone_demand_factors(model, zone, timestamp):
     dt = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-    is_holiday = dt.date() not in holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov'))
+    not_holiday = dt.date() not in holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov'))
     is_peak = 'off peak'
-    if dt.weekday() < 5 and 8 <= dt.hour < 20 and is_holiday:
+    if dt.weekday() < 5 and 8 <= dt.hour < 20 and not_holiday:
         is_peak = 'peak'
     return cemo.const.ZONE_DEMAND_PCT.get(zone).get(is_peak)
 

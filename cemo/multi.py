@@ -406,9 +406,9 @@ class SolveTemplate:
             prevyear = self.Years[self.Years.index(year) - 1]
             opcap0 = "load '" + self.tmpdir + "gen_cap_op" + \
                 str(prevyear) + \
-                ".json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial;"
+                ".json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
         else:
-            opcap0 = '''#operating capacity for all technilogies and regions
+            opcap0 = '''#operating capacity for generating techs regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_initial
@@ -418,7 +418,7 @@ where (ntndp_zone_id,technology_type_id) in
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] gen_cap_initial;
 
-# operating capacity for all technilogies and regions
+# operating capacity storage techs in regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_initial
@@ -428,7 +428,7 @@ where (ntndp_zone_id,technology_type_id) in
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] stor_cap_initial;
 
-# operating capacity for all technilogies and regions
+# operating capacity for hybrid techs in regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_initial
@@ -437,6 +437,9 @@ where (ntndp_zone_id,technology_type_id) in
 ''' + sql_tech_pairs(self.hybtech) + '''
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
+
+# operating capacity for intercons in nodes is currently done in initialisation until capacities
+# are added to a database
 '''
         return opcap0
 

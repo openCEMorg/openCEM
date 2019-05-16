@@ -18,26 +18,27 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
                                init_gen_build_limit, init_hyb_charge_hours,
-                               init_hyb_col_mult, init_intercon_loss_factor,
-                               init_intercon_trans_limit, init_max_hydro,
-                               init_zone_intercons, init_zone_demand_factors, init_stor_charge_hours,
-                               init_stor_rt_eff, init_year_correction_factor,
-                               init_zones_in_regions)
+                               init_hyb_col_mult, init_intercon_cap_initial,
+                               init_intercon_fcr, init_intercon_loss_factor,
+                               init_intercons_in_zones, init_max_hydro,
+                               init_stor_charge_hours, init_stor_rt_eff,
+                               init_year_correction_factor,
+                               init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
-                        ScanForTechperZone, build_intercon_per_zone,
-                        ScanForZoneperRegion, con_caplim, con_chargelim,
+                        ScanForTechperZone, ScanForZoneperRegion,
+                        build_intercon_per_zone, con_caplim, con_chargelim,
                         con_chargelimhy, con_committed_cap, con_dischargelim,
                         con_dischargelimhy, con_disp_ramp_down,
-                        con_disp_ramp_up, con_emissions, con_hybcharge,
-                        con_hyb_cap, con_ldbal, con_max_mwh_as_cap_factor,
-                        con_max_trans, con_maxcap, con_maxcharge,
-                        con_maxchargehy, con_maxmhw, con_min_load_commit,
-                        con_nem_disp_ratio, con_nem_re_disp_ratio,
-                        con_nem_ret_gwh, con_nem_ret_ratio, con_gen_cap, con_intercon_cap,
-                        con_ramp_down_uptime, con_region_ret_ratio,
-                        con_slackbuild, con_slackretire, con_stor_cap,
-                        con_storcharge, con_uns, con_uptime_commitment,
-                        obj_cost)
+                        con_disp_ramp_up, con_emissions, con_gen_cap,
+                        con_hyb_cap, con_hybcharge, con_intercon_cap,
+                        con_ldbal, con_max_mwh_as_cap_factor, con_max_trans,
+                        con_maxcap, con_maxcharge, con_maxchargehy, con_maxmhw,
+                        con_min_load_commit, con_nem_disp_ratio,
+                        con_nem_re_disp_ratio, con_nem_ret_gwh,
+                        con_nem_ret_ratio, con_ramp_down_uptime,
+                        con_region_ret_ratio, con_slackbuild, con_slackretire,
+                        con_stor_cap, con_storcharge, con_uns,
+                        con_uptime_commitment, obj_cost)
 
 
 def create_model(namestr,
@@ -134,6 +135,7 @@ def create_model(namestr,
     m.cost_gen_build = Param(m.gen_tech_in_zones, default=9e7)
     m.cost_stor_build = Param(m.stor_tech_in_zones)  # Capital costs storage
     m.cost_hyb_build = Param(m.hyb_tech_in_zones)  # Capital costs hybrid
+    m.cost_intercon_build = Param(m.intercons_in_zones, default=1e5)  # Capital costs $/MW/km trans
 
     m.cost_fuel = Param(
         m.fuel_gen_tech_in_zones,
@@ -189,7 +191,7 @@ def create_model(namestr,
         m.fuel_gen_tech, initialize=init_default_fuel_emit_rate)
     # proportioning factors for notional interconnectors
     m.intercon_loss_factor = Param(
-        m.zone_intercons, initialize=init_intercon_loss_factor)
+        m.intercons_in_zones, initialize=init_intercon_loss_factor)
 
     m.gen_cap_factor = Param(
         m.gen_tech_in_zones, m.t,
@@ -208,7 +210,7 @@ def create_model(namestr,
     m.hyb_cap_initial = Param(
         m.hyb_tech_in_zones, default=0)  # operating capacity
     m.intercon_cap_initial = Param(
-        m.intercons_in_zones, default=0)  # operating capacity
+        m.intercons_in_zones, initialize=init_intercon_cap_initial)  # operating capacity
     # exogenous new capacity
     m.gen_cap_exo = Param(m.gen_tech_in_zones, default=0)
     # exogenous new storage capacity
@@ -295,7 +297,7 @@ def create_model(namestr,
     # Transmission limits
     m.con_max_trans = Constraint(m.intercons_in_zones, m.t, rule=con_max_trans)
     # Transmission capacity balance
-    m.con_intercon_cap = Constraint(m.gen_tech_in_zones, rule=con_intercon_cap)
+    m.con_intercon_cap = Constraint(m.intercons_in_zones, rule=con_intercon_cap)
     # Load balance
     m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors

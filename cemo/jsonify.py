@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=bad-continuation
 '''
-Turn an evaluated cemo model instance into a JSON object.
-The format has been determined in consultation with Jose Zapata.
+openCEM module to convert simulation data into JSON outputs
 '''
 __author__ = "Andrew Hall"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
@@ -54,6 +53,7 @@ def jsonify(inst):
                inst.cost_gen_build.name: fill_complex_param(inst.cost_gen_build),
                inst.cost_stor_build.name: fill_complex_param(inst.cost_stor_build),
                inst.cost_hyb_build.name: fill_complex_param(inst.cost_hyb_build),
+               inst.cost_intercon_build.name: fill_complex_param(inst.cost_intercon_build),
                inst.cost_fuel.name: fill_complex_param(inst.cost_fuel),
                inst.fuel_heat_rate.name: fill_complex_param(inst.fuel_heat_rate),
                inst.intercon_loss_factor.name: fill_complex_param(inst.intercon_loss_factor),
@@ -63,9 +63,11 @@ def jsonify(inst):
                inst.gen_cap_initial.name: fill_complex_param(inst.gen_cap_initial),
                inst.stor_cap_initial.name: fill_complex_param(inst.stor_cap_initial),
                inst.hyb_cap_initial.name: fill_complex_param(inst.hyb_cap_initial),
+               inst.intercon_cap_initial.name: fill_complex_param(inst.intercon_cap_initial),
                inst.gen_cap_exo.name: fill_complex_param(inst.gen_cap_exo),
                inst.stor_cap_exo.name: fill_complex_param(inst.stor_cap_exo),
                inst.hyb_cap_exo.name: fill_complex_param(inst.hyb_cap_exo),
+               inst.intercon_cap_exo.name: fill_complex_param(inst.intercon_cap_exo),
                inst.ret_gen_cap_exo.name: fill_complex_param(inst.ret_gen_cap_exo),
                inst.region_net_demand.name: fill_complex_param(inst.region_net_demand),
 
@@ -102,6 +104,8 @@ def jsonify(inst):
                inst.stor_cap_op.name: fill_complex_var(inst.stor_cap_op),
                inst.hyb_cap_new.name: fill_complex_var(inst.hyb_cap_new),
                inst.hyb_cap_op.name: fill_complex_var(inst.hyb_cap_op),
+               inst.intercon_cap_new.name: fill_complex_var(inst.intercon_cap_new),
+               inst.intercon_cap_op.name: fill_complex_var(inst.intercon_cap_op),
                inst.gen_cap_ret.name: fill_complex_var(inst.gen_cap_ret),
                inst.gen_cap_ret_neg.name: fill_complex_var(inst.gen_cap_ret_neg),
                inst.gen_cap_exo_neg.name: fill_complex_var(inst.gen_cap_exo_neg),
