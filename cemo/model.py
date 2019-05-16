@@ -156,8 +156,10 @@ def create_model(namestr,
     # Project discount rate
     m.all_tech_discount_rate = Param(default=0.05)
 
-    # Technology fixed charge rate
+    # Generator tech fixed charge rate
     m.fixed_charge_rate = Param(m.all_tech, initialize=init_fcr)
+    # Transmission tech fixed charge rate
+    m.intercon_fixed_charge_rate = Param(initialize=init_intercon_fcr)
     # Per year cost adjustment for sims shorter than 1 year of dispatch
     m.year_correction_factor = Param(initialize=init_year_correction_factor)
 

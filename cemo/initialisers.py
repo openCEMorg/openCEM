@@ -132,6 +132,19 @@ def init_fcr(model, tech):
         1) + model.all_tech_discount_rate
 
 
+def init_intercon_fcr(model):
+    # pylint: disable=unused-argument
+    '''Calculate fixed charge rate for transmission
+    Assumed lifetime: 50 years'''
+    return model.all_tech_discount_rate / (
+        (model.all_tech_discount_rate + 1)**50 -
+        1) + model.all_tech_discount_rate
+
+
+def init_intercon_cap_initial(model, zone_source, zone_dest):
+    return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get('limit', 0)
+
+
 def init_cap_factor(model, zone, tech, time):
     # pylint: disable=unused-argument
     '''Default capacity factor per hour per technology and per zone.
