@@ -74,7 +74,7 @@ ZONES_IN_REGIONS = [
     (5, 11),
     (5, 12),
 ]
-
+# REVIEW obsolete
 REGION_INTERCONS = [
     (4, 5),
     (5, 4),
@@ -173,85 +173,89 @@ ZONE_DEMAND_PCT = {
 
 ZONE_INTERCONS = {
     1: {
-        2: {'loss': 0, 'limit': 1501}
+        2: {'loss': 0, 'limit': 1501, 'length': 600}
     },
     2: {
-        1: {'loss': 0, 'limit': 1501},
-        3: {'loss': 0, 'limit': 1313},
-        4: {'loss': 0, 'limit': 1421}
+        1: {'loss': 0, 'limit': 1501, 'length': 600},
+        3: {'loss': 0, 'limit': 1313, 'length': 385},
+        4: {'loss': 0, 'limit': 1421, 'length': 500}
     },
     3: {
-        2: {'loss': 0, 'limit': 1313},
-        4: {'loss': 0, 'limit': 5288},
-        8: {'loss': 0, 'limit': 1078},
+        2: {'loss': 0, 'limit': 1313, 'length': 385},
+        4: {'loss': 0, 'limit': 5288, 'length': 130},
+        8: {'loss': 0, 'limit': 1078, 'length': 415},
     },
     4: {
-        2: {'loss': 0, 'limit': 1421},
-        3: {'loss': 0, 'limit': 1313},
-        8: {'loss': 0, 'limit': 234},
+        2: {'loss': 0, 'limit': 1421, 'length': 500},
+        3: {'loss': 0, 'limit': 5288, 'length': 130},
+        8: {'loss': 0, 'limit': 234, 'length': 375},
     },
     5: {
-        6: {'loss': 0, 'limit': 2022},
-        11: {'loss': 0, 'limit': 200},  # REVIEW Estimate thermal limit based on 265MVAR capacity
-        12: {'loss': 0, 'limit': 1300},  # REVIEW Use thermal limit worst case?
-        13: {'loss': 0, 'limit': 0},
+        6: {'loss': 0, 'limit': 2022, 'length': 85},
+        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        11: {'loss': 0, 'limit': 200, 'length': 20},
+        # REVIEW Use limitations linked to Hydro generation at each side
+        12: {'loss': 0, 'limit': 1300, 'length': 150},
+        13: {'loss': 0, 'limit': 0, 'length': 600},
     },
     6: {
-        5: {'loss': 0, 'limit': 2022},
-        7: {'loss': 0, 'limit': 2304},
-        12: {'loss': 0, 'limit': 0},  # REVIEW Murray to Guthega is folded into 5-11 link
+        5: {'loss': 0, 'limit': 2022, 'length': 85},
+        7: {'loss': 0, 'limit': 2304, 'length': 115},
+        # REVIEW Murray to Guthega is folded into 5-11 link
+        12: {'loss': 0, 'limit': 0, 'length': 60},
     },
     7: {
-        6: {'loss': 0, 'limit': 2304},
-        8: {'loss': 0, 'limit': 929},
+        6: {'loss': 0, 'limit': 2304, 'length': 115},
+        8: {'loss': 0, 'limit': 929, 'length': 220},
     },
     8: {
-        3: {'loss': 0, 'limit': 486},
-        4: {'loss': 0, 'limit': 105},
-        7: {'loss': 0, 'limit': 929},
+        3: {'loss': 0, 'limit': 486, 'length': 415},
+        4: {'loss': 0, 'limit': 105, 'length': 375},
+        7: {'loss': 0, 'limit': 929, 'length': 220},
     },
     9: {
-        10: {'loss': 0, 'limit': 8907},
-        16: {'loss': 0.5, 'limit': 469},
+        10: {'loss': 0, 'limit': 8907, 'length': 136},
+        16: {'loss': 0.5, 'limit': 469, 'length': 320},
     },
     10: {
-        9: {'loss': 0, 'limit': 8907},
-        11: {'loss': 0, 'limit': 542},
-        12: {'loss': 0, 'limit': 1422},
-        15: {'loss': 0, 'limit': 460},
-        16: {'loss': 0, 'limit': 0},
+        9: {'loss': 0, 'limit': 8907, 'length': 136},
+        11: {'loss': 0, 'limit': 542, 'length': 450},
+        12: {'loss': 0, 'limit': 1422, 'length': 216},
+        15: {'loss': 0, 'limit': 460, 'length': 125},
+        16: {'loss': 0, 'limit': 0, 'length': 320},  # Estimate based on ISP VIC-TAS options
     },
     11: {
-        5: {'loss': 0, 'limit': 200},  # REVIEW Estimate thermal limit based on 265MVAR capacity
-        10: {'loss': 0, 'limit': 542},
-        12: {'loss': 0, 'limit': 284},
-        13: {'loss': 0, 'limit': 220},
+        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        5: {'loss': 0, 'limit': 200, 'length': 20},
+        10: {'loss': 0, 'limit': 542, 'length': 450},
+        12: {'loss': 0, 'limit': 284, 'length': 490},
+        13: {'loss': 0, 'limit': 220, 'length': 150},
     },
     12: {
-        5: {'loss': 0, 'limit': 1300},  # REVIEW Use thermal limit worst case?
-        6: {'loss': 0, 'limit': 0},  # REVIEW Murray to Guthega is folded into 5-11 link
-        10: {'loss': 0, 'limit': 1422},
-        11: {'loss': 0, 'limit': 284},
+        5: {'loss': 0, 'limit': 1300, 'length': 150},  # REVIEW Use thermal limit worst case?
+        6: {'loss': 0, 'limit': 0, 'length': 60},  # REVIEW Murray to Guthega is folded into 5-11 link
+        10: {'loss': 0, 'limit': 1422, 'length': 216},
+        11: {'loss': 0, 'limit': 284, 'length': 490},
     },
     13: {
-        5: {'loss': 0, 'limit': 0},
-        11: {'loss': 0, 'limit': 220},
-        14: {'loss': 0, 'limit': 537},
+        5: {'loss': 0, 'limit': 0, 'length': 600},
+        11: {'loss': 0, 'limit': 220, 'length': 150},
+        14: {'loss': 0, 'limit': 537, 'length': 100},
     },
     14: {
-        13: {'loss': 0, 'limit': 537},
-        15: {'loss': 0, 'limit': 547},
+        13: {'loss': 0, 'limit': 537, 'length': 100},
+        15: {'loss': 0, 'limit': 547, 'length': 380},
     },
     15: {
-        10: {'loss': 0, 'limit': 460},
-        14: {'loss': 0, 'limit': 547},
+        10: {'loss': 0, 'limit': 460, 'length': 125},
+        14: {'loss': 0, 'limit': 547, 'length': 380},
     },
     16: {
-        9: {'loss': 0, 'limit': 594},
-        10: {'loss': 0, 'limit': 0},
+        9: {'loss': 0, 'limit': 594, 'length': 320},
+        10: {'loss': 0, 'limit': 0, 'length': 320},  # Estimate based on ISP 2018 VIC-TAS option
     }
 }
-
+# REVIEW obsolete
 INTERCON_PROP_FACTOR = {
     1: {
         2: 0.61,
@@ -265,6 +269,7 @@ INTERCON_PROP_FACTOR = {
         4: 0.5
     }
 }
+# REVIEW obsolete
 INTERCON_TRANS_LIMIT = {
     1: {
         2: 360,
@@ -491,7 +496,7 @@ DEFAULT_HYB_PROPS = {
 
 DEFAULT_COSTS = {
     "unserved": 980000,
-    "trans": 0.02339, # AEMO 2018-2019 budget
+    "trans": 0.02339,  # AEMO 2018-2019 budget
     "emit": 0,
 }
 

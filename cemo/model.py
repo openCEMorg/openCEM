@@ -135,7 +135,7 @@ def create_model(namestr,
     m.cost_gen_build = Param(m.gen_tech_in_zones, default=9e7)
     m.cost_stor_build = Param(m.stor_tech_in_zones)  # Capital costs storage
     m.cost_hyb_build = Param(m.hyb_tech_in_zones)  # Capital costs hybrid
-    m.cost_intercon_build = Param(m.intercons_in_zones, default=1e5)  # Capital costs $/MW/km trans
+    m.cost_intercon_build = Param(m.intercons_in_zones, default=2300)  # Capital costs $/MW/km trans
 
     m.cost_fuel = Param(
         m.fuel_gen_tech_in_zones,
