@@ -242,9 +242,18 @@ def con_maxmhw(model, z, n):
     return Constraint.Skip
 
 
-def con_max_trans(model, zone_source, zone_dest, t):
-    '''constrain hourly transmission per link to be less than capacity'''
-    return model.intercon_disp[zone_source, zone_dest, t] \
+def con_max_trans(model, zone_source, zone_dest, time):
+    '''constrain hourly transmission per link to be less than capacity
+    It includes hard coded constraints for Murray/Tumit limitations on interconnectors'''
+    if zone_source == 5 and zone_dest == 12:
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= model.intercon_cap_op[zone_source, zone_dest] \
+            - (1350 - 400) / 2303 * model.gen_disp[5, 18, time]
+    if zone_source == 12 and zone_dest == 5:
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= model.intercon_cap_op[zone_source, zone_dest] \
+            - (1600 - 700) / 2222 * model.gen_disp[12, 18, time]
+    return model.intercon_disp[zone_source, zone_dest, time] \
         <= model.intercon_cap_op[zone_source, zone_dest]
 
 

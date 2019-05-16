@@ -195,7 +195,7 @@ ZONE_INTERCONS = {
         # REVIEW Estimate thermal limit based on 265MVAR capacity
         11: {'loss': 0, 'limit': 200, 'length': 20},
         # REVIEW Use limitations linked to Hydro generation at each side
-        12: {'loss': 0, 'limit': 1300, 'length': 150},
+        12: {'loss': 0, 'limit': 1350, 'length': 150},
         13: {'loss': 0, 'limit': 0, 'length': 600},
     },
     6: {
@@ -232,7 +232,7 @@ ZONE_INTERCONS = {
         13: {'loss': 0, 'limit': 220, 'length': 150},
     },
     12: {
-        5: {'loss': 0, 'limit': 1300, 'length': 150},  # REVIEW Use thermal limit worst case?
+        5: {'loss': 0, 'limit': 1600, 'length': 150},
         6: {'loss': 0, 'limit': 0, 'length': 60},  # REVIEW Murray to Guthega is folded into 5-11 link
         10: {'loss': 0, 'limit': 1422, 'length': 216},
         11: {'loss': 0, 'limit': 284, 'length': 490},

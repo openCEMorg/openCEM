@@ -291,6 +291,7 @@ def create_model(namestr,
     m.surplus = Var(
         m.zones, m.t, within=NonNegativeReals)  # surplus power (if any)
 
+    # Interconnector flow
     m.intercon_disp = Var(m.intercons_in_zones, m.t, within=NonNegativeReals)
 
     # @@ Constraints
