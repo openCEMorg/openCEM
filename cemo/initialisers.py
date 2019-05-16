@@ -81,7 +81,7 @@ def init_intercon_loss_factor(model, source, dest):
     '''Initialise interconnector proportioning factors'''
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
-
+# FIXME deprecated
 def init_intercon_trans_limit(model, source, dest):
     # pylint: disable=unused-argument
     '''Initialise interconector transmission limits'''

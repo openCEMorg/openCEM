@@ -225,9 +225,6 @@ def create_model(namestr,
 
     # Maximum hydro energy
     m.hydro_gen_mwh_limit = Param(m.zones, initialize=init_max_hydro)
-    # Transmission line limits
-    m.intercon_trans_limit = Param(
-        m.zone_intercons, initialize=init_intercon_trans_limit)
 
     # carry forward capital costs
     m.cost_cap_carry_forward = Param(m.zones, default=0)

@@ -245,18 +245,19 @@ def con_maxmhw(model, z, n):
 def con_max_trans(model, zone_source, zone_dest, t):
     '''constrain hourly transmission per link to be less than capacity'''
     return model.intercon_disp[zone_source, zone_dest, t] \
-        <= model.intercon_trans_limit[zone_source, zone_dest]
+        <= model.intercon_cap_op[zone_source, zone_dest]
 
 
-def con_intercon_op_cap(model, zone_source, zone_dest):
+def con_intercon_cap(model, zone_source, zone_dest):
     '''Operating transmission capacity is the net of
        - initial (or carryover)
        - model decisions
        -exogenous builds'''
     return model.intercon_cap_op[zone_source, zone_dest] \
-        == model.intercon_cap_initital[zone_source, zone_dest]\
+        == model.intercon_cap_initial[zone_source, zone_dest]\
         + model.intercon_cap_exo[zone_source, zone_dest]\
-        + model.intercon_cap_new[zone_source, zone_dest]
+        + model.intercon_cap_new[zone_source, zone_dest]\
+        + model.intercon_cap_new[zone_dest, zone_source]
 
 
 def con_chargelim(model, z, s, t):

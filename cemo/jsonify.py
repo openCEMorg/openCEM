@@ -68,7 +68,6 @@ def jsonify(inst):
                inst.hyb_cap_exo.name: fill_complex_param(inst.hyb_cap_exo),
                inst.ret_gen_cap_exo.name: fill_complex_param(inst.ret_gen_cap_exo),
                inst.region_net_demand.name: fill_complex_param(inst.region_net_demand),
-               inst.intercon_trans_limit.name: fill_complex_param(inst.intercon_trans_limit),
 
                # params with many scalar keys and
                inst.cost_gen_fom.name: fill_scalar_key_param(inst.cost_gen_fom),
