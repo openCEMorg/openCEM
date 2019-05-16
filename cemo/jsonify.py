@@ -16,7 +16,8 @@ __status__ = "Development"
 
 from pyomo.environ import value
 
-from cemo.rules import cost_capital_per_zone, cost_shadow
+from cemo.rules import (cost_build_per_zone, cost_shadow,
+                        cost_trans_build_per_zone)
 
 
 def jsonify(inst):

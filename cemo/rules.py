@@ -445,10 +445,10 @@ def con_uns(model, r):
 
 def cost_capital(model):
     '''calculate total build costs'''
-    return sum(cost_capital_per_zone(model, zone) for zone in model.zones)
+    return sum(cost_build_per_zone(model, zone) for zone in model.zones)
 
 
-def cost_capital_per_zone(model, zone):
+def cost_build_per_zone(model, zone):
     '''calculate build costs per zone'''
     return sum(model.cost_gen_build[zone, tech]
                * (model.gen_cap_new[zone, tech] + model.gen_cap_exo[zone, tech])
