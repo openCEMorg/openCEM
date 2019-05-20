@@ -77,6 +77,10 @@ def setinstancecapacity(instance, clustercap):
             key = str(z) + ',' + str(h)
             instance.hyb_cap_new[z, h] = roundup(
                 data['hyb_cap_new[' + key + ']']['solution'])
+        for i in instance.intercon_per_zone[z]:
+            key = str(z) + ',' + str(i)
+            instance.intercon_cap_new[z, i] = roundup(
+                data['intercon_cap_new[' + key + ']']['solution'])
         for r in instance.retire_gen_tech_per_zone[z]:
             key = str(z) + ',' + str(r)
             instance.gen_cap_ret[z, r] \
@@ -85,6 +89,7 @@ def setinstancecapacity(instance, clustercap):
     instance.gen_cap_new.fix()
     instance.stor_cap_new.fix()
     instance.hyb_cap_new.fix()
+    instance.intercon_cap_new.fix()
     instance.gen_cap_ret.fix()
     return instance
 

@@ -27,6 +27,7 @@ def jsonify(inst):
                inst.zones.name: list(inst.zones),
                inst.all_tech.name: list(inst.all_tech),
                inst.fuel_gen_tech.name: list(inst.fuel_gen_tech),
+               inst.commit_gen_tech.name: list(inst.commit_gen_tech),
                inst.retire_gen_tech.name: list(inst.retire_gen_tech),
                inst.nobuild_gen_tech.name: list(inst.nobuild_gen_tech),
                inst.hyb_tech.name: list(inst.hyb_tech),
@@ -36,6 +37,7 @@ def jsonify(inst):
                inst.gen_tech_in_zones.name: list(inst.gen_tech_in_zones),
                inst.fuel_gen_tech_in_zones.name: list(inst.fuel_gen_tech_in_zones),
                inst.retire_gen_tech_in_zones.name: list(inst.retire_gen_tech_in_zones),
+               inst.commit_gen_tech_in_zones.name: list(inst.commit_gen_tech_in_zones),
                inst.hyb_tech_in_zones.name: list(inst.hyb_tech_in_zones),
                inst.stor_tech_in_zones.name: list(inst.stor_tech_in_zones),
                inst.intercons_in_zones.name: list(inst.intercons_in_zones),
@@ -44,6 +46,7 @@ def jsonify(inst):
                inst.gen_tech_per_zone.name: fill_complex_set(inst.gen_tech_per_zone),
                inst.fuel_gen_tech_per_zone.name: fill_complex_set(inst.fuel_gen_tech_per_zone),
                inst.retire_gen_tech_per_zone.name: fill_complex_set(inst.retire_gen_tech_per_zone),
+               inst.commit_gen_tech_per_zone.name: fill_complex_set(inst.commit_gen_tech_per_zone),
                inst.hyb_tech_per_zone.name: fill_complex_set(inst.hyb_tech_per_zone),
                inst.stor_tech_per_zone.name: fill_complex_set(inst.stor_tech_per_zone),
                inst.intercon_per_zone.name: fill_complex_set(inst.intercon_per_zone)
@@ -94,6 +97,7 @@ def jsonify(inst):
                inst.cost_trans.name: inst.cost_trans.value,
                inst.all_tech_discount_rate.name: inst.all_tech_discount_rate.value,
                inst.year_correction_factor.name: inst.year_correction_factor.value,
+               inst.intercon_fixed_charge_rate.name: inst.intercon_fixed_charge_rate.value,
 
 
            },
@@ -236,7 +240,7 @@ def fill_complex_var(var):
     '''Return complex variable dictionary'''
     out = []
     for i in var.keys():
-        out.append({'index': i, 'value': var[i].value})
+        out.append({'index': i, 'value': 0 if 1e-6 < var[i].value < 0 else var[i].value})
 
     return out
 
