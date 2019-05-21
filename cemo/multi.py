@@ -547,13 +547,13 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         return exogenous_capacity
 
-    def generateyeartemplate(self, year, test=False):
+    def generateyeartemplate(self, year, test=True):
         """Generate data command file template used for clusters and full runs"""
         date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
         date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
         if test:
-            date2 = datetime.datetime(year - 1, 7, 3, 23, 0, 0)
+            date2 = datetime.datetime(year - 1, 7, 7, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.tmpdir + 'Sim' + str(year) + '.dat'
@@ -766,7 +766,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "Years": self.Years,
             "Template": self.Template,
             "Clustering": self.cluster,
-            "Cluster_number":  self.cluster_max_d if self.cluster else "N/A",
+            "Cluster_number":  self.cluster_max_d if self.cluster else 0,
             "Solver": self.solver,
             "Discount_rate": self.discountrate,
             "Emission_cost": self.cost_emit,
