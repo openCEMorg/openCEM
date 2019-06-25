@@ -18,10 +18,10 @@ from cemo.multi import SolveTemplate
 
 
 def valid_file(param):
-    '''Validates configuration file has the correct extension'''
+    """Validates configuration file has the correct extension"""
     ext = os.path.splitext(param)[1]
-    if ext not in ('.cfg'):
-        raise argparse.ArgumentTypeError('File must have a cfg extension')
+    if ext not in (".cfg"):
+        raise argparse.ArgumentTypeError("File must have a cfg extension")
     return param
 
 
@@ -34,30 +34,34 @@ parser = argparse.ArgumentParser(description="openCEM multiyear model solver")
 # Multi year simulation option using a configuration file
 parser.add_argument(
     "config",
-    help="Specify a configuration file for simulation" +
-    " Note: Python configuration files named CONFIG.cfg",
+    help="Specify a configuration file for simulation"
+    + " Note: Python configuration files named CONFIG.cfg",
     type=valid_file,
-    metavar='CONFIG')
+    metavar="CONFIG",
+)
 # Obtain a solver name from command line, default cbc
 parser.add_argument(
     "--solver",
-    help="Specify solver used by model." +
-    " For Pyomo supported solvers installed in your system ",
+    help="Specify solver used by model."
+    + " For Pyomo supported solvers installed in your system ",
     type=str,
-    metavar='SOLVER',
-    default="cbc")
+    metavar="SOLVER",
+    default="cbc",
+)
 
 # Zip and upload result to custom directory
 parser.add_argument(
     "--log",
     help="Request solver logging and traceback information",
-    action='store_true')
+    action="store_true",
+)
 
 parser.add_argument(
-    "-k",
-    "--keepfiles",
-    help="Save generated files onto a folder with the same name as the configuration file",
-    action='store_true')
+    "-r`",
+    "--resume",
+    help="Resume simulation from last succesfully run year",
+    action="store_true",
+)
 
 # parse arguments into args structure
 args = parser.parse_args()
@@ -65,19 +69,23 @@ args = parser.parse_args()
 # Read configuration file name from
 cfgfile = args.config
 
-# create Multi year simulation
-X = SolveTemplate(cfgfile, solver=args.solver, log=args.log)
+SIM_DIR = cfgfile.split(".")[0] + "/"
+if not os.path.exists(SIM_DIR):
+    os.mkdir(SIM_DIR)
 
-# make a temporary directoy
-if args.keepfiles:
-    path = cfgfile.split(".")[0] + '/'
-    if not os.path.exists(path):
-        os.mkdir(path)
-    X.tmpdir = path
+# create Multi year simulation
+X = SolveTemplate(
+    cfgfile, solver=args.solver, log=args.log, tmpdir=SIM_DIR, resume=args.resume
+)
+
 
 # instruct the solver to launch the multi year simulation
-print("openCEM msolve.py: Runtime %s (pre solver)" % str(
-    datetime.timedelta(seconds=(time.time() - start_time))))
+print(
+    "openCEM msolve.py: Runtime %s (pre solver)"
+    % str(datetime.timedelta(seconds=(time.time() - start_time)))
+)
 X.solve()
-print("openCEM msolve.py: Runtime %s (post solver)" % str(
-    datetime.timedelta(seconds=(time.time() - start_time))))
+print(
+    "openCEM msolve.py: Runtime %s (post solver)"
+    % str(datetime.timedelta(seconds=(time.time() - start_time)))
+)

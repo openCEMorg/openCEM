@@ -97,7 +97,7 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/'):
+    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -106,6 +106,7 @@ class SolveTemplate:
         except FileNotFoundError:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
+        self.resume = resume
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
         self.Years = json.loads(Scenario['Years'])
@@ -694,6 +695,10 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         Assemble full simulation output as metadata+ full year results in each simulated year
         """
         for y in self.Years:
+            if self.resume:
+                if os.path.exists(self.tmpdir+str(y)+'.json'):
+                    print("Skipping year %s" % y)
+                    continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
