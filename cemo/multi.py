@@ -766,7 +766,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "Years": self.Years,
             "Template": self.Template,
             "Clustering": self.cluster,
-            "Cluster_number":  self.cluster_max_d if self.cluster else "N/A",
+            "Cluster_number":  self.cluster_max_d if self.cluster else 0,
             "Solver": self.solver,
             "Discount_rate": self.discountrate,
             "Emission_cost": self.cost_emit,
