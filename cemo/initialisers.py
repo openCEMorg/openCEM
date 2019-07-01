@@ -149,4 +149,6 @@ def init_cap_factor(model, zone, tech, time):
     # pylint: disable=unused-argument
     '''Default capacity factor per hour per technology and per zone.
         Note:Default to zero means technology does not generate'''
-    return cemo.const.GEN_CAP_FACTOR.get(tech, 0)
+    if cemo.const.GEN_CAP_FACTOR.get(tech) is not None:
+        return cemo.const.GEN_CAP_FACTOR.get(tech)
+    return 1
