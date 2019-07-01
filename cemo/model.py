@@ -17,8 +17,9 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
                                init_gen_build_limit, init_hyb_charge_hours,
-                               init_hyb_col_mult, init_intercon_cap_initial,
-                               init_intercon_fcr, init_intercon_loss_factor,
+                               init_hyb_col_mult, init_intercon_build_cost,
+                               init_intercon_cap_initial, init_intercon_fcr,
+                               init_intercon_loss_factor,
                                init_intercons_in_zones, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
                                init_zone_demand_factors, init_zones_in_regions)
@@ -134,7 +135,8 @@ def create_model(namestr,
     m.cost_gen_build = Param(m.gen_tech_in_zones, default=9e7)
     m.cost_stor_build = Param(m.stor_tech_in_zones)  # Capital costs storage
     m.cost_hyb_build = Param(m.hyb_tech_in_zones)  # Capital costs hybrid
-    m.cost_intercon_build = Param(m.intercons_in_zones, default=2300)  # Capital costs $/MW/km trans
+    # Capital costs $/MW/km trans
+    m.cost_intercon_build = Param(m.intercons_in_zones, initialize=init_intercon_build_cost)
 
     m.cost_fuel = Param(
         m.fuel_gen_tech_in_zones,

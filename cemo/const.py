@@ -163,88 +163,88 @@ ZONE_DEMAND_PCT = {
 
 ZONE_INTERCONS = {
     1: {
-        2: {'loss': 0.02, 'limit': 1501, 'length': 600}
+        2: {'loss': 0.02, 'limit': 1501, 'length': 600, 'buildcost': 2500}
     },
     2: {
-        1: {'loss': 0.02, 'limit': 1501, 'length': 600},
-        3: {'loss': 0.02, 'limit': 1313, 'length': 385},
-        4: {'loss': 0.02, 'limit': 1421, 'length': 500}
+        1: {'loss': 0.02, 'limit': 1501, 'length': 600, 'buildcost': 2500},
+        3: {'loss': 0.02, 'limit': 1313, 'length': 385, 'buildcost': 2500},
+        4: {'loss': 0.02, 'limit': 1421, 'length': 500, 'buildcost': 2500}
     },
     3: {
-        2: {'loss': 0.02, 'limit': 1313, 'length': 385},
-        4: {'loss': 0.02, 'limit': 5288, 'length': 130},
-        8: {'loss': 0.02, 'limit': 1078, 'length': 415},
+        2: {'loss': 0.02, 'limit': 1313, 'length': 385, 'buildcost': 2500},
+        4: {'loss': 0.02, 'limit': 5288, 'length': 130, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 1078, 'length': 415, 'buildcost': 2500},
     },
     4: {
-        2: {'loss': 0.02, 'limit': 1421, 'length': 500},
-        3: {'loss': 0.02, 'limit': 5288, 'length': 130},
-        8: {'loss': 0.02, 'limit': 234, 'length': 375},
+        2: {'loss': 0.02, 'limit': 1421, 'length': 500, 'buildcost': 2500},
+        3: {'loss': 0.02, 'limit': 5288, 'length': 130, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 234, 'length': 375,' buildcost': 2500},
     },
     5: {
-        6: {'loss': 0.02, 'limit': 2022, 'length': 85},
+        6: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
         # REVIEW Estimate thermal limit based on 265MVAR capacity
         # Artificial length is 150 so that builds are more comparable
-        11: {'loss': 0.2, 'limit': 200, 'length': 150},
+        11: {'loss': 0.2, 'limit': 200, 'length': 150, 'buildcost': 2500},
         # REVIEW Use limitations linked to Hydro generation at each side
-        12: {'loss': 0.2, 'limit': 1350, 'length': 150},
-        13: {'loss': 0.02, 'limit': 0, 'length': 600},
+        12: {'loss': 0.2, 'limit': 1350, 'length': 150, 'buildcost': 2500},
+        13: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
     },
     6: {
-        5: {'loss': 0.02, 'limit': 2022, 'length': 85},
-        7: {'loss': 0.02, 'limit': 2304, 'length': 115},
+        5: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
+        7: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
         # REVIEW Murray to Guthega is folded into 5-11 link
         # 12: {'loss': 0.02, 'limit': 0, 'length': 60},
     },
     7: {
-        6: {'loss': 0.02, 'limit': 2304, 'length': 115},
-        8: {'loss': 0.02, 'limit': 929, 'length': 220},
+        6: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 929, 'length': 220, 'buildcost': 2500},
     },
     8: {
-        3: {'loss': 0.61, 'limit': 486, 'length': 415},
-        4: {'loss': 0.61, 'limit': 105, 'length': 375},
-        7: {'loss': 0.02, 'limit': 929, 'length': 220},
+        3: {'loss': 0.61, 'limit': 486, 'length': 415, 'buildcost': 2500},
+        4: {'loss': 0.61, 'limit': 105, 'length': 375, 'buildcost': 2500},
+        7: {'loss': 0.02, 'limit': 929, 'length': 220, 'buildcost': 2500},
     },
     9: {
-        10: {'loss': 0.02, 'limit': 8907, 'length': 136},
-        16: {'loss': 0.5, 'limit': 469, 'length': 320},
+        10: {'loss': 0.02, 'limit': 8907, 'length': 136, 'buildcost': 2500},
+        16: {'loss': 0.5, 'limit': 469, 'length': 320, 'buildcost': 2500},
     },
     10: {
-        9: {'loss': 0.02, 'limit': 8907, 'length': 136},
-        11: {'loss': 0.02, 'limit': 542, 'length': 450},
-        12: {'loss': 0.02, 'limit': 1422, 'length': 216},
-        15: {'loss': 0.5, 'limit': 460, 'length': 125},
-        16: {'loss': 0.5, 'limit': 0, 'length': 320},  # Estimate based on ISP VIC-TAS options
+        9: {'loss': 0.02, 'limit': 8907, 'length': 136, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
+        12: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
+        15: {'loss': 0.5, 'limit': 460, 'length': 125, 'buildcost': 2500},
+        16: {'loss': 0.5, 'limit': 0, 'length': 320, 'buildcost': 2500},  # West Tas to Geelong
     },
     11: {
         # REVIEW Estimate thermal limit based on 265MVAR capacity
-        5: {'loss': 0.02, 'limit': 200, 'length': 20},
-        10: {'loss': 0.02, 'limit': 542, 'length': 450},
-        12: {'loss': 0.02, 'limit': 284, 'length': 490},
-        13: {'loss': 0.5, 'limit': 220, 'length': 150},
+        5: {'loss': 0.02, 'limit': 200, 'length': 20, 'buildcost': 2500},
+        10: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
+        12: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
+        13: {'loss': 0.5, 'limit': 220, 'length': 150, 'buildcost': 2500},
     },
     12: {
-        5: {'loss': 0.02, 'limit': 1600, 'length': 150},
+        5: {'loss': 0.02, 'limit': 1600, 'length': 150, 'buildcost': 2500},
         # REVIEW Murray to Guthega is folded into 5-11 link
         # 6: {'loss': 0.02, 'limit': 0, 'length': 60},
-        10: {'loss': 0.02, 'limit': 1422, 'length': 216},
-        11: {'loss': 0.02, 'limit': 284, 'length': 490},
+        10: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
     },
     13: {
-        5: {'loss': 0.02, 'limit': 0, 'length': 600},
-        11: {'loss': 0.02, 'limit': 220, 'length': 150},
-        14: {'loss': 0.02, 'limit': 537, 'length': 100},
+        5: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 220, 'length': 150, 'buildcost': 2500},
+        14: {'loss': 0.02, 'limit': 537, 'length': 100, 'buildcost': 2500},
     },
     14: {
-        13: {'loss': 0.02, 'limit': 537, 'length': 100},
-        15: {'loss': 0.02, 'limit': 547, 'length': 380},
+        13: {'loss': 0.02, 'limit': 537, 'length': 100, 'buildcost': 2500},
+        15: {'loss': 0.02, 'limit': 547, 'length': 380, 'buildcost': 2500},
     },
     15: {
-        10: {'loss': 0.02, 'limit': 460, 'length': 125},
-        14: {'loss': 0.02, 'limit': 547, 'length': 380},
+        10: {'loss': 0.02, 'limit': 460, 'length': 125, 'buildcost': 2500},
+        14: {'loss': 0.02, 'limit': 547, 'length': 380, 'buildcost': 2500},
     },
     16: {
-        9: {'loss': 0.02, 'limit': 594, 'length': 320},
-        10: {'loss': 0.02, 'limit': 0, 'length': 320},  # Estimate based on ISP 2018 VIC-TAS option
+        9: {'loss': 0.02, 'limit': 594, 'length': 320, 'buildcost': 2500},
+        10: {'loss': 0.02, 'limit': 0, 'length': 320, 'buildcost': 2500},  # Estimate based on ISP 2018 VIC-TAS option
     }
 }
 
