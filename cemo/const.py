@@ -74,17 +74,7 @@ ZONES_IN_REGIONS = [
     (5, 11),
     (5, 12),
 ]
-# REVIEW obsolete
-REGION_INTERCONS = [
-    (4, 5),
-    (5, 4),
-    (5, 1),
-    (1, 5),
-    (3, 5),
-    (5, 3),
-    (1, 2),
-    (2, 1),
-]
+
 # Source Modelling Transmission Frameworks Review (EPR0019) Roam Consulting,
 # Table 4.4, 2029-2030 values, adapted to openCEM zones
 ZONE_DEMAND_PCT = {
@@ -257,41 +247,7 @@ ZONE_INTERCONS = {
         10: {'loss': 0.02, 'limit': 0, 'length': 320},  # Estimate based on ISP 2018 VIC-TAS option
     }
 }
-# REVIEW obsolete
-INTERCON_PROP_FACTOR = {
-    1: {
-        2: 0.61,
-        5: 0.2
-    },
-    2: {},
-    3: {},
-    4: {},
-    5: {
-        3: 0.5,
-        4: 0.5
-    }
-}
-# REVIEW obsolete
-INTERCON_TRANS_LIMIT = {
-    1: {
-        2: 360,
-        5: 400
-    },
-    2: {
-        1: 1175
-    },
-    3: {
-        5: 850
-    },
-    4: {
-        5: 480
-    },
-    5: {
-        1: 700,
-        3: 870,
-        4: 480
-    },
-}
+
 
 DEFAULT_FUEL_PRICE = {
     1: 0.5,
