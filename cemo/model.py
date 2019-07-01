@@ -306,8 +306,8 @@ def create_model(namestr,
     # MaxMWh limit
     m.con_max_mwh_per_zone = Constraint(m.gen_tech_in_zones, rule=con_max_mhw_per_zone)
     # MaxMWh limit (currently only for hydro)
-    m.max_mwh_as_cap_factor = Constraint(
-        m.gen_tech_in_zones, rule=con_max_mwh_as_cap_factor)
+    m.con_max_mwh_nem_wide = Constraint(
+        m.all_tech, rule=con_max_mwh_nem_wide)
     # Slack constraint on exogenous retirement to prevent it to go nevative
     m.con_slackretire = Constraint(
         m.retire_gen_tech_in_zones, rule=con_slackretire)

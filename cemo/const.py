@@ -350,7 +350,12 @@ DEFAULT_MAX_MWH_PER_ZONE = {
         16: 9165993  # openNEM 2009-2018 LTA is 9165993
     }
 }
+
+DEFAULT_MAX_MWH_NEM_WIDE = {
+    1: 10.1e6,  # Source Near term potential for Biomass
 }
+
+
 
 DEFAULT_RETIREMENT_COST = {
     2: 10487.98,

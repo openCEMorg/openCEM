@@ -222,7 +222,7 @@ def con_region_ret_ratio(model, r):
               )
     )
 
-
+# FIXME deprecated
 def con_max_mwh_as_cap_factor(model, zone, tech):
     '''Define a maximum MWh output as a capacity factor cap for a zone and technology'''
     cap_factor = cemo.const.MAX_MWH_CAP_FACTOR.get(zone).get(tech, 1)
@@ -244,6 +244,17 @@ def con_max_mhw_per_zone(model, zone, tech):
             model.year_correction_factor
     return Constraint.Skip
 
+
+def con_max_mwh_nem_wide(model, tech):
+    '''limit maximum generation over a period for a tech nem wide.
+
+       Results scaled to yearly MWH using year correction factor'''
+    if cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) is not None:
+        return sum(model.gen_disp[zone, tech, time]
+                   for zone in model.zones if tech in model.gen_tech_per_zone[zone]
+                   for time in model.t)\
+            <= cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
+            model.year_correction_factor
     return Constraint.Skip
 
 
