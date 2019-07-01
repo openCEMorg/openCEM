@@ -150,9 +150,3 @@ def init_cap_factor(model, zone, tech, time):
     '''Default capacity factor per hour per technology and per zone.
         Note:Default to zero means technology does not generate'''
     return cemo.const.GEN_CAP_FACTOR.get(tech, 0)
-
-
-def init_max_hydro(model, zone):
-    # pylint: disable=unused-argument
-    '''Default maximum hydro generation per year in each zone'''
-    return cemo.const.DEFAULT_HYDRO_MWH_MAX.get(zone, 0)

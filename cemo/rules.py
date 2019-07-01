@@ -234,11 +234,16 @@ def con_max_mwh_as_cap_factor(model, zone, tech):
     return Constraint.Skip
 
 
-def con_maxmhw(model, z, n):
-    '''limit maximum generation over a period, scaled to yearly'''
-    if n == 18:  # hydro only
-        return sum(model.gen_disp[z, n, t] for t in model.t)\
-            <= model.hydro_gen_mwh_limit[z] / model.year_correction_factor
+def con_max_mhw_per_zone(model, zone, tech):
+    '''limit maximum generation over a period for a tech in a zone.
+
+       Results scaled to yearly MWH using year correction factor'''
+    if cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech) is not None:
+        return sum(model.gen_disp[zone, tech, time] for time in model.t)\
+            <= cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech).get(zone, 0) /\
+            model.year_correction_factor
+    return Constraint.Skip
+
     return Constraint.Skip
 
 

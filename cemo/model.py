@@ -11,7 +11,6 @@ __status__ = "Development"
 from pyomo.environ import (AbstractModel, BuildAction, Constraint, Expression,
                            NonNegativeReals, Objective, Param, Set, Suffix,
                            Var)
-
 import cemo.const
 from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_default_fuel_emit_rate,
@@ -20,9 +19,8 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_gen_build_limit, init_hyb_charge_hours,
                                init_hyb_col_mult, init_intercon_cap_initial,
                                init_intercon_fcr, init_intercon_loss_factor,
-                               init_intercons_in_zones, init_max_hydro,
-                               init_stor_charge_hours, init_stor_rt_eff,
-                               init_year_correction_factor,
+                               init_intercons_in_zones, init_stor_charge_hours,
+                               init_stor_rt_eff, init_year_correction_factor,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
@@ -31,14 +29,15 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         con_dischargelimhy, con_disp_ramp_down,
                         con_disp_ramp_up, con_emissions, con_gen_cap,
                         con_hyb_cap, con_hybcharge, con_intercon_cap,
-                        con_ldbal, con_max_mwh_as_cap_factor, con_max_trans,
-                        con_maxcap, con_maxcharge, con_maxchargehy, con_maxmhw,
-                        con_min_load_commit, con_nem_disp_ratio,
-                        con_nem_re_disp_ratio, con_nem_ret_gwh,
-                        con_nem_ret_ratio, con_ramp_down_uptime,
-                        con_region_ret_ratio, con_slackbuild, con_slackretire,
-                        con_stor_cap, con_storcharge, con_uns,
-                        con_uptime_commitment, obj_cost)
+                        con_ldbal, con_max_mhw_per_zone, con_max_mwh_nem_wide,
+                        con_max_trans, con_maxcap, con_maxcharge,
+                        con_maxchargehy, con_min_load_commit,
+                        con_nem_disp_ratio, con_nem_re_disp_ratio,
+                        con_nem_ret_gwh, con_nem_ret_ratio,
+                        con_ramp_down_uptime, con_region_ret_ratio,
+                        con_slackbuild, con_slackretire, con_stor_cap,
+                        con_storcharge, con_uns, con_uptime_commitment,
+                        obj_cost)
 
 
 def create_model(namestr,
@@ -225,9 +224,6 @@ def create_model(namestr,
     # Zone load distribution factors as a pct of region demand
     m.zone_demand_factor = Param(m.zones, m.t, initialize=init_zone_demand_factors)
 
-    # Maximum hydro energy
-    m.hydro_gen_mwh_limit = Param(m.zones, initialize=init_max_hydro)
-
     # carry forward capital costs
     m.cost_cap_carry_forward = Param(m.zones, default=0)
 
@@ -308,7 +304,7 @@ def create_model(namestr,
     # gen_cap_op in existing period is previous gen_cap_op plus gen_cap_new
     m.con_gen_cap = Constraint(m.gen_tech_in_zones, rule=con_gen_cap)
     # MaxMWh limit
-    m.max_mwh = Constraint(m.gen_tech_in_zones, rule=con_maxmhw)
+    m.con_max_mwh_per_zone = Constraint(m.gen_tech_in_zones, rule=con_max_mhw_per_zone)
     # MaxMWh limit (currently only for hydro)
     m.max_mwh_as_cap_factor = Constraint(
         m.gen_tech_in_zones, rule=con_max_mwh_as_cap_factor)

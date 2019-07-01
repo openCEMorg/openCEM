@@ -332,20 +332,24 @@ DEFAULT_FUEL_EMIT_RATE = {
     19: 705.0
 }
 
-DEFAULT_HYDRO_MWH_MAX = {
-    1: 195000,  # openNEM data shows the 2010-2017 yearly average is 662262
-    3: 0,
-    4: 0,
-    5: 3294000,  # openNEM data shows the 2009-2018 yearly average is 2326421
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: 0,
-    12:
-    4753000,  # openNEM data shows the 2009-2018 yearly average to be 2747264
-    14: 0,
-    16: 11287000  # openNEM 2009-2018 LTA is 9165993
+DEFAULT_MAX_MWH_PER_ZONE = {
+    18: {
+        1: 662262,  # openNEM data shows the 2010-2017 yearly average is 662262
+        3: 0,
+        4: 0,
+        5:
+        2326421,  # openNEM data shows the 2009-2018 yearly average is 2326421
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+        12:
+        2747264,  # openNEM data shows the 2009-2018 yearly average to be 2747264
+        14: 0,
+        16: 9165993  # openNEM 2009-2018 LTA is 9165993
+    }
+}
 }
 
 DEFAULT_RETIREMENT_COST = {
