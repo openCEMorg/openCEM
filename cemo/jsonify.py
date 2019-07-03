@@ -240,7 +240,7 @@ def fill_complex_var(var):
     '''Return complex variable dictionary'''
     out = []
     for i in var.keys():
-        out.append({'index': i, 'value': 0 if 1e-6 < var[i].value < 0 else var[i].value})
+        out.append({'index': i, 'value': 0 if -1e-6 < var[i].value < 0 else var[i].value})
 
     return out
 
