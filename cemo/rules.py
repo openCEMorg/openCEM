@@ -10,7 +10,12 @@ __status__ = "Development"
 from pyomo.environ import Constraint
 
 import cemo.const
-from cemo.utils import region_in_zone
+
+
+def region_in_zone(zone):
+    '''Return region where a given zone belongs to'''
+    result = [pair[0] for pair in cemo.const.ZONES_IN_REGIONS if pair[1] == zone]
+    return result[0]
 
 
 def ScanForTechperZone(model):

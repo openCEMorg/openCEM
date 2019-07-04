@@ -21,12 +21,6 @@ import cemo.rules
 locale.setlocale(locale.LC_ALL, '')
 
 
-def region_in_zone(zone):
-    '''Return region where a given zone belongs to'''
-    result = [pair[0] for pair in cemo.const.ZONES_IN_REGIONS if pair[1] == zone]
-    return result[0]
-
-
 def printonly(instance, key):  # pragma: no cover
     '''pprint specified instance variable and exit'''
     if key == "all":

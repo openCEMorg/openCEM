@@ -525,7 +525,10 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
-            prevyear = self.Years[self.Years.index(year) - 1]
+            prevyear = 2017
+            if self.Years.index(year) > 0:
+                prevyear = self.Years[self.Years.index(year) - 1]
+
             for key in keywords.keys():
                 cap = capacity[
                     (capacity['year'] > int(prevyear)) &
@@ -535,7 +538,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     (capacity['zone'].isin(self.zones))
                 ]
                 if not cap.empty:
-                    exogenous_capacity += '#Exogenous capacity entry ' + key + '\n'
+                    exogenous_capacity += '# Exogenous capacity entry ' + key + '\n'
                     exogenous_capacity += 'param ' + key + ':=\n'
                     exogenous_capacity += cap[['zone', 'tech', 'value']
                                               ].to_string(header=False, index=False,
