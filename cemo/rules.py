@@ -514,28 +514,53 @@ def cost_unserved(model):
 
 
 def cost_operating(model):
-    '''Calculate operating costs as the sum of FOM, VOM
-    and fuel costs for generators, hybrid and storage'''
+    '''Calculate Variable operating costs.
+
+    VOM costs are the sum of:
+    - generator VOM costs
+    - flexible generator fuel costs
+    - non-flexible generator fuel costs
+    - non-flexible generator start up fuel costs
+    - storage VOM costs
+    - Hybrid COM costs
+    '''
     return model.year_correction_factor * (
         sum(model.cost_gen_vom[n] * model.gen_disp[z, n, t]
             for z in model.zones for n in model.gen_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_fuel[z, f] * model.fuel_heat_rate[z, f] *
             model.gen_disp[z, f, t] for z in model.zones
-            for f in model.fuel_gen_tech_per_zone[z]
+            for f in set(model.fuel_gen_tech_per_zone[z]) - set(model.commit_gen_tech_per_zone[z])
+            for t in model.t) +
+        sum(cost_fuel_non_flexible(model, z, f, t) for z in model.zones
+            for f in model.commit_gen_tech_per_zone[z]
+            for t in model.t) +
+        sum(model.cost_fuel[z, n] * cemo.const.GEN_COMMIT['penalty'].get(n, 0) * model.gen_disp_com_p[z, n, t]
+            for z in model.zones
+            for n in model.commit_gen_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_stor_vom[s] * model.stor_disp[z, s, t]
             for z in model.zones for s in model.stor_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
             for z in model.zones
-            for h in model.hyb_tech_per_zone[z] for t in model.t) +
-        sum(model.cost_fuel[z, n] *
-            cemo.const.GEN_COMMIT['penalty'].get(
-                n, 0) * model.gen_disp_com_p[z, n, t]
-            for z in model.zones
-            for n in model.commit_gen_tech_per_zone[z]
-            for t in model.t))
+            for h in model.hyb_tech_per_zone[z] for t in model.t)
+        )
+
+
+def cost_fuel_non_flexible(model, zone, tech, time):
+    '''Fuel cost for non flexible generators.
+
+    Heat rate varies linearly to simulate lower efficiency at part load'''
+    mincap = cemo.const.GEN_COMMIT['mincap'].get(tech)
+    effrate = cemo.const.GEN_COMMIT['effrate'].get(tech)
+    return model.cost_fuel[zone, tech] * (
+        mincap * model.gen_disp_com[zone, tech, time] *
+        model.fuel_heat_rate[zone, tech] / effrate +
+        (model.gen_disp[zone, tech, time] - mincap *
+         model.gen_disp_com[zone, tech, time]) * model.fuel_heat_rate[zone, tech] *
+        (1 - mincap / effrate) / (1 - mincap))
+
 
 
 def cost_transmission(model):
