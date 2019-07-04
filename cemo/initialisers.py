@@ -81,7 +81,8 @@ def init_intercon_loss_factor(model, source, dest):
     '''Initialise interconnector proportioning factors'''
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
-# FIXME deprecated
+
+# FIXME are we resetting transmission limits each time?
 def init_intercon_trans_limit(model, source, dest):
     # pylint: disable=unused-argument
     '''Initialise interconector transmission limits'''
@@ -142,13 +143,27 @@ def init_intercon_fcr(model):
 
 
 def init_intercon_cap_initial(model, zone_source, zone_dest):
+    # pylint: disable=unused-argument
+    '''Initialise initial transmission limits.
+
+    If a template reads values from JSON, these defaults are overwritten'''
     return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get('limit', 0)
+
+
+def init_intercon_build_cost(model, zone_source, zone_dest):
+    # pylint: disable=unused-argument
+    '''Initialise build transmission costs $/MW/km.
+
+    If a template reads values from JSON, these defaults are overwritten
+    Return the highest of forward and reverse cposts specified'''
+    return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get('buildcost', 2500)
 
 
 def init_cap_factor(model, zone, tech, time):
     # pylint: disable=unused-argument
     '''Default capacity factor per hour per technology and per zone.
-        Note:Default to zero means technology does not generate'''
+
+    Note: Defaults to zero means technology does not generate'''
     if cemo.const.GEN_CAP_FACTOR.get(tech) is not None:
         return cemo.const.GEN_CAP_FACTOR.get(tech)
     return 1
