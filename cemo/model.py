@@ -25,18 +25,18 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, con_caplim, con_chargelim,
-                        con_chargelimhy, con_committed_cap, con_dischargelim,
-                        con_dischargelimhy, con_disp_ramp_down,
-                        con_disp_ramp_up, con_emissions, con_gen_cap,
-                        con_hyb_cap, con_hybcharge, con_intercon_cap,
-                        con_ldbal, con_max_mhw_per_zone, con_max_mwh_nem_wide,
-                        con_max_trans, con_maxcap, con_maxcharge,
-                        con_maxchargehy, con_min_load_commit,
+                        build_intercon_per_zone, con_caplim, con_chargelimhy,
+                        con_committed_cap, con_dischargelimhy,
+                        con_disp_ramp_down, con_disp_ramp_up, con_emissions,
+                        con_gen_cap, con_hyb_cap, con_hybcharge,
+                        con_intercon_cap, con_ldbal, con_max_mhw_per_zone,
+                        con_max_mwh_nem_wide, con_max_trans, con_maxcap,
+                        con_maxcharge, con_maxchargehy, con_min_load_commit,
                         con_nem_disp_ratio, con_nem_re_disp_ratio,
                         con_nem_ret_gwh, con_nem_ret_ratio,
                         con_ramp_down_uptime, con_region_ret_ratio,
                         con_slackbuild, con_slackretire, con_stor_cap,
+                        con_stor_flow_lim, con_stor_reserve_lim,
                         con_storcharge, con_uns, con_uptime_commitment,
                         obj_cost)
 
@@ -264,7 +264,9 @@ def create_model(namestr,
     m.stor_disp = Var(
         m.stor_tech_in_zones, m.t,
         within=NonNegativeReals)  # dispatched power from storage
-
+    m.stor_reserve = Var(
+        m.stor_tech_in_zones, m.t,
+        within=NonNegativeReals)  # dispatched power from storage
     m.stor_charge = Var(
         m.stor_tech_in_zones, m.t,
         within=NonNegativeReals)  # power to charge storage
@@ -374,10 +376,10 @@ def create_model(namestr,
     # Storage charge/discharge dynamic
     m.StCharDis = Constraint(m.stor_tech_in_zones, m.t, rule=con_storcharge)
     # Maxiumum rate of storage charge
-    m.Chargelimit = Constraint(m.stor_tech_in_zones, m.t, rule=con_chargelim)
+    m.con_stor_flow_lim = Constraint(m.stor_tech_in_zones, m.t, rule=con_stor_flow_lim)
     # Maxiumum rate of storage discharge
     m.Dishchargelimit = Constraint(
-        m.stor_tech_in_zones, m.t, rule=con_dischargelim)
+        m.stor_tech_in_zones, m.t, rule=con_stor_reserve_lim)
     # Maxiumum charge capacity of storage
     m.MaxCharge = Constraint(m.stor_tech_in_zones, m.t, rule=con_maxcharge)
     # StCap in existing period is previous stor_cap_op plus stor_cap_new

@@ -290,14 +290,14 @@ def con_intercon_cap(model, zone_source, zone_dest):
         + model.intercon_cap_new[zone_dest, zone_source]
 
 
-def con_chargelim(model, z, s, t):
-    '''limit flow of charge to storage to be less than storage nameplate capacity'''
-    return model.stor_charge[z, s, t] <= model.stor_cap_op[z, s]
+def con_stor_flow_lim(model, z, s, t):
+    '''limit flow of charge/discharge to storage to be less than storage nameplate capacity'''
+    return model.stor_charge[z, s, t] + model.stor_disp[z, s, t] + model.stor_reserve[z,s,t] <= model.stor_cap_op[z, s]
 
 
-def con_dischargelim(model, z, s, t):
+def con_stor_reserve_lim(model, z, s, t):
     '''limit flow of energy out of storage to be less than its nameplate capacity'''
-    return model.stor_disp[z, s, t] <= model.stor_cap_op[z, s]
+    return model.stor_reserve[z, s, t] <= model.stor_level[z, s, t]
 
 
 def con_maxcharge(model, z, s, t):
