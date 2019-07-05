@@ -25,14 +25,14 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, con_caplim, con_chargelimhy,
-                        con_committed_cap, con_dischargelimhy,
+                        build_intercon_per_zone, con_caplim, con_committed_cap,
                         con_disp_ramp_down, con_disp_ramp_up, con_emissions,
-                        con_gen_cap, con_hyb_cap, con_hybcharge,
+                        con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
+                        con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
                         con_intercon_cap, con_ldbal, con_max_mhw_per_zone,
                         con_max_mwh_nem_wide, con_max_trans, con_maxcap,
                         con_maxcharge, con_maxchargehy, con_min_load_commit,
-                        con_nem_disp_ratio, con_nem_re_disp_ratio,
+                        con_operating_reserve, con_nem_re_disp_ratio,
                         con_nem_ret_gwh, con_nem_ret_ratio,
                         con_ramp_down_uptime, con_region_ret_ratio,
                         con_slackbuild, con_slackretire, con_stor_cap,
@@ -225,7 +225,8 @@ def create_model(namestr,
     m.region_net_demand = Param(m.regions, m.t)
     # Zone load distribution factors as a pct of region demand
     m.zone_demand_factor = Param(m.zones, m.t, initialize=init_zone_demand_factors)
-
+    # NEM operating reserve margin
+    m.nem_operating_reserve = Param(default=0.075)
     # carry forward capital costs
     m.cost_cap_carry_forward = Param(m.zones, default=0)
 
@@ -274,6 +275,10 @@ def create_model(namestr,
     m.hyb_disp = Var(
         m.hyb_tech_in_zones, m.t,
         within=NonNegativeReals)  # dispatched power from hybrid
+
+    m.hyb_reserve = Var(
+        m.hyb_tech_in_zones, m.t,
+        within=NonNegativeReals)  # reserve capacity for hybrids
 
     m.hyb_charge = Var(
         m.hyb_tech_in_zones, m.t,
@@ -330,6 +335,9 @@ def create_model(namestr,
     m.con_uptime_commitment = Constraint(
         m.commit_gen_tech_in_zones, m.t, rule=con_uptime_commitment)
     m.con_committed_cap = Constraint(m.commit_gen_tech_in_zones, m.t, rule=con_committed_cap)
+    # NEM operating reserve constraint
+    m.con_operating_reserve = Constraint(
+        m.regions, m.t, rule=con_operating_reserve)
     # Hard constraint on unserved energy
     if unslim:
         m.con_uns = Constraint(m.regions, rule=con_uns)
@@ -358,14 +366,6 @@ def create_model(namestr,
         m.region_ret_ratio = Param(m.regions, default=0)
         # Regional RET constraint
         m.con_region_ret = Constraint(m.regions, rule=con_region_ret_ratio)
-
-    if nem_disp_ratio:
-        # NEM wide minimum hour by our generation from "dispatchable" sources
-        m.nem_disp_ratio = Param(default=0)
-        # NEM wide minimum hourly dispatch from dispatchable sources constraint
-        m.con_nem_disp_ratio = Constraint(
-            m.regions, m.t, rule=con_nem_disp_ratio)
-
     if nem_re_disp_ratio:
         # NEM wide minimum hour by our generation from "dispatchable" sources
         m.nem_re_disp_ratio = Param(default=0)
@@ -378,7 +378,7 @@ def create_model(namestr,
     # Maxiumum rate of storage charge
     m.con_stor_flow_lim = Constraint(m.stor_tech_in_zones, m.t, rule=con_stor_flow_lim)
     # Maxiumum rate of storage discharge
-    m.Dishchargelimit = Constraint(
+    m.con_stor_reserve_lim = Constraint(
         m.stor_tech_in_zones, m.t, rule=con_stor_reserve_lim)
     # Maxiumum charge capacity of storage
     m.MaxCharge = Constraint(m.stor_tech_in_zones, m.t, rule=con_maxcharge)
@@ -387,12 +387,15 @@ def create_model(namestr,
 
     # Hybrid charge/discharge dynamic
     m.HybCharDis = Constraint(m.hyb_tech_in_zones, m.t, rule=con_hybcharge)
-    # Maxiumum rate of hybrid storage discharge
-    m.Chargelimithy = Constraint(
-        m.hyb_tech_in_zones, m.t, rule=con_chargelimhy)
-    # Maxiumum rate of hybrid storage discharge
-    m.Dishchargelimithy = Constraint(
-        m.hyb_tech_in_zones, m.t, rule=con_dischargelimhy)
+    # Maxiumum level of hybrid storage discharge
+    m.con_hyb_level_max = Constraint(
+        m.hyb_tech_in_zones, m.t, rule=con_hyb_level_max)
+    # Maxiumum rate of hybrid storage charge/discharge
+    m.con_hyb_flow_lim = Constraint(
+        m.hyb_tech_in_zones, m.t, rule=con_hyb_flow_lim)
+    # Limit hybrid reserve capacity to be within storage level
+    m.con_hyb_reserve_lim = Constraint(
+        m.hyb_tech_in_zones, m.t, rule=con_hyb_reserve_lim)
     # Maxiumum charge capacity of storage
     m.MaxChargehy = Constraint(m.hyb_tech_in_zones, m.t, rule=con_maxchargehy)
     # HyCap in existing period is previous stor_cap_op plus stor_cap_new

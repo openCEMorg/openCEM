@@ -141,34 +141,33 @@ def con_nem_ret_gwh(model):
         >= model.nem_ret_gwh * 1000 / model.year_correction_factor
 
 
-def con_nem_disp_ratio(model, r, t):
-    '''inequality constraint setting dispatchable generation must be greater than
-    disp_ratio * total generation, in each region and each hour'''
-    return sum(model.gen_disp[z, n, t]
-               for z in model.zones_per_region[r]
-               for n in model.disp_gen_tech_per_zone[z]
+def con_operating_reserve(model, region, time):
+    '''Operating reserve margin for each NEM region
+
+    At each hour, reserves consist of the sum of:
+    -spare capacity from dispatchable flexible genenerators
+    -spare committed capacity from non flexible generators
+    -spare capacity from storage (considering charge),
+    -spare capacity from hybrids (considering charge),
+    storage and hybrids must be greater or equal than a percentage
+    of the load, determined by the `operating_reserve` parameter'''
+    return sum(model.gen_cap_op[zone, gen_tech] - model.gen_disp[zone, gen_tech, time]
+               for zone in model.zones_per_region[region]
+               for gen_tech in set(model.disp_gen_tech_per_zone[zone]) - set(model.commit_gen_tech_per_zone[zone])
                )\
-        + sum(model.stor_disp[z, s, t]
-              for z in model.zones_per_region[r]
-              for s in model.stor_tech_per_zone[z]
+        + sum(model.gen_disp_com[zone, gen_tech, time] - model.gen_disp[zone, gen_tech, time]
+              for zone in model.zones_per_region[region]
+              for gen_tech in model.commit_gen_tech_per_zone[zone]
               )\
-        + sum(model.hyb_disp[z, h, t]
-              for z in model.zones_per_region[r]
-              for h in model.hyb_tech_per_zone[z]
+        + sum(model.stor_reserve[zone, store_tech, time]
+              for zone in model.zones_per_region[region]
+              for store_tech in model.stor_tech_per_zone[zone]
               )\
-        >= model.nem_disp_ratio * (sum(model.gen_disp[z, n, t]
-                                       for z in model.zones_per_region[r]
-                                       for n in model.gen_tech_per_zone[z]
-                                       )
-                                   + sum(model.stor_disp[z, s, t]
-                                         for z in model.zones_per_region[r]
-                                         for s in model.stor_tech_per_zone[z]
-                                         )
-                                   + sum(model.hyb_disp[z, h, t]
-                                         for z in model.zones_per_region[r]
-                                         for h in model.hyb_tech_per_zone[z]
-                                         )
-                                   )
+        + sum(model.hyb_reserve[zone, hyb_tech, time]
+              for zone in model.zones_per_region[region]
+              for hyb_tech in model.hyb_tech_per_zone[zone]
+              )\
+        >= model.nem_operating_reserve * model.region_net_demand[region, time]
 
 
 def con_nem_re_disp_ratio(model, r, t):
@@ -322,15 +321,30 @@ def con_hybcharge(model, z, h, t):
         + model.hyb_charge[z, h, t]
 
 
-def con_chargelimhy(model, z, h, t):
-    '''Hybrid storage cannot charge faster than what the collector can charge it'''
+def con_hyb_level_max(model, z, h, t):
+    '''Hybrid storage charge is limted by collector output.
+
+    '''
     return model.hyb_charge[z, h, t] \
-        <= model.hyb_col_mult[h] * model.hyb_cap_factor[z, h, t] * model.hyb_cap_op[z, h]
+        <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * model.hyb_cap_op[z, h]
 
 
-def con_dischargelimhy(model, z, h, t):
-    '''Hybrid storage cannot discharge faster than plant nameplate capacity'''
-    return model.hyb_disp[z, h, t] <= model.hyb_cap_op[z, h]
+def con_hyb_flow_lim(model, zone, hyb_tech, time):
+    '''Hybrid storage charge/discharge flow is limited by plant capacity.
+
+    In the case of CSP, storage can charge faster than power block'''
+    if hyb_tech in [13, 22, 23]:
+        return model.hyb_disp[zone, hyb_tech, time]\
+            + model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_cap_op[zone, hyb_tech]
+    return model.hyb_disp[zone, hyb_tech, time]\
+        + model.hyb_charge[zone, hyb_tech, time]\
+        + model.hyb_reserve[zone, hyb_tech, time]\
+        <= model.hyb_cap_op[zone, hyb_tech]
+
+
+def con_hyb_reserve_lim(model, zone, hyb_tech, time):
+    '''limit hybrid reserves to be within storage charge. '''
+    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[zone, hyb_tech, time]
 
 
 def con_maxchargehy(model, z, h, t):
