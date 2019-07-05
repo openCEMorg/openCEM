@@ -112,9 +112,9 @@ param cost_trans:= 0.00001;
 # Cost of emissions $/kg
 param cost_emit:= 0.0;
 
-param nem_disp_ratio :=0.05;
+param nem_operating_reserve :=0.075;
 
-param nem_re_disp_ratio :=0.05;
+param nem_re_disp_ratio :=0.0;
 
 param nem_ret_ratio :=0.1;
 

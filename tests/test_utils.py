@@ -1,7 +1,8 @@
 '''Test suite for utils module'''
 import pytest
 
-from cemo.utils import printstats, region_in_zone
+from cemo.utils import printstats
+from cemo.rules import region_in_zone
 
 
 def test_printstats(solution, capfd):

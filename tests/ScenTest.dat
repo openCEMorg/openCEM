@@ -14,9 +14,9 @@ set Scenarios := S1 S2 S3 S4 S5 S6 ;
 
 param ScenarioLeafNode := S1 S1Node S2 S2Node S3 S3Node S4 S4Node S5 S5Node S6 S6Node ;
 
-set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];
+set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];
 
-set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];
+set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];
 
 param StageCost := FS FSCost SS SSCost;
 
