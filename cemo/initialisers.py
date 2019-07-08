@@ -46,13 +46,13 @@ def init_intercons_in_zones(model):
 def init_stor_rt_eff(model, tech):
     # pylint: disable=unused-argument
     '''Default return efficiency for storage techs'''
-    return cemo.const.DEFAULT_STOR_PROPS["rt_eff"].get(tech, 0)
+    return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("rt_eff", 0)
 
 
 def init_stor_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for storage tech'''
-    return cemo.const.DEFAULT_STOR_PROPS["charge_hours"].get(tech, 0)
+    return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("charge_hours", 0)
 
 
 def init_zone_demand_factors(model, zone, timestamp):
@@ -162,7 +162,9 @@ def init_cap_factor(model, zone, tech, time):
     # pylint: disable=unused-argument
     '''Default capacity factor per hour per technology and per zone.
 
-    Note: Defaults to zero means technology does not generate'''
+    Note: Defaults to zero means technology does not generate
+    Needed to prevent trace based generators to generate at all
+    times when their trace fails to load'''
     if cemo.const.GEN_CAP_FACTOR.get(tech) is not None:
         return cemo.const.GEN_CAP_FACTOR.get(tech)
     return 1

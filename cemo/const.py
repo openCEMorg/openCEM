@@ -426,31 +426,15 @@ GEN_CAP_FACTOR = {
 }
 
 DEFAULT_STOR_PROPS = {
-    "rt_eff": {
-        14: 0.8,
-        15: 0.8,
-        21: 0.8
-    },
-    "charge_hours": {
-        14: 6,
-        15: 2,
-        21: 168
-    }
+    14: {"rt_eff": 0.8, "charge_hours": 6},
+    15: {"rt_eff": 0.8, "charge_hours": 2},
+    21: {"rt_eff": 0.8, "charge_hours": 168}
 }
 
 DEFAULT_HYB_PROPS = {
-    13: {
-        "col_mult": 2.5,
-        "charge_hours": 6
-    },
-    22: {
-        "col_mult": 2.1,
-        "charge_hours": 3
-    },
-    23: {
-        "col_mult": 3.1,
-        "charge_hours": 12
-    },
+    13: {"col_mult": 2.5, "charge_hours": 6},
+    22: {"col_mult": 2.1, "charge_hours": 3},
+    23: {"col_mult": 3.1, "charge_hours": 12},
 }
 
 DEFAULT_COSTS = {
