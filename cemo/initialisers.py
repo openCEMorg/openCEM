@@ -67,13 +67,13 @@ def init_zone_demand_factors(model, zone, timestamp):
 def init_hyb_col_mult(model, tech):
     # pylint: disable=unused-argument
     '''Default collector multiple for hybrid tech'''
-    return cemo.const.DEFAULT_HYB_PROPS["col_mult"].get(tech, 0)
+    return cemo.const.DEFAULT_HYB_PROPS.get(tech).get('col_mult', 0)
 
 
 def init_hyb_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for hybrid tech'''
-    return cemo.const.DEFAULT_HYB_PROPS["charge_hours"].get(tech, 0)
+    return cemo.const.DEFAULT_HYB_PROPS.get(tech).get("charge_hours", 0)
 
 
 def init_intercon_loss_factor(model, source, dest):
