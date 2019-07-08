@@ -12,6 +12,12 @@ from pyomo.environ import Constraint
 import cemo.const
 
 
+def region_in_zone(zone):
+    '''Return region where a given zone belongs to'''
+    result = [pair[0] for pair in cemo.const.ZONES_IN_REGIONS if pair[1] == zone]
+    return result[0]
+
+
 def ScanForTechperZone(model):
     '''generate sparse generator zone sets from tuple based sets'''
     for (i, j) in model.gen_tech_in_zones:
@@ -49,10 +55,10 @@ def ScanForZoneperRegion(model):
             model.zones_per_region[i].add(j)
 
 
-def ScanForTransLineperRegion(model):
-    '''Generate (source,target) interconnector tuples based on default or configured data'''
-    for (i, j) in model.region_intercons:
-        model.intercon_per_region[i].add(j)
+def build_intercon_per_zone(model):
+    '''Generate (source,target) interconnector tuples based on default or supplied data'''
+    for (i, j) in model.intercons_in_zones:
+        model.intercon_per_zone[i].add(j)
 
 
 def dispatch(model, r):
@@ -135,34 +141,33 @@ def con_nem_ret_gwh(model):
         >= model.nem_ret_gwh * 1000 / model.year_correction_factor
 
 
-def con_nem_disp_ratio(model, r, t):
-    '''inequality constraint setting dispatchable generation must be greater than
-    disp_ratio * total generation, in each region and each hour'''
-    return sum(model.gen_disp[z, n, t]
-               for z in model.zones_per_region[r]
-               for n in model.disp_gen_tech_per_zone[z]
+def con_operating_reserve(model, region, time):
+    '''Operating reserve margin for each NEM region
+
+    At each hour, reserves consist of the sum of:
+    -spare capacity from dispatchable flexible genenerators
+    -spare committed capacity from non flexible generators
+    -spare capacity from storage (considering charge),
+    -spare capacity from hybrids (considering charge),
+    storage and hybrids must be greater or equal than a percentage
+    of the load, determined by the `operating_reserve` parameter'''
+    return sum(model.gen_cap_op[zone, gen_tech] - model.gen_disp[zone, gen_tech, time]
+               for zone in model.zones_per_region[region]
+               for gen_tech in set(model.disp_gen_tech_per_zone[zone]) - set(model.commit_gen_tech_per_zone[zone])
                )\
-        + sum(model.stor_disp[z, s, t]
-              for z in model.zones_per_region[r]
-              for s in model.stor_tech_per_zone[z]
+        + sum(model.gen_disp_com[zone, gen_tech, time] - model.gen_disp[zone, gen_tech, time]
+              for zone in model.zones_per_region[region]
+              for gen_tech in model.commit_gen_tech_per_zone[zone]
               )\
-        + sum(model.hyb_disp[z, h, t]
-              for z in model.zones_per_region[r]
-              for h in model.hyb_tech_per_zone[z]
+        + sum(model.stor_reserve[zone, store_tech, time]
+              for zone in model.zones_per_region[region]
+              for store_tech in model.stor_tech_per_zone[zone]
               )\
-        >= model.nem_disp_ratio * (sum(model.gen_disp[z, n, t]
-                                       for z in model.zones_per_region[r]
-                                       for n in model.gen_tech_per_zone[z]
-                                       )
-                                   + sum(model.stor_disp[z, s, t]
-                                         for z in model.zones_per_region[r]
-                                         for s in model.stor_tech_per_zone[z]
-                                         )
-                                   + sum(model.hyb_disp[z, h, t]
-                                         for z in model.zones_per_region[r]
-                                         for h in model.hyb_tech_per_zone[z]
-                                         )
-                                   )
+        + sum(model.hyb_reserve[zone, hyb_tech, time]
+              for zone in model.zones_per_region[region]
+              for hyb_tech in model.hyb_tech_per_zone[zone]
+              )\
+        >= model.nem_operating_reserve * model.region_net_demand[region, time]
 
 
 def con_nem_re_disp_ratio(model, r, t):
@@ -221,7 +226,7 @@ def con_region_ret_ratio(model, r):
               )
     )
 
-
+# FIXME deprecated
 def con_max_mwh_as_cap_factor(model, zone, tech):
     '''Define a maximum MWh output as a capacity factor cap for a zone and technology'''
     cap_factor = cemo.const.MAX_MWH_CAP_FACTOR.get(zone).get(tech, 1)
@@ -233,27 +238,65 @@ def con_max_mwh_as_cap_factor(model, zone, tech):
     return Constraint.Skip
 
 
-def con_maxmhw(model, z, n):
-    '''limit maximum generation over a period, scaled to yearly'''
-    if n == 18:  # hydro only
-        return sum(model.gen_disp[z, n, t] for t in model.t)\
-            <= model.hydro_gen_mwh_limit[z] / model.year_correction_factor
+def con_max_mhw_per_zone(model, zone, tech):
+    '''limit maximum generation over a period for a tech in a zone.
+
+       Results scaled to yearly MWH using year correction factor'''
+    if cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech) is not None:
+        return sum(model.gen_disp[zone, tech, time] for time in model.t)\
+            <= cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech).get(zone, 0) /\
+            model.year_correction_factor
     return Constraint.Skip
 
 
-def con_maxtrans(model, r, p, t):
-    '''limit transmission per link to be less than its maximum'''
-    return model.intercon_disp[r, p, t] <= model.intercon_trans_limit[r, p]
+def con_max_mwh_nem_wide(model, tech):
+    '''limit maximum generation over a period for a tech nem wide.
+
+       Results scaled to yearly MWH using year correction factor'''
+    if cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) is not None:
+        return sum(model.gen_disp[zone, tech, time]
+                   for zone in model.zones if tech in model.gen_tech_per_zone[zone]
+                   for time in model.t)\
+            <= cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
+            model.year_correction_factor
+    return Constraint.Skip
 
 
-def con_chargelim(model, z, s, t):
-    '''limit flow of charge to storage to be less than storage nameplate capacity'''
-    return model.stor_charge[z, s, t] <= model.stor_cap_op[z, s]
+def con_max_trans(model, zone_source, zone_dest, time):
+    '''constrain hourly transmission per link to be less than capacity
+    It includes hard coded constraints for Murray/Tumit limitations on interconnectors'''
+    if zone_source == 5 and zone_dest == 12:
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= model.intercon_cap_op[zone_source, zone_dest] \
+            - (1350 - 400) / 2303 * model.gen_disp[5, 18, time]
+    if zone_source == 12 and zone_dest == 5:
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= model.intercon_cap_op[zone_source, zone_dest] \
+            - (1600 - 700) / 2222 * model.gen_disp[12, 18, time]
+    return model.intercon_disp[zone_source, zone_dest, time] \
+        <= model.intercon_cap_op[zone_source, zone_dest]
 
 
-def con_dischargelim(model, z, s, t):
+def con_intercon_cap(model, zone_source, zone_dest):
+    '''Operating transmission capacity is the net of
+       - initial (or carryover)
+       - model decisions
+       -exogenous builds'''
+    return model.intercon_cap_op[zone_source, zone_dest] \
+        == model.intercon_cap_initial[zone_source, zone_dest]\
+        + model.intercon_cap_exo[zone_source, zone_dest]\
+        + model.intercon_cap_new[zone_source, zone_dest]\
+        + model.intercon_cap_new[zone_dest, zone_source]
+
+
+def con_stor_flow_lim(model, z, s, t):
+    '''limit flow of charge/discharge to storage to be less than storage nameplate capacity'''
+    return model.stor_charge[z, s, t] + model.stor_disp[z, s, t] + model.stor_reserve[z,s,t] <= model.stor_cap_op[z, s]
+
+
+def con_stor_reserve_lim(model, z, s, t):
     '''limit flow of energy out of storage to be less than its nameplate capacity'''
-    return model.stor_disp[z, s, t] <= model.stor_cap_op[z, s]
+    return model.stor_reserve[z, s, t] <= model.stor_level[z, s, t]
 
 
 def con_maxcharge(model, z, s, t):
@@ -278,15 +321,30 @@ def con_hybcharge(model, z, h, t):
         + model.hyb_charge[z, h, t]
 
 
-def con_chargelimhy(model, z, h, t):
-    '''Hybrid storage cannot charge faster than what the collector can charge it'''
+def con_hyb_level_max(model, z, h, t):
+    '''Hybrid storage charge is limted by collector output.
+
+    '''
     return model.hyb_charge[z, h, t] \
-        <= model.hyb_col_mult[h] * model.hyb_cap_factor[z, h, t] * model.hyb_cap_op[z, h]
+        <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * model.hyb_cap_op[z, h]
 
 
-def con_dischargelimhy(model, z, h, t):
-    '''Hybrid storage cannot discharge faster than plant nameplate capacity'''
-    return model.hyb_disp[z, h, t] <= model.hyb_cap_op[z, h]
+def con_hyb_flow_lim(model, zone, hyb_tech, time):
+    '''Hybrid storage charge/discharge flow is limited by plant capacity.
+
+    In the case of CSP, storage can charge faster than power block'''
+    if hyb_tech in [13, 22, 23]:
+        return model.hyb_disp[zone, hyb_tech, time]\
+            + model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_cap_op[zone, hyb_tech]
+    return model.hyb_disp[zone, hyb_tech, time]\
+        + model.hyb_charge[zone, hyb_tech, time]\
+        + model.hyb_reserve[zone, hyb_tech, time]\
+        <= model.hyb_cap_op[zone, hyb_tech]
+
+
+def con_hyb_reserve_lim(model, zone, hyb_tech, time):
+    '''limit hybrid reserves to be within storage charge. '''
+    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[zone, hyb_tech, time]
 
 
 def con_maxchargehy(model, z, h, t):
@@ -295,34 +353,30 @@ def con_maxchargehy(model, z, h, t):
         <= model.hyb_cap_op[z, h] * model.hyb_charge_hours[h]
 
 
-def con_ldbal(model, r, t):
+def con_ldbal(model, z, t):
     """Provides a rule defining a load balance constraint for the model"""
-    return sum(model.gen_disp[z, n, t] for z in model.zones_per_region[r]
-               for n in model.gen_tech_per_zone[z])\
-        + sum(model.hyb_disp[z, h, t] for z in model.zones_per_region[r]
-              for h in model.hyb_tech_per_zone[z])\
-        + model.unserved[r, t]\
-        + sum(model.intercon_disp[p, r, t] for p in model.intercon_per_region[r])\
-        + sum(model.stor_disp[z, s, t]
-              for z in model.zones_per_region[r] for s in model.stor_tech_per_zone[z])\
-        == model.region_net_demand[r, t]\
-        + sum((1.0 + model.intercon_prop_factor[r, p]) * model.intercon_disp[r, p, t]
-              for p in model.intercon_per_region[r])\
-        + sum(model.stor_charge[z, s, t]
-              for z in model.zones_per_region[r] for s in model.stor_tech_per_zone[z])\
-        + model.surplus[r, t]
+    return sum(model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
+        + sum(model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
+        + sum(model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
+        + model.unserved[z, t]\
+        == model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
+        + sum((1.0 + model.intercon_loss_factor[z, p]) * model.intercon_disp[z, p, t]
+              for p in model.intercon_per_zone[z])\
+        + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + model.surplus[z, t]
 
 
-def con_maxcap(model, z, n):
+def con_maxcap(model, zone, tech):
     '''Prevent resulting operational capacity to exceed build limits'''
-    return model.gen_cap_op[z, n] <= model.gen_build_limit[z, n]
+    return model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
 
 
 def con_emissions(model):
     '''Emission constraint for the NEM in MT/y for total emissions'''
     return model.year_correction_factor * sum(
-        emissions(model, r)
-        for r in model.regions) <= 1e9 * model.nem_year_emit_limit
+        emissions(model, region)
+        for region in model.regions) <= 1e9 * model.nem_year_emit_limit
 
 
 def con_slackretire(model, z, n):
@@ -337,7 +391,7 @@ def con_slackbuild(model, z, n):
         z, n] - model.gen_cap_exo_neg[z, n] <= model.gen_build_limit[z, n]
 
 
-def con_opcap(model, z, n):  # z and n come both from TechinZones
+def con_gen_cap(model, z, n):  # z and n come both from TechinZones
     '''Calculate operating capacity as the net of model and exogenous decisions'''
     if n in model.nobuild_gen_tech:
         if n in model.retire_gen_tech:
@@ -359,7 +413,7 @@ def con_opcap(model, z, n):  # z and n come both from TechinZones
         + model.gen_cap_new[z, n]
 
 
-def con_stcap(model, z, s):  # z and n come both from TechinZones
+def con_stor_cap(model, z, s):  # z and n come both from TechinZones
     '''Calculate Storage capacity as the net of model and exogenous decisions'''
     if s in model.nobuild_gen_tech:
         return model.stor_cap_op[z, s] == model.stor_cap_initial[z, s] \
@@ -369,7 +423,7 @@ def con_stcap(model, z, s):  # z and n come both from TechinZones
         + model.stor_cap_new[z, s]
 
 
-def con_hycap(model, z, h):  # z and n come both from TechinZones
+def con_hyb_cap(model, z, h):  # z and n come both from TechinZones
     '''Calculate Hybrid capacity as the net of model and exogenous decisions'''
     if h in model.nobuild_gen_tech:
         return model.hyb_cap_op[z, h] == model.hyb_cap_initial[z, h] \
@@ -430,22 +484,30 @@ def con_committed_cap(model, z, n, t):
 
 def con_uns(model, r):
     '''constraint limiting unserved energy'''
-    return sum(model.unserved[r, t] for t in model.t) \
+    return sum(model.unserved[z, t] for z in model.zones_per_region[r] for t in model.t) \
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
-def cost_capital(model, z):
-    '''calculate build costs'''
-    return sum(model.cost_gen_build[z, n] * (model.gen_cap_new[z, n] + model.gen_cap_exo[z, n])
-               * model.fixed_charge_rate[n]
-               for n in model.gen_tech_per_zone[z])\
-        + sum(model.cost_stor_build[z, s] * (model.stor_cap_new[z, s] + model.stor_cap_exo[z, s])
-              * model.fixed_charge_rate[s]
-              for s in model.stor_tech_per_zone[z])\
-        + sum(model.cost_hyb_build[z, h] * (model.hyb_cap_new[z, h] + model.hyb_cap_exo[z, h])
-              * model.fixed_charge_rate[h]
-              for h in model.hyb_tech_per_zone[z])\
-        + model.cost_cap_carry_forward[z]
+def cost_capital(model):
+    '''calculate total build costs'''
+    return sum(cost_build_per_zone(model, zone) for zone in model.zones)
+
+
+def cost_build_per_zone(model, zone):
+    '''calculate build costs per zone'''
+    return sum(model.cost_gen_build[zone, tech]
+               * (model.gen_cap_new[zone, tech] + model.gen_cap_exo[zone, tech])
+               * model.fixed_charge_rate[tech]
+               for tech in model.gen_tech_per_zone[zone])\
+        + sum(model.cost_stor_build[zone, tech]
+              * (model.stor_cap_new[zone, tech] + model.stor_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.stor_tech_per_zone[zone])\
+        + sum(model.cost_hyb_build[zone, tech]
+              * (model.hyb_cap_new[zone, tech] + model.hyb_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.hyb_tech_per_zone[zone])\
+        + model.cost_cap_carry_forward[zone]
 
 
 def cost_fixed(model):
@@ -464,39 +526,80 @@ def cost_fixed(model):
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
     return model.year_correction_factor * model.cost_unserved * sum(
-        model.unserved[r, t] for r in model.regions for t in model.t)
+        model.unserved[z, t]
+        for r in model.regions
+        for z in model.zones_per_region[r]
+        for t in model.t)
 
 
 def cost_operating(model):
-    '''Calculate operating costs as the sum of FOM, VOM
-    and fuel costs for generators, hybrid and storage'''
+    '''Calculate Variable operating costs.
+
+    VOM costs are the sum of:
+    - generator VOM costs
+    - flexible generator fuel costs
+    - non-flexible generator fuel costs
+    - non-flexible generator start up fuel costs
+    - storage VOM costs
+    - Hybrid COM costs
+    '''
     return model.year_correction_factor * (
         sum(model.cost_gen_vom[n] * model.gen_disp[z, n, t]
             for z in model.zones for n in model.gen_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_fuel[z, f] * model.fuel_heat_rate[z, f] *
             model.gen_disp[z, f, t] for z in model.zones
-            for f in model.fuel_gen_tech_per_zone[z]
+            for f in set(model.fuel_gen_tech_per_zone[z]) - set(model.commit_gen_tech_per_zone[z])
+            for t in model.t) +
+        sum(cost_fuel_non_flexible(model, z, f, t) for z in model.zones
+            for f in model.commit_gen_tech_per_zone[z]
+            for t in model.t) +
+        sum(model.cost_fuel[z, n] * cemo.const.GEN_COMMIT['penalty'].get(n, 0) * model.gen_disp_com_p[z, n, t]
+            for z in model.zones
+            for n in model.commit_gen_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_stor_vom[s] * model.stor_disp[z, s, t]
             for z in model.zones for s in model.stor_tech_per_zone[z]
             for t in model.t) +
         sum(model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
             for z in model.zones
-            for h in model.hyb_tech_per_zone[z] for t in model.t) +
-        sum(model.cost_fuel[z, n] *
-            cemo.const.GEN_COMMIT['penalty'].get(
-                n, 0) * model.gen_disp_com_p[z, n, t]
-            for z in model.zones
-            for n in model.commit_gen_tech_per_zone[z]
-            for t in model.t))
+            for h in model.hyb_tech_per_zone[z] for t in model.t)
+        )
+
+
+def cost_fuel_non_flexible(model, zone, tech, time):
+    '''Fuel cost for non flexible generators.
+
+    Heat rate varies linearly to simulate lower efficiency at part load'''
+    mincap = cemo.const.GEN_COMMIT['mincap'].get(tech)
+    effrate = cemo.const.GEN_COMMIT['effrate'].get(tech)
+    return model.cost_fuel[zone, tech] * (
+        mincap * model.gen_disp_com[zone, tech, time] *
+        model.fuel_heat_rate[zone, tech] / effrate +
+        (model.gen_disp[zone, tech, time] - mincap *
+         model.gen_disp_com[zone, tech, time]) * model.fuel_heat_rate[zone, tech] *
+        (1 - mincap / effrate) / (1 - mincap))
+
 
 
 def cost_transmission(model):
+    return cost_trans_flow(model) + sum(cost_trans_build_per_zone(model, zone) for zone in model.zones)
+
+
+def cost_trans_build_per_zone(model, zone):
+    return sum(model.cost_intercon_build[zone, dest] *
+               cemo.const.ZONE_INTERCONS.get(zone).get(dest).get('length')
+               * (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
+               * model.intercon_fixed_charge_rate
+               for dest in model.intercon_per_zone[zone])\
+
+
+
+def cost_trans_flow(model):
     '''Calculate transmission flow costs'''
     return model.year_correction_factor * model.cost_trans * sum(
-        model.intercon_disp[r, p, t] for r in model.regions
-        for p in model.intercon_per_region[r] for t in model.t)
+        model.intercon_disp[zone, dest, time] for zone in model.zones
+        for dest in model.intercon_per_zone[zone] for time in model.t)
 
 
 def cost_emissions(model):
@@ -522,13 +625,13 @@ def cost_shadow(model):
         + 10000000 * sum(model.gen_cap_exo_neg[z, n]
                          for z in model.zones
                          for n in model.gen_tech_per_zone[z])\
-        + 10000 * sum(model.surplus[r, t] for r in model.regions
+        + 10000 * sum(model.surplus[z, t] for z in model.zones
                       for t in model.t)
 
 
 def obj_cost(model):
     """Objective function as total annualised cost for model"""
-    return sum(cost_capital(model, z) for z in model.zones)\
+    return cost_capital(model)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
         + cost_retirement(model) + cost_shadow(model)

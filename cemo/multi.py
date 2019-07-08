@@ -77,6 +77,10 @@ def setinstancecapacity(instance, clustercap):
             key = str(z) + ',' + str(h)
             instance.hyb_cap_new[z, h] = roundup(
                 data['hyb_cap_new[' + key + ']']['solution'])
+        for i in instance.intercon_per_zone[z]:
+            key = str(z) + ',' + str(i)
+            instance.intercon_cap_new[z, i] = roundup(
+                data['intercon_cap_new[' + key + ']']['solution'])
         for r in instance.retire_gen_tech_per_zone[z]:
             key = str(z) + ',' + str(r)
             instance.gen_cap_ret[z, r] \
@@ -85,6 +89,7 @@ def setinstancecapacity(instance, clustercap):
     instance.gen_cap_new.fix()
     instance.stor_cap_new.fix()
     instance.hyb_cap_new.fix()
+    instance.intercon_cap_new.fix()
     instance.gen_cap_ret.fix()
     return instance
 
@@ -92,7 +97,7 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/'):
+    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -101,6 +106,7 @@ class SolveTemplate:
         except FileNotFoundError:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
+        self.resume = resume
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
         self.Years = json.loads(Scenario['Years'])
@@ -406,11 +412,11 @@ class SolveTemplate:
             prevyear = self.Years[self.Years.index(year) - 1]
             opcap0 = "load '" + self.tmpdir + "gen_cap_op" + \
                 str(prevyear) + \
-                ".json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial;"
+                ".json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
         else:
-            opcap0 = '''#operating capacity for all technilogies and regions
+            opcap0 = '''#operating capacity for generating techs regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -418,9 +424,9 @@ where (ntndp_zone_id,technology_type_id) in
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] gen_cap_initial;
 
-# operating capacity for all technilogies and regions
+# operating capacity storage techs in regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -428,20 +434,23 @@ where (ntndp_zone_id,technology_type_id) in
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] stor_cap_initial;
 
-# operating capacity for all technilogies and regions
+# operating capacity for hybrid techs in regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
 ''' + sql_tech_pairs(self.hybtech) + '''
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
+
+# operating capacity for intercons in nodes
+# Currently extracted from cemo.const during initalisation
 '''
         return opcap0
 
     def carry_forward_cap_costs(self, year):
-        '''Save total annualised capital costs in carry forward json'''
+        '''Fill template to retrieve carry forward annualised capital costs from gen_cap_op json'''
         carry_fwd_cost = ''
         if self.Years.index(year):
             carry_fwd_cost = "#Carry forward annualised capital costs\n"
@@ -516,7 +525,10 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
-            prevyear = self.Years[self.Years.index(year) - 1]
+            prevyear = 2017
+            if self.Years.index(year) > 0:
+                prevyear = self.Years[self.Years.index(year) - 1]
+
             for key in keywords.keys():
                 cap = capacity[
                     (capacity['year'] > int(prevyear)) &
@@ -526,7 +538,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     (capacity['zone'].isin(self.zones))
                 ]
                 if not cap.empty:
-                    exogenous_capacity += '#Exogenous capacity entry ' + key + '\n'
+                    exogenous_capacity += '# Exogenous capacity entry ' + key + '\n'
                     exogenous_capacity += 'param ' + key + ':=\n'
                     exogenous_capacity += cap[['zone', 'tech', 'value']
                                               ].to_string(header=False, index=False,
@@ -545,7 +557,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         strd1 = "'" + str(date1) + "'"
         date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
         if test:
-            date2 = datetime.datetime(year - 1, 7, 3, 23, 0, 0)
+            date2 = datetime.datetime(year - 1, 7, 12, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.tmpdir + 'Sim' + str(year) + '.dat'
@@ -686,6 +698,10 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         Assemble full simulation output as metadata+ full year results in each simulated year
         """
         for y in self.Years:
+            if self.resume:
+                if os.path.exists(self.tmpdir+str(y)+'.json'):
+                    print("Skipping year %s" % y)
+                    continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
@@ -758,7 +774,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "Years": self.Years,
             "Template": self.Template,
             "Clustering": self.cluster,
-            "Cluster_number":  self.cluster_max_d if self.cluster else "N/A",
+            "Cluster_number":  self.cluster_max_d if self.cluster else 0,
             "Solver": self.solver,
             "Discount_rate": self.discountrate,
             "Emission_cost": self.cost_emit,

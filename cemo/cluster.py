@@ -303,9 +303,9 @@ class ClusterRun:
             'setScenariosrep': setScenarios,
             'paramScenLeafrep': paramScenLeaf,
             'setstagevars1':
-            'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',
             'setstagevars2':
-            'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] gen_cap_ret[*,*];',
+            'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',
             'stagecost': 'param StageCost := FS FSCost SS SSCost;',
         }
         with open(self.tmpdir + '/ScenarioStructure.dat', 'wt') as fo:

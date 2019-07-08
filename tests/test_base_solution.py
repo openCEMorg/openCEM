@@ -58,10 +58,10 @@ def test_hybrid(solution, benchmark, zone, time, tech):
 
 
 @pytest.mark.parametrize("tfrom,tto,time", [
-    (4, 5, '2020-01-02 14:00:00'),
-    (4, 5, '2020-01-02 15:00:00'),
-    (4, 5, '2020-01-02 16:00:00'),
-    (4, 5, '2020-01-02 17:00:00'),
+    (9, 16, '2020-01-02 14:00:00'),
+    (9, 10, '2020-01-02 15:00:00'),
+    (11, 10, '2020-01-02 16:00:00'),
+    (12, 10, '2020-01-02 17:00:00'),
 ])
 def test_transmission(solution, benchmark, tfrom, tto, time):
     '''Assert transmission decisions match known value'''

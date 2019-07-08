@@ -185,7 +185,8 @@ def _printcosts(inst):
     print("Total Cost:\t %20s" %
           locale.currency(value(inst.Obj - cemo.rules.cost_shadow(inst)), grouping=True))
     print("Build cost:\t %20s" %
-          locale.currency(value(sum(cemo.rules.cost_capital(inst, z) - inst.cost_cap_carry_forward[z] for z in inst.zones)),
+          locale.currency(sum(value(cemo.rules.cost_build_per_zone(inst, zone) -
+                                    inst.cost_cap_carry_forward[zone]) for zone in inst.zones),
                           grouping=True))
     print("Repayment cost:\t %20s" %
           locale.currency(value(sum(inst.cost_cap_carry_forward[z] for z in inst.zones)),
@@ -196,8 +197,12 @@ def _printcosts(inst):
     print("Fixed cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_fixed(inst)),
                           grouping=True))
-    print("Transm. cost:\t %20s" %
-          locale.currency(value(cemo.rules.cost_transmission(inst)),
+    print("Trans. build cost:\t %12s" %
+          locale.currency(sum(value(cemo.rules.cost_trans_build_per_zone(inst, zone))
+                              for zone in inst.zones),
+                          grouping=True))
+    print("Trans. flow cost:\t %12s" %
+          locale.currency(value(cemo.rules.cost_trans_flow(inst)),
                           grouping=True))
     print("Unserved cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_unserved(inst)),
@@ -213,17 +218,21 @@ def _printcosts(inst):
 def _printemissionrate(instance):
     emrate = sum(value(cemo.rules.emissions(instance, r))
                  for r in instance.regions) /\
-        (sum(value(cemo.rules.dispatch(instance, r)) for r in instance.regions)+1.0e-12)
+        (sum(value(cemo.rules.dispatch(instance, r)) for r in instance.regions) + 1.0e-12)
     print("Total Emission rate: %6.3f kg/MWh" % emrate)
 
 
 def _printunserved(instance):
-    uns = np.zeros(5, dtype=float)
-    for r in instance.regions:
-        uns[r - 1] = 100.0 * sum(value(instance.unserved[r, t])
-                                 for t in instance.t) / sum(value(instance.region_net_demand[r, t]) for t in instance.t)
+    regions = list(instance.regions)
+    unserved = np.zeros(len(regions), dtype=float)
+    for region in regions:
+        unserved[regions.index(region)] \
+            = 100.0 * sum(value(instance.unserved[zone, time])
+                          for zone in instance.zones_per_region[region]
+                          for time in instance.t) \
+            / sum(value(instance.region_net_demand[region, time]) for time in instance.t)
 
-    print('Unserved %:' + str(uns))
+    print('Unserved %:' + str(unserved))
 
 
 def _printcapacity(instance):

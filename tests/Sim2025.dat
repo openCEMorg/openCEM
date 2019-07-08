@@ -467,7 +467,7 @@ set hyb_tech_in_zones :=
 
 #Retrieve fuel costs for defined technologies
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(fuel.price) as cost_fuel
 FROM fuel_price fuel
 INNER JOIN capacity cap ON cap.id=fuel.capacity_id
@@ -478,7 +478,7 @@ group by zones,all_tech;" :[zones,all_tech] cost_fuel;
 
 #Retrieve fuel heat rates for default technologies
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="SELECT cap.ntndp_zone_id AS zones, cap.technology_type_id AS all_tech, avg(heat.heat_rate) as fuel_heat_rate
 FROM heat_rates heat
 INNER JOIN capacity cap ON cap.id=heat.capacity_id
@@ -488,16 +488,16 @@ group by zones,all_tech;" :[zones,all_tech] fuel_heat_rate;
 
 #Ordered set of timestams to retrieve traces for dispatch calculations
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 format=set
 query="SELECT DISTINCT cast(timestamp AS CHAR)
 FROM demand_and_rooftop_traces
-WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-03 23:00:00'
+WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-12 23:00:00'
 AND MINUTE(timestamp)=0;" :t;
 
 # Build costs for gentech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
 1000*capex AS cost_gen_build
@@ -514,7 +514,7 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
 
 # Build costs for stortech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
 1000*capex AS cost_stor_build
@@ -531,7 +531,7 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
 
 # Build costs for hybtech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
 1000*capex AS cost_hyb_build
@@ -548,7 +548,7 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
 
 # FOM VOM costs for gentech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT technology_type_id AS all_tech, 1000*fom AS cost_gen_fom, vom AS cost_gen_vom
 FROM opex WHERE (source_id, technology_type_id) in
@@ -557,7 +557,7 @@ FROM opex WHERE (source_id, technology_type_id) in
 
 # FOM VOM costs for stortech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_stor_fom, vom AS cost_stor_vom
 FROM opex WHERE (source_id, technology_type_id) in
   (SELECT MAX(source_id),technology_type_id
@@ -565,18 +565,18 @@ FROM opex WHERE (source_id, technology_type_id) in
 
 # FOM VOM costs for hybtech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_hyb_fom, vom AS cost_hyb_vom
 FROM opex WHERE (source_id, technology_type_id) in
   (SELECT MAX(source_id),technology_type_id
    FROM opex where technology_type_id in (13) GROUP BY technology_type_id);": [all_tech] cost_hyb_fom cost_hyb_vom;
 
 #Starting capacity (either cfrom capacity table or carry forward from previous)
-load 'gen_cap_op2020.json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial;
+load 'gen_cap_op2020.json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;
 
 # Exogenously commissioned capacity
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_exo
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -584,7 +584,7 @@ where (ntndp_zone_id,technology_type_id) in
 group by zones,all_tech;" : [zones,all_tech] gen_cap_exo;
 
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_exo
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -592,7 +592,7 @@ where (ntndp_zone_id,technology_type_id) in
 group by zones,all_tech;" : [zones,all_tech] stor_cap_exo;
 
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_exo
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -602,7 +602,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_exo;
 
 # Exogenously retired capacity
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as ret_gen_cap_exo
 from capacity
 where (ntndp_zone_id,technology_type_id) in
@@ -611,13 +611,13 @@ group by zones,all_tech;" : [zones,all_tech] ret_gen_cap_exo;
 
 #capacity factors for technologies with traces
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.timestamp AS CHAR) AS t, avg(mw) AS gen_cap_factor, t1.source_id
 FROM wind_and_solar_traces t1
 INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_id, timestamp
             FROM wind_and_solar_traces
-            WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-03 23:00:00'
+            WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-12 23:00:00'
                 AND MINUTE(timestamp)=0
                 AND (ntndp_zone_id, technology_type_id) IN ((1, 1), (1, 2), (1, 4), (1, 8), (1, 11), (1, 12), (1, 16), (1, 18), (2, 1), (2, 2), (2, 4), (2, 8), (2, 11), (2, 12), (2, 16), (3, 1), (3, 2), (3, 4), (3, 8), (3, 11), (3, 12), (3, 16), (4, 1), (4, 2), (4, 4), (4, 8), (4, 11), (4, 16), (5, 1), (5, 2), (5, 8), (5, 10), (5, 11), (5, 12), (5, 18), (6, 1), (6, 2), (6, 8), (6, 10), (6, 12), (6, 16), (7, 1), (7, 2), (7, 4), (7, 8), (7, 10), (7, 11), (7, 12), (7, 16), (8, 1), (8, 2), (8, 4), (8, 8), (8, 11), (8, 12), (8, 16), (9, 1), (9, 2), (9, 6), (9, 8), (9, 12), (10, 1), (10, 2), (10, 8), (10, 12), (10, 16), (10, 19), (11, 1), (11, 2), (11, 8), (11, 11), (11, 12), (11, 16), (12, 1), (12, 2), (12, 8), (12, 11), (12, 12), (12, 16), (12, 18), (13, 1), (13, 2), (13, 8), (13, 11), (13, 12), (13, 16), (14, 2), (14, 8), (14, 12), (14, 16), (14, 19), (15, 1), (15, 2), (15, 8), (15, 12), (15, 16), (16, 1), (16, 2), (16, 8), (16, 12), (16, 16), (16, 18))
             GROUP BY ntndp_zone_id, technology_type_id, timestamp) as t2
@@ -628,13 +628,13 @@ INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_i
 GROUP BY t1.ntndp_zone_id, t1.technology_type_id, t1.timestamp;" : [zones,all_tech,t] gen_cap_factor;
 
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="
 SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.timestamp AS CHAR) AS t, avg(mw) AS hyb_cap_factor, t1.source_id
 FROM wind_and_solar_traces t1
 INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_id, timestamp
             FROM wind_and_solar_traces
-            WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-03 23:00:00'
+            WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-12 23:00:00'
                 AND MINUTE(timestamp)=0
                 AND (ntndp_zone_id, technology_type_id) IN ((1, 13), (2, 13), (3, 13), (5, 13), (7, 13), (8, 13), (13, 13))
             GROUP BY ntndp_zone_id, technology_type_id, timestamp) as t2
@@ -646,11 +646,11 @@ GROUP BY t1.ntndp_zone_id, t1.technology_type_id, t1.timestamp;" : [zones,all_te
 
 #Demand for for all regions for the given time interval
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
-user=select password=select_password using=pymysql
+user=select password=select_password1 using=pymysql
 query="SELECT cast(poe.timestamp AS CHAR) AS t, poe.region_id AS regions, (poe.poe10 -0*roof.rooftop_solar) AS region_net_demand
 FROM demand_and_rooftop_traces poe
 INNER JOIN (SELECT timestamp, region_id, rooftop_solar FROM demand_and_rooftop_traces
-WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-03 23:00:00'
+WHERE timestamp BETWEEN '2024-07-01 00:00:00' AND '2024-07-12 23:00:00'
 AND MINUTE(timestamp)=0
 AND demand_scenario_id =3) roof
 ON poe.timestamp = roof.timestamp AND poe.region_id = roof.region_id
@@ -686,15 +686,11 @@ param cost_stor_vom:=
 21       5.00
 ;
 
-#Exogenous capacity entry gen_cap_exo
-param gen_cap_exo:=
-8 12     500.00
-;
-#Exogenous capacity entry stor_cap_exo
+# Exogenous capacity entry stor_cap_exo
 param stor_cap_exo:=
 5 21    2000.00
 ;
-#Exogenous capacity entry ret_gen_cap_exo
+# Exogenous capacity entry ret_gen_cap_exo
 param ret_gen_cap_exo:=
 8 4     600.00
 ;

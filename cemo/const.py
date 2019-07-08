@@ -31,10 +31,10 @@ TECH_TYPE = {
     19: 'gas_thermal',
     20: 'pumps',
     21: 'Snowy 2.0',
-    22: 'Other tech 2',
-    23: 'Other tech 3',
-    24: 'Other tech 4',
-    25: 'Other tech 5',
+    22: 'cst_3h',
+    23: 'cst_12h',
+    24: 'phes_3h',
+    25: 'phes_12h',
 }
 
 ZONE = {
@@ -75,50 +75,179 @@ ZONES_IN_REGIONS = [
     (5, 12),
 ]
 
-REGION_INTERCONS = [
-    (4, 5),
-    (5, 4),
-    (5, 1),
-    (1, 5),
-    (3, 5),
-    (5, 3),
-    (1, 2),
-    (2, 1),
-]
-
-INTERCON_PROP_FACTOR = {
+# Source Modelling Transmission Frameworks Review (EPR0019) Roam Consulting,
+# Table 4.4, 2029-2030 values, adapted to openCEM zones
+ZONE_DEMAND_PCT = {
     1: {
-        2: 0.61,
-        5: 0.2
-    },
-    2: {},
-    3: {},
-    4: {},
-    5: {
-        3: 0.5,
-        4: 0.5
-    }
-}
-INTERCON_TRANS_LIMIT = {
-    1: {
-        2: 360,
-        5: 400
+        'peak': 0.08,
+        'off peak': 0.18,
+        'prov': 'QLD'
     },
     2: {
-        1: 1175
+        'peak': 0.19,
+        'off peak': 0.31,
+        'prov': 'QLD'
     },
     3: {
-        5: 850
+        'peak': 0.16,
+        'off peak': 0.15,
+        'prov': 'QLD'
     },
     4: {
-        5: 480
+        'peak': 0.57,
+        'off peak': 0.36,
+        'prov': 'QLD'
     },
     5: {
-        1: 700,
-        3: 870,
-        4: 480
+        'peak': 0.05,
+        'off peak': 0.07,
+        'prov': 'NSW'
     },
+    6: {
+        'peak': 0.06,
+        'off peak': 0.05,
+        'prov': 'ACT'
+    },
+    7: {
+        'peak': 0.83,
+        'off peak': 0.84,
+        'prov': 'NSW'
+    },
+    8: {
+        'peak': 0.06,
+        'off peak': 0.04,
+        'prov': 'NSW'
+    },
+    9: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'VIC'
+
+    },
+    10: {
+        'peak': 0.82,
+        'off peak': 0.81,
+        'prov': 'VIC'
+    },
+    11: {
+        'peak': 0.08,
+        'off peak': 0.07,
+        'prov': 'VIC'
+    },
+    12: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'VIC'
+    },
+    13: {
+        'peak': 0.36,
+        'off peak': 0.55,
+        'prov': 'SA'
+    },
+    14: {
+        'peak': 0.59,
+        'off peak': 0.39,
+        'prov': 'SA'
+    },
+    15: {
+        'peak': 0.05,
+        'off peak': 0.06,
+        'prov': 'SA'
+    },
+    16: {
+        'peak': 1.0,
+        'off peak': 1.0,
+        'prov': 'TAS'
+    }
 }
+
+ZONE_INTERCONS = {
+    1: {
+        2: {'loss': 0.02, 'limit': 1501, 'length': 600, 'buildcost': 2500}
+    },
+    2: {
+        1: {'loss': 0.02, 'limit': 1501, 'length': 600, 'buildcost': 2500},
+        3: {'loss': 0.02, 'limit': 1313, 'length': 385, 'buildcost': 2500},
+        4: {'loss': 0.02, 'limit': 1421, 'length': 500, 'buildcost': 2500}
+    },
+    3: {
+        2: {'loss': 0.02, 'limit': 1313, 'length': 385, 'buildcost': 2500},
+        4: {'loss': 0.02, 'limit': 5288, 'length': 130, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 1078, 'length': 415, 'buildcost': 2500},
+    },
+    4: {
+        2: {'loss': 0.02, 'limit': 1421, 'length': 500, 'buildcost': 2500},
+        3: {'loss': 0.02, 'limit': 5288, 'length': 130, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 234, 'length': 375, ' buildcost': 2500},
+    },
+    5: {
+        6: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
+        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        # Artificial length is 150 so that builds are more comparable
+        11: {'loss': 0.2, 'limit': 200, 'length': 150, 'buildcost': 2500},
+        # REVIEW Use limitations linked to Hydro generation at each side
+        12: {'loss': 0.2, 'limit': 1350, 'length': 150, 'buildcost': 2500},
+        13: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
+    },
+    6: {
+        5: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
+        7: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
+        # REVIEW Murray to Guthega is folded into 5-11 link
+        # 12: {'loss': 0.02, 'limit': 0, 'length': 60},
+    },
+    7: {
+        6: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 929, 'length': 220, 'buildcost': 2500},
+    },
+    8: {
+        3: {'loss': 0.61, 'limit': 486, 'length': 415, 'buildcost': 2500},
+        4: {'loss': 0.61, 'limit': 105, 'length': 375, 'buildcost': 2500},
+        7: {'loss': 0.02, 'limit': 929, 'length': 220, 'buildcost': 2500},
+    },
+    9: {
+        10: {'loss': 0.02, 'limit': 8907, 'length': 136, 'buildcost': 2500},
+        16: {'loss': 0.5, 'limit': 469, 'length': 320, 'buildcost': 2500},
+    },
+    10: {
+        9: {'loss': 0.02, 'limit': 8907, 'length': 136, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
+        12: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
+        15: {'loss': 0.5, 'limit': 460, 'length': 125, 'buildcost': 2500},
+        16: {'loss': 0.5, 'limit': 0, 'length': 320, 'buildcost': 2500},  # West Tas to Geelong
+    },
+    11: {
+        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        5: {'loss': 0.02, 'limit': 200, 'length': 20, 'buildcost': 2500},
+        10: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
+        12: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
+        13: {'loss': 0.5, 'limit': 220, 'length': 150, 'buildcost': 2500},
+    },
+    12: {
+        5: {'loss': 0.02, 'limit': 1600, 'length': 150, 'buildcost': 2500},
+        # REVIEW Murray to Guthega is folded into 5-11 link
+        # 6: {'loss': 0.02, 'limit': 0, 'length': 60},
+        10: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
+    },
+    13: {
+        5: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
+        11: {'loss': 0.02, 'limit': 220, 'length': 150, 'buildcost': 2500},
+        14: {'loss': 0.02, 'limit': 537, 'length': 100, 'buildcost': 2500},
+    },
+    14: {
+        13: {'loss': 0.02, 'limit': 537, 'length': 100, 'buildcost': 2500},
+        15: {'loss': 0.02, 'limit': 547, 'length': 380, 'buildcost': 2500},
+    },
+    15: {
+        10: {'loss': 0.02, 'limit': 460, 'length': 125, 'buildcost': 2500},
+        14: {'loss': 0.02, 'limit': 547, 'length': 380, 'buildcost': 2500},
+    },
+    16: {
+        9: {'loss': 0.02, 'limit': 594, 'length': 320, 'buildcost': 2500},
+        10: {'loss': 0.02, 'limit': 0, 'length': 320, 'buildcost': 2500},  # Estimate based on ISP 2018 VIC-TAS option
+    }
+}
+
 
 DEFAULT_FUEL_PRICE = {
     1: 0.5,
@@ -159,21 +288,30 @@ DEFAULT_FUEL_EMIT_RATE = {
     19: 705.0
 }
 
-DEFAULT_HYDRO_MWH_MAX = {
-    1: 195000,  # openNEM data shows the 2010-2017 yearly average is 662262
-    3: 0,
-    4: 0,
-    5: 3294000,  # openNEM data shows the 2009-2018 yearly average is 2326421
-    6: 0,
-    7: 0,
-    8: 0,
-    9: 0,
-    10: 0,
-    12:
-    4753000,  # openNEM data shows the 2009-2018 yearly average to be 2747264
-    14: 0,
-    16: 11287000  # openNEM 2009-2018 LTA is 9165993
+DEFAULT_MAX_MWH_PER_ZONE = {
+    18: {
+        1: 662262,  # openNEM data shows the 2010-2017 yearly average is 662262
+        3: 0,
+        4: 0,
+        5:
+        2326421,  # openNEM data shows the 2009-2018 yearly average is 2326421
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+        12:
+        2747264,  # openNEM data shows the 2009-2018 yearly average to be 2747264
+        14: 0,
+        16: 9165993  # openNEM 2009-2018 LTA is 9165993
+    }
 }
+
+DEFAULT_MAX_MWH_NEM_WIDE = {
+    1: 10624e3,  # Source Near term potential for Biomass CEC BioEnergy RoadMap 2008
+}
+
+
 
 DEFAULT_RETIREMENT_COST = {
     2: 10487.98,
@@ -287,22 +425,10 @@ DEFAULT_BUILD_LIMIT = {
 }
 
 GEN_CAP_FACTOR = {
-    1: 1,
-    2: 1,
-    3: 1,
-    4: 1,
-    5: 1,
-    6: 1,
-    7: 1,
-    8: 1,
     9: 0,
     10: 0,
     11: 0,
     12: 0,
-    16: 1,
-    17: 0,
-    18: 1,
-    19: 1,
 }
 
 DEFAULT_STOR_PROPS = {
@@ -325,7 +451,7 @@ DEFAULT_HYB_PROPS = {
 
 DEFAULT_COSTS = {
     "unserved": 980000,
-    "trans": 0.1,
+    "trans": 0.02339,  # AEMO 2018-2019 budget
     "emit": 0,
 }
 
@@ -429,15 +555,22 @@ GEN_COMMIT = {
         6: 0.5,
         7: 0.5,
         19: 0.5
+    },
+    "effrate": {
+        2: 0.85,
+        3: 0.85,
+        4: 0.85,
+        5: 0.85,
+        6: 0.85,
+        7: 0.85,
+        19: 0.85
     }
 }
 
-ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23]
 
 DISPLAY_ORDER = [
-    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 15, 18, 14, 12, 17, 13, 9, 10, 11, 21, 22,
-    23, 24, 25
-]
+    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 15, 25, 18, 14, 12, 17, 22, 13, 23, 9, 10, 11, 21]
 
 GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20]
 RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
@@ -446,7 +579,7 @@ RE_DISP_GEN_TECH = [1, 18]
 GEN_TRACE = [9, 10, 11, 12, 17]
 FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19]
 COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19]
-HYB_TECH = [13]
+HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
