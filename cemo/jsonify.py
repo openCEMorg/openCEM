@@ -162,7 +162,7 @@ def jsoninit(inst):
     del out['retire_gen_tech_per_zone']
     del out['hyb_tech_per_zone']
     del out['stor_tech_per_zone']
-    del out['intercon_per_region']
+    del out['intercon_per_zone']
     for entry in out:
         if isinstance(out[entry], dict):
             out.update({entry: simple_as_complex(out[entry])})
