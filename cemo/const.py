@@ -31,10 +31,10 @@ TECH_TYPE = {
     19: 'gas_thermal',
     20: 'pumps',
     21: 'Snowy 2.0',
-    22: 'Other tech 2',
-    23: 'Other tech 3',
-    24: 'Other tech 4',
-    25: 'Other tech 5',
+    22: 'cst_3h',
+    23: 'cst_12h',
+    24: 'phes_3h',
+    25: 'phes_12h',
 }
 
 ZONE = {
@@ -308,7 +308,7 @@ DEFAULT_MAX_MWH_PER_ZONE = {
 }
 
 DEFAULT_MAX_MWH_NEM_WIDE = {
-    1: 10.1e6,  # Source Near term potential for Biomass
+    1: 10624e3,  # Source Near term potential for Biomass CEC BioEnergy RoadMap 2008
 }
 
 
@@ -567,12 +567,10 @@ GEN_COMMIT = {
     }
 }
 
-ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23]
 
 DISPLAY_ORDER = [
-    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 15, 18, 14, 12, 17, 13, 9, 10, 11, 21, 22,
-    23, 24, 25
-]
+    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 15, 25, 18, 14, 12, 17, 22, 13, 23, 9, 10, 11, 21]
 
 GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20]
 RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
@@ -581,7 +579,7 @@ RE_DISP_GEN_TECH = [1, 18]
 GEN_TRACE = [9, 10, 11, 12, 17]
 FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19]
 COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19]
-HYB_TECH = [13]
+HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
