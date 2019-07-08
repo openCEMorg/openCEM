@@ -120,9 +120,6 @@ def con_nem_ret_ratio(model):
     )
 
 
-# TODO a more transparent method to scale gwh from config file to mwh in model
-
-
 def con_nem_ret_gwh(model):
     '''inequality constraint setting renewable generation must be greater or equal
     than a defined GWh per year across the system'''
@@ -225,17 +222,6 @@ def con_region_ret_ratio(model, r):
               for t in model.t
               )
     )
-
-# FIXME deprecated
-def con_max_mwh_as_cap_factor(model, zone, tech):
-    '''Define a maximum MWh output as a capacity factor cap for a zone and technology'''
-    cap_factor = cemo.const.MAX_MWH_CAP_FACTOR.get(zone).get(tech, 1)
-    if cap_factor < 1:
-        return sum(model.gen_disp[zone, tech, t]
-                   for t in model.t)\
-            <= cap_factor * model.gen_cap_op[zone, tech] * 8760 /\
-            model.year_correction_factor
-    return Constraint.Skip
 
 
 def con_max_mhw_per_zone(model, zone, tech):

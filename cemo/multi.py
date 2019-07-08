@@ -551,7 +551,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         return exogenous_capacity
 
-    def generateyeartemplate(self, year, test=False):
+    def generateyeartemplate(self, year, test=True):
         """Generate data command file template used for clusters and full runs"""
         date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
@@ -672,7 +672,6 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                             str(i) for i in cemo.const.NOBUILD_TECH))
                     line = line.replace('[carryforwardcap]', opcap0)
                     line = line.replace('[timerange]', drange)
-                    # REVIEW [___techset] entrie may be superceeded by model sets initialisation
                     fo.write(line)
                 fo.write(custom_costs)
                 fo.write(exogenous_capacity)

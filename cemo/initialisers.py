@@ -82,7 +82,6 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
-# FIXME are we resetting transmission limits each time?
 def init_intercon_trans_limit(model, source, dest):
     # pylint: disable=unused-argument
     '''Initialise interconector transmission limits'''

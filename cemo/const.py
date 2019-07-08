@@ -182,18 +182,15 @@ ZONE_INTERCONS = {
     },
     5: {
         6: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
-        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        # Estimated thermal limit based on 265MVAR capacity
         # Artificial length is 150 so that builds are more comparable
         11: {'loss': 0.2, 'limit': 200, 'length': 150, 'buildcost': 2500},
-        # REVIEW Use limitations linked to Hydro generation at each side
         12: {'loss': 0.2, 'limit': 1350, 'length': 150, 'buildcost': 2500},
         13: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
     },
     6: {
         5: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
         7: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
-        # REVIEW Murray to Guthega is folded into 5-11 link
-        # 12: {'loss': 0.02, 'limit': 0, 'length': 60},
     },
     7: {
         6: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
@@ -216,7 +213,7 @@ ZONE_INTERCONS = {
         16: {'loss': 0.5, 'limit': 0, 'length': 320, 'buildcost': 2500},  # West Tas to Geelong
     },
     11: {
-        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        # Estimated thermal limit based on 265MVAR capacity
         5: {'loss': 0.02, 'limit': 200, 'length': 20, 'buildcost': 2500},
         10: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
         12: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
@@ -224,8 +221,6 @@ ZONE_INTERCONS = {
     },
     12: {
         5: {'loss': 0.02, 'limit': 1600, 'length': 150, 'buildcost': 2500},
-        # REVIEW Murray to Guthega is folded into 5-11 link
-        # 6: {'loss': 0.02, 'limit': 0, 'length': 60},
         10: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
         11: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
     },
@@ -312,7 +307,6 @@ DEFAULT_MAX_MWH_NEM_WIDE = {
 }
 
 
-
 DEFAULT_RETIREMENT_COST = {
     2: 10487.98,
     3: 10487.98,
@@ -324,7 +318,7 @@ DEFAULT_RETIREMENT_COST = {
     11: 20975.96,
     12: 10487.98,
     16: 52439.9,
-    19: 52439.9  # FIXME Should this be 10k like for gas?
+    19: 52439.9  # REVIEW Find a source for this cost
 }
 
 DEFAULT_TECH_LIFETIME = {
@@ -455,60 +449,6 @@ DEFAULT_COSTS = {
     "emit": 0,
 }
 
-MAX_MWH_CAP_FACTOR = {
-    1: {
-        1: 0.5
-    },
-    2: {
-        1: 0.5
-    },
-    3: {
-        1: 0.5
-    },
-    4: {
-        1: 0.5
-    },
-    5: {
-        1: 0.5,
-        4: 0.85
-    },
-    6: {
-        1: 0.5,
-        4: 0.85
-    },
-    7: {
-        1: 0.5,
-        4: 0.85
-    },
-    8: {
-        1: 0.5,
-        4: 0.85
-    },
-    9: {
-        1: 0.5
-    },
-    10: {
-        1: 0.5
-    },
-    11: {
-        1: 0.5
-    },
-    12: {
-        1: 0.5
-    },
-    13: {
-        1: 0.5
-    },
-    14: {
-        1: 0.5
-    },
-    15: {
-        1: 0.5
-    },
-    16: {
-        1: 0.5
-    }
-}
 
 GEN_COMMIT = {
     "penalty": {  # Startup fuel cost in GJ/MWh
