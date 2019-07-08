@@ -444,8 +444,8 @@ where (ntndp_zone_id,technology_type_id) in
 and commissioning_year is NULL
 group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
-# operating capacity for intercons in nodes is currently done in initialisation until capacities
-# are added to a database
+# operating capacity for intercons in nodes
+# Currently extracted from cemo.const during initalisation
 '''
         return opcap0
 
@@ -551,7 +551,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         return exogenous_capacity
 
-    def generateyeartemplate(self, year, test=False):
+    def generateyeartemplate(self, year, test=True):
         """Generate data command file template used for clusters and full runs"""
         date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
