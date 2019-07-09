@@ -206,7 +206,7 @@ INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_i
 GROUP BY t1.ntndp_zone_id, t1.technology_type_id, t1.timestamp;" : [zones,all_tech,t] gen_cap_factor;
 
 # Traces for hybrids
-load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
+load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_community
 user=select password=select_password1 using=pymysql
 query="
 SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.timestamp AS CHAR) AS t, avg(mw) AS hyb_cap_factor, t1.source_id
