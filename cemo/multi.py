@@ -461,9 +461,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         return carry_fwd_cost
 
     def produce_custom_costs(self, y):
-        '''Produce custom costs in template that override costs as defined
-        in template. Custom costs are specified in the configuration file as a
-        separate csv file read with pandas.
+        '''Produce custom costs in template from data.
+
+        These costs override costs as defined by default or template queries.
+        Custom costs are specified in the configuration file as a separate csv file
+        read with pandas.
         Template is a pyomo data command file where parameter
         values correspond to the last data command instruction statement'''
         year = str(y)
@@ -481,12 +483,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'cost_stor_vom': 'tech'}
         if self.custom_costs is not None:
             costs = pd.read_csv(self.custom_costs, skipinitialspace=True)
-            for key in keywords.keys():
+            for key in keywords:
                 if year in costs.columns:
                     cost = costs[
                         (costs['name'] == key) &
-                        (costs['tech'].isin(self.all_tech)
-                         & (costs['zone'].isin(self.zones)))
+                        (costs['tech'].isin(self.all_tech))
                     ].dropna(subset=[year])
                 else:
                     cost = pd.DataFrame()
@@ -501,6 +502,9 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                                            year: lambda x: '%10.2f' % x,
                                                                        })
                     else:
+                        cost = cost[cost[['zone', 'tech']].apply(tuple, 1).isin([
+                            (i, j) for i in self.all_tech_per_zone
+                                   for j in self.all_tech_per_zone[i]])]
                         custom_costs += cost[['zone', 'tech', year]
                                              ].to_string(header=False, index=False,
                                                          formatters={
@@ -529,7 +533,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.Years.index(year) > 0:
                 prevyear = self.Years[self.Years.index(year) - 1]
 
-            for key in keywords.keys():
+            for key in keywords:
                 cap = capacity[
                     (capacity['year'] > int(prevyear)) &
                     (capacity['year'] <= int(year)) &
