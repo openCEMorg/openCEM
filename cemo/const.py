@@ -3,7 +3,7 @@ __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
 __license__ = "GPLv3"
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
@@ -35,6 +35,9 @@ TECH_TYPE = {
     23: 'cst_12h',
     24: 'phes_3h',
     25: 'phes_12h',
+    26: 'battery_1h',
+    27: 'battery_3h',
+    28: 'coal_sc_new'
 }
 
 ZONE = {
@@ -182,18 +185,15 @@ ZONE_INTERCONS = {
     },
     5: {
         6: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
-        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        # Estimated thermal limit based on 265MVAR capacity
         # Artificial length is 150 so that builds are more comparable
         11: {'loss': 0.2, 'limit': 200, 'length': 150, 'buildcost': 2500},
-        # REVIEW Use limitations linked to Hydro generation at each side
         12: {'loss': 0.2, 'limit': 1350, 'length': 150, 'buildcost': 2500},
         13: {'loss': 0.02, 'limit': 0, 'length': 600, 'buildcost': 2500},
     },
     6: {
         5: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
         7: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
-        # REVIEW Murray to Guthega is folded into 5-11 link
-        # 12: {'loss': 0.02, 'limit': 0, 'length': 60},
     },
     7: {
         6: {'loss': 0.02, 'limit': 2304, 'length': 115, 'buildcost': 2500},
@@ -216,7 +216,7 @@ ZONE_INTERCONS = {
         16: {'loss': 0.5, 'limit': 0, 'length': 320, 'buildcost': 2500},  # West Tas to Geelong
     },
     11: {
-        # REVIEW Estimate thermal limit based on 265MVAR capacity
+        # Estimated thermal limit based on 265MVAR capacity
         5: {'loss': 0.02, 'limit': 200, 'length': 20, 'buildcost': 2500},
         10: {'loss': 0.02, 'limit': 542, 'length': 450, 'buildcost': 2500},
         12: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
@@ -224,8 +224,6 @@ ZONE_INTERCONS = {
     },
     12: {
         5: {'loss': 0.02, 'limit': 1600, 'length': 150, 'buildcost': 2500},
-        # REVIEW Murray to Guthega is folded into 5-11 link
-        # 6: {'loss': 0.02, 'limit': 0, 'length': 60},
         10: {'loss': 0.02, 'limit': 1422, 'length': 216, 'buildcost': 2500},
         11: {'loss': 0.02, 'limit': 284, 'length': 490, 'buildcost': 2500},
     },
@@ -266,26 +264,28 @@ DEFAULT_HEAT_RATE = {
     1: 12.66,
     2: 6.93,
     3: 7.93,
-    4: 8.66,
+    4: 9.66,
     5: 11.52,
     6: 12.4,
     7: 17.4,
     8: 10.15,
     16: 7.6,
-    19: 10.7
+    19: 10.7,
+    28: 8.66,
 }
-
+# REVIEW Emissions and heat rates need a review
 DEFAULT_FUEL_EMIT_RATE = {
     1: 57.13,
     2: 410.0,
     3: 432.5,
-    4: 850.0,
+    4: 950.0,
     5: 1150.0,
     6: 1100.0,
     7: 1683.0,
     8: 602.0,
     16: 602.0,
-    19: 705.0
+    19: 705.0,
+    28: 840.0,
 }
 
 DEFAULT_MAX_MWH_PER_ZONE = {
@@ -312,7 +312,6 @@ DEFAULT_MAX_MWH_NEM_WIDE = {
 }
 
 
-
 DEFAULT_RETIREMENT_COST = {
     2: 10487.98,
     3: 10487.98,
@@ -324,7 +323,7 @@ DEFAULT_RETIREMENT_COST = {
     11: 20975.96,
     12: 10487.98,
     16: 52439.9,
-    19: 52439.9  # FIXME Should this be 10k like for gas?
+    19: 52439.9  # REVIEW Find a source for this cost
 }
 
 DEFAULT_TECH_LIFETIME = {
@@ -432,21 +431,19 @@ GEN_CAP_FACTOR = {
 }
 
 DEFAULT_STOR_PROPS = {
-    "rt_eff": {
-        14: 0.8,
-        15: 0.8,
-        21: 0.8
-    },
-    "charge_hours": {
-        14: 6,
-        15: 2,
-        21: 168
-    }
+    14: {"rt_eff": 0.8, "charge_hours": 6},
+    24: {"rt_eff": 0.8, "charge_hours": 3},
+    25: {"rt_eff": 0.8, "charge_hours": 12},
+    21: {"rt_eff": 0.8, "charge_hours": 168},
+    15: {"rt_eff": 0.8, "charge_hours": 2},
+    26: {"rt_eff": 0.8, "charge_hours": 1},
+    27: {"rt_eff": 0.8, "charge_hours": 3},
 }
 
 DEFAULT_HYB_PROPS = {
-    "col_mult": {13: 1},
-    "charge_hours": {13: 0}
+    13: {"col_mult": 2.5, "charge_hours": 6},
+    22: {"col_mult": 2.1, "charge_hours": 3},
+    23: {"col_mult": 3.1, "charge_hours": 12},
 }
 
 DEFAULT_COSTS = {
@@ -455,60 +452,6 @@ DEFAULT_COSTS = {
     "emit": 0,
 }
 
-MAX_MWH_CAP_FACTOR = {
-    1: {
-        1: 0.5
-    },
-    2: {
-        1: 0.5
-    },
-    3: {
-        1: 0.5
-    },
-    4: {
-        1: 0.5
-    },
-    5: {
-        1: 0.5,
-        4: 0.85
-    },
-    6: {
-        1: 0.5,
-        4: 0.85
-    },
-    7: {
-        1: 0.5,
-        4: 0.85
-    },
-    8: {
-        1: 0.5,
-        4: 0.85
-    },
-    9: {
-        1: 0.5
-    },
-    10: {
-        1: 0.5
-    },
-    11: {
-        1: 0.5
-    },
-    12: {
-        1: 0.5
-    },
-    13: {
-        1: 0.5
-    },
-    14: {
-        1: 0.5
-    },
-    15: {
-        1: 0.5
-    },
-    16: {
-        1: 0.5
-    }
-}
 
 GEN_COMMIT = {
     "penalty": {  # Startup fuel cost in GJ/MWh
@@ -519,24 +462,27 @@ GEN_COMMIT = {
         6: 41,
         7: 41,
         19: 25,
+        28: 41,
     },
     "rate up": {
         2: 0.68,
         3: 0.68,
-        4: 0.67,
-        5: 0.67,
-        6: 0.45,
-        7: 0.99,
-        19: 0.67
+        4: 0.45,
+        5: 0.45,
+        6: 0.67,
+        7: 0.67,
+        19: 0.67,
+        28: 0.45
     },
     "rate down": {
         2: 0.87,
         3: 0.87,
-        4: 0.67,
-        5: 0.67,
-        6: 0.41,
-        7: 0.41,
-        19: 0.67
+        4: 0.41,
+        5: 0.41,
+        6: 0.67,
+        7: 0.67,
+        19: 0.67,
+        28: 0.41,
     },
     "uptime": {
         2: 4,
@@ -545,7 +491,8 @@ GEN_COMMIT = {
         5: 12,
         6: 12,
         7: 12,
-        19: 12
+        19: 12,
+        28: 12
     },
     "mincap": {
         2: 0.5,
@@ -554,7 +501,8 @@ GEN_COMMIT = {
         5: 0.5,
         6: 0.5,
         7: 0.5,
-        19: 0.5
+        19: 0.5,
+        28: 0.5
     },
     "effrate": {
         2: 0.85,
@@ -563,27 +511,28 @@ GEN_COMMIT = {
         5: 0.85,
         6: 0.85,
         7: 0.85,
-        19: 0.85
+        19: 0.85,
+        28: 0.85
     }
 }
 
-ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23]
+ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28]
 
 DISPLAY_ORDER = [
-    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 15, 25, 18, 14, 12, 17, 22, 13, 23, 9, 10, 11, 21]
+    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
 
-GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20]
+GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28]
 RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
-DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19]
+DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28]
 RE_DISP_GEN_TECH = [1, 18]
 GEN_TRACE = [9, 10, 11, 12, 17]
-FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19]
-COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19]
+FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 28]
+COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19, 28]
 HYB_TECH = [13, 22, 23]
-STOR_TECH = [14, 15, 21]
+STOR_TECH = [14, 15, 21, 24, 25, 26, 27]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
-NOBUILD_TECH = [3, 5, 6, 7, 9, 16, 18, 19, 21]
+NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
 
 PALETTE = {

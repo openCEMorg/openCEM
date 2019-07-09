@@ -188,7 +188,6 @@ where (ntndp_zone_id,technology_type_id) in
 group by zones,all_tech;" : [zones,all_tech] ret_gen_cap_exo;
 
 #capacity factors for technologies with traces
-# TODO FIXME  check that the MAX statement correctly retrieves the desired scenario
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="
@@ -206,8 +205,8 @@ INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_i
        AND t1.source_id = t2.source_id
 GROUP BY t1.ntndp_zone_id, t1.technology_type_id, t1.timestamp;" : [zones,all_tech,t] gen_cap_factor;
 
-# TODO  check that the MAX statement correctly retrieves the desired scenario
-load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
+# Traces for hybrids
+load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_community
 user=select password=select_password1 using=pymysql
 query="
 SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.timestamp AS CHAR) AS t, avg(mw) AS hyb_cap_factor, t1.source_id
@@ -225,8 +224,6 @@ INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_i
 GROUP BY t1.ntndp_zone_id, t1.technology_type_id, t1.timestamp;" : [zones,all_tech,t] hyb_cap_factor;
 
 #Demand for for all regions for the given time interval
-# TODO  check that the MAX statement correctly retrieves the desired scenario
-# TODO tidy up operational demand query
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="SELECT cast(poe.timestamp AS CHAR) AS t, poe.region_id AS regions, (poe.poe10 -0*roof.rooftop_solar) AS region_net_demand

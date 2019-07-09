@@ -3,7 +3,7 @@ __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
 __license__ = "GPLv3"
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
@@ -46,13 +46,13 @@ def init_intercons_in_zones(model):
 def init_stor_rt_eff(model, tech):
     # pylint: disable=unused-argument
     '''Default return efficiency for storage techs'''
-    return cemo.const.DEFAULT_STOR_PROPS["rt_eff"].get(tech, 0)
+    return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("rt_eff", 0)
 
 
 def init_stor_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for storage tech'''
-    return cemo.const.DEFAULT_STOR_PROPS["charge_hours"].get(tech, 0)
+    return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("charge_hours", 0)
 
 
 def init_zone_demand_factors(model, zone, timestamp):
@@ -67,13 +67,13 @@ def init_zone_demand_factors(model, zone, timestamp):
 def init_hyb_col_mult(model, tech):
     # pylint: disable=unused-argument
     '''Default collector multiple for hybrid tech'''
-    return cemo.const.DEFAULT_HYB_PROPS["col_mult"].get(tech, 0)
+    return cemo.const.DEFAULT_HYB_PROPS.get(tech).get('col_mult', 0)
 
 
 def init_hyb_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for hybrid tech'''
-    return cemo.const.DEFAULT_HYB_PROPS["charge_hours"].get(tech, 0)
+    return cemo.const.DEFAULT_HYB_PROPS.get(tech).get("charge_hours", 0)
 
 
 def init_intercon_loss_factor(model, source, dest):
@@ -82,7 +82,6 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
-# FIXME are we resetting transmission limits each time?
 def init_intercon_trans_limit(model, source, dest):
     # pylint: disable=unused-argument
     '''Initialise interconector transmission limits'''
@@ -163,7 +162,9 @@ def init_cap_factor(model, zone, tech, time):
     # pylint: disable=unused-argument
     '''Default capacity factor per hour per technology and per zone.
 
-    Note: Defaults to zero means technology does not generate'''
+    Note: Defaults to zero means technology does not generate
+    Needed to prevent trace based generators to generate at all
+    times when their trace fails to load'''
     if cemo.const.GEN_CAP_FACTOR.get(tech) is not None:
         return cemo.const.GEN_CAP_FACTOR.get(tech)
     return 1

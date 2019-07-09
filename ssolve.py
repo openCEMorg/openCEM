@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """solve.py: Single model template solver for openCEM"""
-__version__ = "0.9.2"
+__version__ = "0.9.5"
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
@@ -106,7 +106,6 @@ if ARGS.printonly:
 OPT = SolverFactory(ARGS.solver)
 
 # Use multiple threads for CBC solver (if available)
-# TODO pass solver options via command line interface
 if ARGS.solver == "cbc":
     OPT.options['threads'] = 4
     OPT.options['ratio'] = 0.0001

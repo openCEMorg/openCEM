@@ -4,7 +4,7 @@ __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
 __license__ = "GPLv3"
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
@@ -143,7 +143,6 @@ class ClusterData:
                 self.Xsynth[k] = self.Xclus[k].mean(axis=0)[:self.nplen]
 
     def clusterset(self, max_d, method='average', metric='cityblock'):
-        # TODO expose method and metric to class initialisation
         """Group period observations into clusters and save into Xcluster"""
         self.max_d = max_d
         # Perform selected clustering algorithm on dataset
@@ -181,7 +180,6 @@ class ClusterData:
         self.Xcluster = pd.DataFrame(
             Xcl, columns=['week', 'date', 'weight']).sort_values(by='date')
 
-
 class CSVCluster(ClusterData):
     """Weekly Cluster from CSV file, to perform unit tests and standalone clustering studies"""
 
@@ -210,7 +208,7 @@ class InstanceCluster(ClusterData):
 
     def __init__(self, instance, max_d=12):
         self.demand = cemo.jsonify.jsonifyld(
-            instance)  # FIXME better name for jsonifyld
+            instance)
         ClusterData.__init__(self, max_d=max_d, regions=instance.regions)
 
     def _data_query(self, region):
