@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """msolve.py: Multi year solution wrapper openCEM"""
-__version__ = "0.9.4"
+__version__ = "0.9.5"
 __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
