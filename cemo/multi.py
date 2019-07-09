@@ -555,7 +555,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         return exogenous_capacity
 
-    def generateyeartemplate(self, year, test=True):
+    def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
         date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
         strd1 = "'" + str(date1) + "'"
