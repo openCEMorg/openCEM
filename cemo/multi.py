@@ -736,7 +736,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             opt = SolverFactory(self.solver)
             if self.log:
                 print("openCEM multi: Starting full year dispatch simulation")
-            opt.solve(inst, tee=self.log, keepfiles=self.log)
+            opt.solve(inst, tee=self.log, keepfiles=False)
 
             # Carry forward operating capacity to next Inv period
             opcap = json_carry_forward_cap(inst)
