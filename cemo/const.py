@@ -30,7 +30,7 @@ TECH_TYPE = {
     18: 'hydro',
     19: 'gas_thermal',
     20: 'pumps',
-    21: 'Snowy 2.0',
+    21: 'phes_168h',
     22: 'cst_3h',
     23: 'cst_12h',
     24: 'phes_3h',
