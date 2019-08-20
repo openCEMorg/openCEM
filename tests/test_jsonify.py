@@ -2,7 +2,7 @@
 
 import json
 
-from cemo.jsonify import jsoninit
+from cemo.jsonify import json_readr, json_readr_meta, json_readr_year, jsoninit
 
 
 def sort_func(entry):
@@ -27,3 +27,28 @@ def test_json_init(solution):
         data2 = json.load(known)
     for key in data:
         assert dumped_data(data[key]) == dumped_data(data2[key])
+
+
+def test_json_readr():
+    '''Assert that a one per line openCEM JSON file reads as a conventional dictionary'''
+    with open('tests/test_reading.json') as known:
+        full_data = json.load(known)
+    assert full_data == json_readr('tests/test_reader_one_per_line.json')
+
+
+def test_json_readr_meta():
+    '''Assert that a one per line openCEM JSON file reads metadata'''
+    with open('tests/test_reading.json') as known:
+        full_data = json.load(known)
+    assert {
+        "meta": full_data['meta']
+    } == json_readr_meta('tests/test_reader_one_per_line.json')
+
+
+def test_json_readr_year():
+    '''Assert that a one per line openCEM JSON file reads metadata'''
+    with open('tests/test_reading.json') as known:
+        full_data = json.load(known)
+    assert {
+        "2025": full_data['2025']
+    } == json_readr_year('tests/test_reader_one_per_line.json', 2025)

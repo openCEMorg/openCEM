@@ -13,6 +13,9 @@ __maintainer__ = "Andrew Hall"
 __email__ = "andrew.hall@itpau.com.au"
 __status__ = "Development"
 
+import json
+import linecache
+
 from pyomo.environ import value
 
 from cemo.rules import (cost_build_per_zone, cost_shadow,
@@ -304,6 +307,32 @@ def jsonifyld(inst):
     '''Produce JSON net demand indexed by region and timestamp'''
     out = fill_complex_param(inst.region_net_demand)
     return out
+
+
+def json_readr(filename):
+    '''Read entire openCEM JSON output file.
+
+    Returns metadata and all year data in a single dictionary'''
+    data = {}
+    for line in open(filename, mode="r"):
+        data.update(json.loads(line))
+    return data
+
+
+def json_readr_meta(filename):
+    '''Read metadata for openCEM JSON file.
+
+    Return metadata entry for file in a single dictionary'''
+    return json.loads(linecache.getline(filename, 1))
+
+
+def json_readr_year(filename, year):
+    '''Read single year from openCEM JSON file.
+
+    Return year entry for file in a single dictionary'''
+    metadata = json_readr_meta(filename)
+    line = metadata['meta']['Years'].index(int(year)) + 2
+    return json.loads(linecache.getline(filename, line))
 
 
 # Helper functions for marshalling various objects into appropriate json values
