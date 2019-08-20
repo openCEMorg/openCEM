@@ -1,5 +1,5 @@
 "name","zone","tech",2020,2025,2035
-"cost_gen_fom",13,1,1111,3333
+"cost_gen_fom",,1,1111,3333
 "cost_gen_fom",13,2,2222,4444,
 "cost_gen_vom",13,1,5555,7777,
 "cost_gen_vom",13,2,6666,8888,
