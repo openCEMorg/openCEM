@@ -747,9 +747,9 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Dump simulation result in JSON forma
             if self.log:
                 print("openCEM multi: Saving year %s results into temporary file" % y)
-            out = jsonify(inst)
-            with open(self.tmpdir + str(y) + '.json', 'w') as jo:
-                json.dump(out, jo)
+            with open(self.tmpdir + str(y) + '.json', 'w') as json_out:
+                json.dump(jsonify(inst, y), json_out)
+                json_out.write('\n')
 
             printstats(inst)
 
