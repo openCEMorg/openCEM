@@ -17,8 +17,8 @@ import holidays
 def init_year_correction_factor(model):
     # pylint: disable=unused-argument
     '''Calculate factor to adjust dispatch periods different to 8760 hours'''
-    ystr = model.t.last()
-    year = int(ystr[:4])  # TODO use date time to extract year
+    year = datetime.datetime.strptime(model.t.last(),
+                                      '%Y-%m-%d %H:%M:%S').year
     hours = 8760
     if calendar.isleap(year):
         hours = 8784
