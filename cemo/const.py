@@ -273,15 +273,14 @@ DEFAULT_HEAT_RATE = {
     19: 10.7,
     28: 8.66,
 }
-# REVIEW Emissions and heat rates need a review
 DEFAULT_FUEL_EMIT_RATE = {
     1: 57.13,
     2: 410.0,
-    3: 432.5,
+    3: 432.5,  # NTNDP data, not used
     4: 950.0,
-    5: 1150.0,
+    5: 1150.0,  # NTNDP data, not used
     6: 1100.0,
-    7: 1683.0,
+    7: 1683.0,  # NTNDP data, not used
     8: 602.0,
     16: 602.0,
     19: 705.0,
@@ -323,7 +322,7 @@ DEFAULT_RETIREMENT_COST = {
     11: 20975.96,
     12: 10487.98,
     16: 52439.9,
-    19: 52439.9  # REVIEW Find a source for this cost
+    19: 52439.9  # Copy of 16
 }
 
 DEFAULT_TECH_LIFETIME = {
@@ -338,8 +337,8 @@ DEFAULT_TECH_LIFETIME = {
     15: 15.0,
     21: 50.0,
 }
+
 # Numbers are sum of ISP Build limits plus initial capacity as per capex table
-# TODO impose a limit of 0 to PHES and CSP for regions that do not allow it
 DEFAULT_BUILD_LIMIT = {
     1: {
         11: 9250 + 1001,
@@ -532,7 +531,7 @@ HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21, 24, 25, 26, 27]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
-NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]
+NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
 
 PALETTE = {
