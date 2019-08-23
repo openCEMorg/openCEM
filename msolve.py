@@ -57,7 +57,7 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-r`",
+    "-r",
     "--resume",
     help="Resume simulation from last succesfully run year",
     action="store_true",

@@ -335,7 +335,16 @@ DEFAULT_TECH_LIFETIME = {
     13: 30.0,
     14: 50.0,
     15: 15.0,
+    17: 30,
     21: 50.0,
+    22: 30,
+    23: 30,
+    24: 50,
+    25: 50,
+    26: 15,
+    27: 15,
+    28: 30,
+
 }
 
 # Numbers are sum of ISP Build limits plus initial capacity as per capex table
