@@ -17,8 +17,8 @@ import holidays
 def init_year_correction_factor(model):
     # pylint: disable=unused-argument
     '''Calculate factor to adjust dispatch periods different to 8760 hours'''
-    ystr = model.t.last()
-    year = int(ystr[:4])  # TODO use date time to extract year
+    year = datetime.datetime.strptime(model.t.last(),
+                                      '%Y-%m-%d %H:%M:%S').year
     hours = 8760
     if calendar.isleap(year):
         hours = 8784
@@ -82,12 +82,6 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
-def init_intercon_trans_limit(model, source, dest):
-    # pylint: disable=unused-argument
-    '''Initialise interconector transmission limits'''
-    return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('limit')
-
-
 def init_default_fuel_price(model, zone, tech):
     # pylint: disable=unused-argument
     '''Assign default price across zone and technologies'''
@@ -145,7 +139,8 @@ def init_intercon_cap_initial(model, zone_source, zone_dest):
     # pylint: disable=unused-argument
     '''Initialise initial transmission limits.
 
-    If a template reads values from JSON, these defaults are overwritten'''
+    If a template reads values from JSON, e.g. from a previous year,
+    these defaults are overwritten'''
     return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get('limit', 0)
 
 

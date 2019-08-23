@@ -788,7 +788,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "System emission limit": self.emitlimit,
             "Dispatchable generation ratio ": self.nem_disp_ratio,
             "Renewable Dispatchable generation ratio ": self.nem_re_disp_ratio,
-            "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone':0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,
+            "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone': 0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,
             "Exogenous Capacity decisions": pd.read_csv(self.exogenous_capacity).to_dict(orient='records') if self.exogenous_capacity is not None else None,
         }
 
