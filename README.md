@@ -8,7 +8,7 @@ Welcome to the repository for openCEM
 
 This repository contains the development version of openCEM. You can download and try it in your computer. Please report issues either via:
 
-- Log an issue in the [issue tracker](https://github.com/docker-library/docs/issues)
+- Log an issue in the [issue tracker](https://github.com/openCEMorg/openCEM/issues)
 - Email [analyticsinfo-at-itpau.com.au](mailto:analyticsinfo@itpau.com.au)
 
 ## Requirements
