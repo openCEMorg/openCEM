@@ -180,6 +180,7 @@ class ClusterData:
         self.Xcluster = pd.DataFrame(
             Xcl, columns=['week', 'date', 'weight']).sort_values(by='date')
 
+
 class CSVCluster(ClusterData):
     """Weekly Cluster from CSV file, to perform unit tests and standalone clustering studies"""
 
