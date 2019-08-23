@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/openCEMorg/openCEM.svg?token=YPwjEg4ZHVHXyJ2xeA7b&branch=master)](https://travis-ci.com/openCEMorg/openCEM)
+
 # openCEM
 
 Welcome to the repository for openCEM
