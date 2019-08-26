@@ -9,12 +9,12 @@ NEM Capacity total: 21.02 GW	NEM Dispatch total: 997.90 GWh
           phes_6h: 225.2 MW | dispatch:   1.4 GWh | avg cap factor: 0.06(0.50)
        battery_2h:   1.5 GW | dispatch:   9.0 GWh | avg cap factor: 0.06(0.50)
             hydro:   2.3 GW | dispatch: 100.2 GWh | avg cap factor: 0.46(1.00)
-Total Cost:	    $4,507,435,650.91
-Build cost:	    $1,676,161,981.26
+Total Cost:	    $4,507,435,645.83
+Build cost:	    $1,676,161,975.88
 Repayment cost:	                $0.00
-Operating cost:	    $1,900,367,588.08
-Fixed cost:	      $838,735,458.00
-Trans. build cost:	 $92,170,013.65
+Operating cost:	    $1,900,367,590.16
+Fixed cost:	      $838,735,457.27
+Trans. build cost:	 $92,170,012.62
 Trans. flow cost:	      $609.92
 Unserved cost:	                $0.00
 Emission cost:	                $0.00

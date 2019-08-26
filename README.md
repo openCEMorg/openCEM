@@ -13,14 +13,15 @@ This repository contains the development version of openCEM. You can download an
 
 ## Requirements
 
-- A computer with at least 16 GB of RAM (32 GB or more recommended)
-- Windows or Linux OS
-- 4 GB available in your hard drive (for full result sets)
-- An active internet connection for the duration of the run
+*   A computer with at least 16 GB of RAM (32 GB or more recommended)
+*   Windows, MacOS, or Linux OS
+*   4 GB available in your hard drive (for full result sets)
+*   An active internet connection for the duration of the run
 
 ## Installation
 
-To run openCEM, you need to install [Python 3](https://www.python.org/download/releases/3.0/), a development version of [Pyomo](http://www.pyomo.org/) and a solver.
+To run openCEM, you need to install [Python 3](https://www.python.org/download/releases/3.0/) and additional dependencies.
+See the [Install](https://github.com/openCEMorg/openCEM/wiki/Install) page for more information.
 
 ## Documentation
 

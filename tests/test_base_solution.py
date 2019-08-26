@@ -54,7 +54,7 @@ def test_storage(solution, benchmark, zone, time, tech):
 def test_hybrid(solution, benchmark, zone, time, tech):
     '''Assert hybrid dispatch solutions match known value'''
     assert value(solution.hyb_disp[zone, tech, time]) \
-        == pytest.approx(value(benchmark.hyb_disp[zone, tech, time]), abs=1e-11)
+        == pytest.approx(value(benchmark.hyb_disp[zone, tech, time]), abs=1e-4)
 
 
 @pytest.mark.parametrize("tfrom,tto,time", [
@@ -66,7 +66,7 @@ def test_hybrid(solution, benchmark, zone, time, tech):
 def test_transmission(solution, benchmark, tfrom, tto, time):
     '''Assert transmission decisions match known value'''
     assert value(solution.intercon_disp[tfrom, tto, time])\
-        == value(benchmark.intercon_disp[tfrom, tto, time])
+        == pytest.approx(value(benchmark.intercon_disp[tfrom, tto, time]), abs=1e-4)
 
 
 def test_problemsize(solution, benchmark):
