@@ -14,7 +14,7 @@ This repository contains the development version of openCEM. You can download an
 ## Requirements
 
 *   A computer with at least 16 GB of RAM (32 GB or more recommended)
-*   Windows, MacOS Linux OS
+*   Windows, MacOS, or Linux OS
 *   4 GB available in your hard drive (for full result sets)
 *   An active internet connection for the duration of the run
 
