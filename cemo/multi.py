@@ -22,6 +22,8 @@ from cemo.jsonify import json_carry_forward_cap, jsonify
 from cemo.model import create_model
 from cemo.utils import printstats
 
+from shutil import copyfileobj
+
 
 def sql_tech_pairs(techset):
     """Format zone,tech pairs as a set for SQL query statement"""
@@ -747,9 +749,9 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Dump simulation result in JSON forma
             if self.log:
                 print("openCEM multi: Saving year %s results into temporary file" % y)
-            out = jsonify(inst)
-            with open(self.tmpdir + str(y) + '.json', 'w') as jo:
-                json.dump(out, jo)
+            with open(self.tmpdir + str(y) + '.json', 'w') as json_out:
+                json.dump(jsonify(inst, y), json_out)
+                json_out.write('\n')
 
             printstats(inst)
 
@@ -762,13 +764,14 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
     def mergejsonyears(self):
         '''Merge the full year JSON output for each simulated year in a single dictionary'''
         data = self.generate_metadata()
-        for y in self.Years:
-            with open(self.tmpdir + str(y) + '.json', 'r') as f:
-                yeardata = {str(y): json.load(f)}
-            data.update(yeardata)
         # Save json output named after .cfg file
-        with open(self.cfgfile.split(".")[0] + '.json', 'w') as fo:
-            json.dump(data, fo)
+        with open(self.cfgfile.split(".")[0] + '.json', 'w') as out_file:
+            json.dump(data, out_file)
+            out_file.write('\n')
+            for year in self.Years:
+                with open(self.tmpdir + str(year) + '.json', 'r') as in_file:
+                    copyfileobj(in_file, out_file)
+
 
     def generate_metadata(self):
         '''Append simulation metadata to full JSON output'''
@@ -788,7 +791,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "System emission limit": self.emitlimit,
             "Dispatchable generation ratio ": self.nem_disp_ratio,
             "Renewable Dispatchable generation ratio ": self.nem_re_disp_ratio,
-            "Custom costs": pd.read_csv(self.custom_costs).to_dict(orient='records') if self.custom_costs is not None else None,
+            "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone': 0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,
             "Exogenous Capacity decisions": pd.read_csv(self.exogenous_capacity).to_dict(orient='records') if self.exogenous_capacity is not None else None,
         }
 

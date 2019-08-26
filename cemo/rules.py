@@ -277,7 +277,7 @@ def con_intercon_cap(model, zone_source, zone_dest):
 
 def con_stor_flow_lim(model, z, s, t):
     '''limit flow of charge/discharge to storage to be less than storage nameplate capacity'''
-    return model.stor_charge[z, s, t] + model.stor_disp[z, s, t] + model.stor_reserve[z,s,t] <= model.stor_cap_op[z, s]
+    return model.stor_charge[z, s, t] + model.stor_disp[z, s, t] + model.stor_reserve[z, s, t] <= model.stor_cap_op[z, s]
 
 
 def con_stor_reserve_lim(model, z, s, t):
@@ -567,18 +567,19 @@ def cost_fuel_non_flexible(model, zone, tech, time):
         (1 - mincap / effrate) / (1 - mincap))
 
 
-
 def cost_transmission(model):
-    return cost_trans_flow(model) + sum(cost_trans_build_per_zone(model, zone) for zone in model.zones)
+    '''Add transmission build and transmission flow costs for convenience'''
+    return cost_trans_flow(model)\
+        + sum(cost_trans_build_per_zone(model, zone) for zone in model.zones)
 
 
 def cost_trans_build_per_zone(model, zone):
+    '''Tally transmission build costs from a zone'''
     return sum(model.cost_intercon_build[zone, dest] *
                cemo.const.ZONE_INTERCONS.get(zone).get(dest).get('length')
                * (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
                * model.intercon_fixed_charge_rate
-               for dest in model.intercon_per_zone[zone])\
-
+               for dest in model.intercon_per_zone[zone])
 
 
 def cost_trans_flow(model):

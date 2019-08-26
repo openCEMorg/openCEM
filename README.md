@@ -1,14 +1,15 @@
+[![Build Status](https://travis-ci.com/openCEMorg/openCEM.svg?token=YPwjEg4ZHVHXyJ2xeA7b&branch=master)](https://travis-ci.com/openCEMorg/openCEM)
+
 # openCEM
 
 Welcome to the repository for openCEM
 
 ## What is this repository for?
 
-This repository contains the development version of openCEM. You can download
-and try it in your computer. Please report issues either via:
+This repository contains the development version of openCEM. You can download and try it in your computer. Please report issues either via:
 
-*   Log an issue in the [issue tracker](https://github.com/docker-library/docs/issues)
-*   Email [analyticsinfo-at-itpau.com.au](mailto:analyticsinfo@itpau.com.au)
+- Log an issue in the [issue tracker](https://github.com/openCEMorg/openCEM/issues)
+- Email [analyticsinfo-at-itpau.com.au](mailto:analyticsinfo@itpau.com.au)
 
 ## Requirements
 
@@ -23,5 +24,9 @@ To run openCEM, you need to install [Python 3](https://www.python.org/download/r
 See the [Install](https://github.com/openCEMorg/openCEM/wiki/Install) page for more information.
 
 ## Documentation
-The [Wiki](https://github.com/openCEMorg/openCEM/wiki) for this repository is the main and most up
-to date source of information for openCEM.
+
+The [Wiki](https://github.com/openCEMorg/openCEM/wiki) for this repository is the main and most up to date source of information for openCEM.
+
+## Examples
+
+Example input files for openCEM can be found in the [Examples](https://github.com/openCEMorg/openCEM/openCEM_examples) repository
