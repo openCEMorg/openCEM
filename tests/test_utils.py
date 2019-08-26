@@ -5,13 +5,18 @@ from cemo.utils import printstats
 from cemo.rules import region_in_zone
 
 
-def test_printstats(solution, capfd):
+def test_printstats(request, solution, capfd):
     '''Assert that solution stats printout matches known value'''
     printstats(solution)
     captured = capfd.readouterr()
-    with open('tests/stats.txt', 'r') as sample:
+    if request.config.getoption("--solver") == 'cbc':
+        testfile = 'tests/stats_cbc.txt'
+    else:
+        testfile = 'tests/stats.txt'
+    with open(testfile, 'r') as sample:
         array = sample.read()
     assert captured.out == array
+
 
 
 @pytest.mark.parametrize("zone,result", [
