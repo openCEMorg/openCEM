@@ -99,7 +99,7 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False):
+    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False, templatetest=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -109,6 +109,7 @@ class SolveTemplate:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
         self.resume = resume
+        self.templatetest = templatetest
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
         self.Years = json.loads(Scenario['Years'])
@@ -710,7 +711,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
-            year_template = self.generateyeartemplate(y)
+            year_template = self.generateyeartemplate(y, self.templatetest)
             # Solve full year capacity and dispatch instance
             # Create model based on policy configuration options
             model = create_model(
@@ -724,7 +725,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # create model instance based in template data
             inst = model.create_instance(year_template)
             # These presolve capacity on a clustered form
-            if self.cluster:
+            if self.cluster and not self.templatetest:
                 clus = InstanceCluster(inst, self.cluster_max_d)
                 ccap = ClusterRun(
                     clus,
