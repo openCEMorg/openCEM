@@ -147,6 +147,15 @@ FROM opex WHERE (source_id, technology_type_id) in
 #Starting capacity (either cfrom capacity table or carry forward from previous)
 [carryforwardcap]
 
+#Load carry_forward costs from openCEM_cap_hist
+load "cemo/openCEM_cap_hist.db" using=sqlite3
+query="SELECT ntndp_zone_id as zone, sum(annualised_capex) as cost_cap_carry_forward_hist
+FROM NEM_fleet
+WHERE zone in ([zoneslist])
+AND commissioning_year < 2018
+AND years_to_EOL_2020-(XXXX-2020)>0
+group by ntndp_zone_id": [zone] cost_cap_carry_forward_hist;
+
 # Exogenously commissioned capacity
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql

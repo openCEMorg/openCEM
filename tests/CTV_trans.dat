@@ -121,3 +121,12 @@ param nem_ret_ratio :=0.1;
 param nem_ret_gwh :=1;
 
 param region_ret_ratio:= 5 0.1;
+
+load "cemo/openCEM_cap_hist.db" using=sqlite3
+query="SELECT ntndp_zone_id as zone, sum(annualised_capex) as cost_cap_carry_forward_hist
+FROM NEM_fleet
+WHERE technology_type_id IN (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)
+AND zone in (9,10,11,12,16)
+AND commissioning_year < 2018
+AND years_to_EOL_2020-(2020-2020)>0
+group by ntndp_zone_id": [zone] cost_cap_carry_forward_hist ;
