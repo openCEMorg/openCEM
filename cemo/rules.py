@@ -61,6 +61,13 @@ def build_intercon_per_zone(model):
         model.intercon_per_zone[i].add(j)
 
 
+def build_carry_fwd_cost_per_zone(model):
+    '''Generate cost_cap_carry_forward from historical and simulated values'''
+    for zone in model.zones:
+        model.cost_cap_carry_forward[zone] = model.cost_cap_carry_forward_sim[
+            zone] + model.cost_cap_carry_forward_hist[zone]
+
+
 def dispatch(model, r):
     '''calculate sum of all dispatch'''
     return sum(model.gen_disp[z, n, t]
