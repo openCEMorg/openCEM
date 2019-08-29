@@ -154,7 +154,7 @@ def jsonify(inst, year):
                 inst.fuel_emit_rate.name:
                 fill_scalar_key_param(inst.fuel_emit_rate),
                 inst.cost_cap_carry_forward.name:
-                fill_scalar_key_param(inst.cost_cap_carry_forward),
+                fill_scalar_key_mutable_param(inst.cost_cap_carry_forward),
 
                 # params with scalar value
                 inst.cost_unserved.name:
@@ -281,13 +281,14 @@ def json_carry_forward_cap(inst):
         fill_complex_var(inst.hyb_cap_op),
         inst.intercon_cap_initial.name:
         fill_complex_var(inst.intercon_cap_op),
-        inst.cost_cap_carry_forward.name: [{
+        inst.cost_cap_carry_forward_sim.name: [{
             "index":
             zone,
             "value":
             value(
                 cost_build_per_zone(inst, zone) +
-                cost_trans_build_per_zone(inst, zone))
+                cost_trans_build_per_zone(inst, zone) +
+                inst.cost_cap_carry_forward_sim[zone])
         } for zone in inst.zones]
     }
     return out
@@ -368,6 +369,14 @@ def fill_scalar_key_param(par):
     out = dict()
     for i in par.keys():
         out[str(i)] = par[i]
+
+    return out
+
+def fill_scalar_key_mutable_param(par):
+    '''Return scalar key mutableparameter dictionary'''
+    out = dict()
+    for i in par.keys():
+        out[str(i)] = par[i].value
 
     return out
 

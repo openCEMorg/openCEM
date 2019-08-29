@@ -701,7 +701,7 @@ param all_tech_discount_rate := 0.06;
 #Cost of emissions $/Mhw
 param cost_emit:= 0.023;
 #Carry forward annualised capital costs
-load 'gen_cap_op2020.json' : cost_cap_carry_forward;
+load 'gen_cap_op2020.json' : cost_cap_carry_forward_sim;
 
  # NEM wide RET
 param nem_ret_ratio :=0.2;

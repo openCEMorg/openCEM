@@ -460,7 +460,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             prevyear = self.Years[self.Years.index(year) - 1]
             carry_fwd_cost += "load '" + self.tmpdir + "gen_cap_op" + \
                 str(prevyear) + \
-                ".json' : cost_cap_carry_forward;\n"
+                ".json' : cost_cap_carry_forward_sim;\n"
         return carry_fwd_cost
 
     def produce_custom_costs(self, y):
