@@ -486,6 +486,11 @@ def cost_capital(model):
     return sum(cost_build_per_zone(model, zone) for zone in model.zones)
 
 
+def cost_repayment(model):
+    '''calculate repayment costs per zone'''
+    return sum(model.cost_cap_carry_forward[zone] for zone in model.zones)
+
+
 def cost_build_per_zone(model, zone):
     '''calculate build costs per zone'''
     return sum(model.cost_gen_build[zone, tech]
@@ -499,8 +504,7 @@ def cost_build_per_zone(model, zone):
         + sum(model.cost_hyb_build[zone, tech]
               * (model.hyb_cap_new[zone, tech] + model.hyb_cap_exo[zone, tech])
               * model.fixed_charge_rate[tech]
-              for tech in model.hyb_tech_per_zone[zone])\
-        + model.cost_cap_carry_forward[zone]
+              for tech in model.hyb_tech_per_zone[zone])
 
 
 def cost_fixed(model):
@@ -625,7 +629,7 @@ def cost_shadow(model):
 
 def obj_cost(model):
     """Objective function as total annualised cost for model"""
-    return cost_capital(model)\
+    return cost_capital(model) + cost_repayment(model)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
         + cost_retirement(model) + cost_shadow(model)
