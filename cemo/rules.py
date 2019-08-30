@@ -326,12 +326,7 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
     '''Hybrid storage charge/discharge flow is limited by plant capacity.
 
     In the case of CSP, storage can charge faster than power block'''
-    if hyb_tech in [13, 22, 23]:
-        return model.hyb_disp[zone, hyb_tech, time]\
-            + model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_cap_op[zone, hyb_tech]
-    return model.hyb_disp[zone, hyb_tech, time]\
-        + model.hyb_charge[zone, hyb_tech, time]\
-        + model.hyb_reserve[zone, hyb_tech, time]\
+    return model.hyb_disp[zone, hyb_tech, time] + model.hyb_reserve[zone, hyb_tech, time] \
         <= model.hyb_cap_op[zone, hyb_tech]
 
 
