@@ -575,6 +575,15 @@ FROM opex WHERE (source_id, technology_type_id) in
 #Starting capacity (either cfrom capacity table or carry forward from previous)
 load 'gen_cap_op2020.json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;
 
+#Load carry_forward costs from openCEM_cap_hist
+load "cemo/openCEM_cap_hist.db" using=sqlite3
+query="SELECT ntndp_zone_id as zone, sum(annualised_capex) as cost_cap_carry_forward_hist
+FROM NEM_fleet
+WHERE zone in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+AND commissioning_year < 2018
+AND years_to_EOL_2020-(2025-2020)>0
+group by ntndp_zone_id": [zone] cost_cap_carry_forward_hist;
+
 # Exogenously commissioned capacity
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
@@ -701,7 +710,7 @@ param all_tech_discount_rate := 0.06;
 #Cost of emissions $/Mhw
 param cost_emit:= 0.023;
 #Carry forward annualised capital costs
-load 'gen_cap_op2020.json' : cost_cap_carry_forward;
+load 'gen_cap_op2020.json' : cost_cap_carry_forward_sim;
 
  # NEM wide RET
 param nem_ret_ratio :=0.2;

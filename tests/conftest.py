@@ -1,6 +1,6 @@
 '''Common fixtures for test suite'''
 import pickle
-
+import os
 import pytest
 from pyomo.opt import SolverFactory
 
@@ -70,7 +70,11 @@ def solution(request, instance):
     return instance
 
 
-@pytest.fixture(scope="session")
-def temp_data_dir(tmpdir_factory):
-    '''Temporary data directory fixture for tests'''
-    return tmpdir_factory.mktemp("CEMOtemp")
+@pytest.fixture()
+def delete_sim2025_dat():
+    '''Fixture to delete temporary file Sim2025.dat
+
+    This is an inconvenient teardown step but enables the most
+    accurate test of template generation, using filecmp'''
+    yield
+    os.remove('Sim2025.dat')

@@ -1,7 +1,7 @@
 '''Unit test suite for multi.py module (multi year simulations)'''
+import filecmp
 import json
 import tempfile
-from difflib import SequenceMatcher
 
 import pytest
 
@@ -30,7 +30,8 @@ def test_multi_conf_file_not_found():
 def test_multi_bad_cfg(option, value):
     ''' Assert validate bad config option by replacing known bad options in sample file'''
     with open('tests/Sample.cfg') as sample:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_sample:
+        with tempfile.NamedTemporaryFile(
+                mode='w', delete=False) as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
@@ -48,7 +49,8 @@ def test_multi_bad_cfg(option, value):
 def test_multi_bad_file(option, value):
     ''' Assert that multi detects missing files in config'''
     with open('tests/Sample.cfg') as sample:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_sample:
+        with tempfile.NamedTemporaryFile(
+                mode='w', delete=False) as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
@@ -62,26 +64,14 @@ def test_multi_template_first():
     '''Tests generate first year template by comparing to known good result'''
     multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg')
     multi_sim.generateyeartemplate(multi_sim.Years[0], test=True)
-    with open(multi_sim.tmpdir + 'Sim2020.dat') as generated_template:
-        genfile = generated_template.readlines()
-    with open('tests/Sim2020.dat') as test_template:
-        testfile = test_template.readlines()
-    # Check that they are mostly the same
-    sequence = SequenceMatcher(None, genfile, testfile)
-    assert sequence.ratio() >= 0.99999999999
+    assert filecmp.cmp(multi_sim.tmpdir + 'Sim2020.dat', 'tests/Sim2020.dat')
 
 
-def test_multi_template_second():
+def test_multi_template_second(delete_sim2025_dat):
     '''Tests generate second (and later) year template by comparing to known good result'''
-    multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg')
+    multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg', tmpdir='')
     multi_sim.generateyeartemplate(multi_sim.Years[1], test=True)
-    with open(multi_sim.tmpdir + 'Sim2025.dat') as generated_template:
-        genfile = generated_template.readlines()
-    with open('tests/Sim2025.dat') as test_template:
-        testfile = test_template.readlines()
-    # Check that they are mostly the same, but for tempdir entries
-    sequence = SequenceMatcher(None, genfile, testfile)
-    assert sequence.ratio() >= 0.99657534
+    assert filecmp.cmp(multi_sim.tmpdir + 'Sim2025.dat', 'tests/Sim2025.dat')
 
 
 def test_multi_metadata():

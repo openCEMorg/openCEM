@@ -25,7 +25,7 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, con_caplim, con_committed_cap,
+                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim, con_committed_cap,
                         con_disp_ramp_down, con_disp_ramp_up, con_emissions,
                         con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
                         con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
@@ -227,8 +227,15 @@ def create_model(namestr,
     m.zone_demand_factor = Param(m.zones, m.t, initialize=init_zone_demand_factors)
     # NEM operating reserve margin
     m.nem_operating_reserve = Param(default=0.075)
-    # carry forward capital costs
-    m.cost_cap_carry_forward = Param(m.zones, default=0)
+    # carry forward capital costs calculated
+    m.cost_cap_carry_forward_sim = Param(m.zones, default=0)
+    # carry forward capital costs NEM historical estimate
+    m.cost_cap_carry_forward_hist = Param(m.zones, default=0)
+    # carry forward capital costs total
+    m.cost_cap_carry_forward = Param(m.zones, mutable=True)
+
+    # Build action to Compute carry forward costs
+    m.cost_carry_forward_build = BuildAction(rule=build_carry_fwd_cost_per_zone)
 
     # @@ Variables
     m.gen_cap_new = Var(

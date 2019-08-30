@@ -63,6 +63,13 @@ parser.add_argument(
     action="store_true",
 )
 
+parser.add_argument(
+    "-t",
+    "--templatetest",
+    help="Testing mode where only short dispatch periods are use. Warning, it disables clustering",
+    action="store_true",
+)
+
 # parse arguments into args structure
 args = parser.parse_args()
 
@@ -75,7 +82,7 @@ if not os.path.exists(SIM_DIR):
 
 # create Multi year simulation
 X = SolveTemplate(
-    cfgfile, solver=args.solver, log=args.log, tmpdir=SIM_DIR, resume=args.resume
+    cfgfile, solver=args.solver, log=args.log, tmpdir=SIM_DIR, resume=args.resume, templatetest = args.templatetest
 )
 
 

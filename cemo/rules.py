@@ -61,6 +61,13 @@ def build_intercon_per_zone(model):
         model.intercon_per_zone[i].add(j)
 
 
+def build_carry_fwd_cost_per_zone(model):
+    '''Generate cost_cap_carry_forward from historical and simulated values'''
+    for zone in model.zones:
+        model.cost_cap_carry_forward[zone] = model.cost_cap_carry_forward_sim[
+            zone] + model.cost_cap_carry_forward_hist[zone]
+
+
 def dispatch(model, r):
     '''calculate sum of all dispatch'''
     return sum(model.gen_disp[z, n, t]
@@ -319,12 +326,7 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
     '''Hybrid storage charge/discharge flow is limited by plant capacity.
 
     In the case of CSP, storage can charge faster than power block'''
-    if hyb_tech in [13, 22, 23]:
-        return model.hyb_disp[zone, hyb_tech, time]\
-            + model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_cap_op[zone, hyb_tech]
-    return model.hyb_disp[zone, hyb_tech, time]\
-        + model.hyb_charge[zone, hyb_tech, time]\
-        + model.hyb_reserve[zone, hyb_tech, time]\
+    return model.hyb_disp[zone, hyb_tech, time] + model.hyb_reserve[zone, hyb_tech, time] \
         <= model.hyb_cap_op[zone, hyb_tech]
 
 
@@ -479,6 +481,11 @@ def cost_capital(model):
     return sum(cost_build_per_zone(model, zone) for zone in model.zones)
 
 
+def cost_repayment(model):
+    '''calculate repayment costs per zone'''
+    return sum(model.cost_cap_carry_forward[zone] for zone in model.zones)
+
+
 def cost_build_per_zone(model, zone):
     '''calculate build costs per zone'''
     return sum(model.cost_gen_build[zone, tech]
@@ -492,8 +499,7 @@ def cost_build_per_zone(model, zone):
         + sum(model.cost_hyb_build[zone, tech]
               * (model.hyb_cap_new[zone, tech] + model.hyb_cap_exo[zone, tech])
               * model.fixed_charge_rate[tech]
-              for tech in model.hyb_tech_per_zone[zone])\
-        + model.cost_cap_carry_forward[zone]
+              for tech in model.hyb_tech_per_zone[zone])
 
 
 def cost_fixed(model):
@@ -618,7 +624,7 @@ def cost_shadow(model):
 
 def obj_cost(model):
     """Objective function as total annualised cost for model"""
-    return cost_capital(model)\
+    return cost_capital(model) + cost_repayment(model)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
         + cost_retirement(model) + cost_shadow(model)

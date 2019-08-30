@@ -36,11 +36,11 @@ def sql_tech_pairs(techset):
     return "(" + ", ".join(map(str, out)) + ")"
 
 
-def sql_tech_list(tech_list):
-    """Format technology lists as a set for SQL query statement"""
-    if len(tech_list) == 0:
-        tech_list.append(99)  # return non empty set to preserve query syntax if list is empty
-    return ", ".join(map(str, tech_list))
+def sql_list(list):
+    """Format set lists as a comma separated set for SQL query statement"""
+    if not list:
+        list.append(99)  # return non empty set to preserve query syntax if list is empty
+    return ", ".join(map(str, list))
 
 
 def dclist(techset):
@@ -99,7 +99,7 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False):
+    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False, templatetest=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -109,6 +109,7 @@ class SolveTemplate:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
         self.resume = resume
+        self.templatetest = templatetest
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
         self.Years = json.loads(Scenario['Years'])
@@ -459,7 +460,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             prevyear = self.Years[self.Years.index(year) - 1]
             carry_fwd_cost += "load '" + self.tmpdir + "gen_cap_op" + \
                 str(prevyear) + \
-                ".json' : cost_cap_carry_forward;\n"
+                ".json' : cost_cap_carry_forward_sim;\n"
         return carry_fwd_cost
 
     def produce_custom_costs(self, y):
@@ -631,6 +632,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         str(i) for i in self.regions))
                     line = line.replace('[zones]', " ".join(
                         str(i) for i in self.zones))
+                    line = line.replace('[zoneslist]', sql_list(self.zones))
                     line = line.replace('[alltech]', " ".join(
                         str(i) for i in self.all_tech))
                     line = line.replace('XXXX', str(year))
@@ -638,15 +640,15 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('[gentech]', dclist(self.gentech))
                     line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
                     line = line.replace('[gentechlist]',
-                                        sql_tech_list([tech for tech in cemo.const.GEN_TECH
+                                        sql_list([tech for tech in cemo.const.GEN_TECH
                                                        if tech in self.all_tech]))
                     line = line.replace('[stortech]', dclist(self.stortech))
                     line = line.replace('[stortechdb]', sql_tech_pairs(self.stortech))
-                    line = line.replace('[stortechlist]', sql_tech_list([
+                    line = line.replace('[stortechlist]', sql_list([
                         tech for tech in cemo.const.STOR_TECH if tech in self.all_tech]))
                     line = line.replace('[hybtech]', dclist(self.hybtech))
                     line = line.replace('[hybtechdb]', sql_tech_pairs(self.hybtech))
-                    line = line.replace('[hybtechlist]', sql_tech_list(
+                    line = line.replace('[hybtechlist]', sql_list(
                         [tech for tech in cemo.const.HYB_TECH if tech in self.all_tech]))
                     line = line.replace('[retiretech]',
                                         dclist(self.retiretech))
@@ -710,7 +712,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
-            year_template = self.generateyeartemplate(y)
+            year_template = self.generateyeartemplate(y, self.templatetest)
             # Solve full year capacity and dispatch instance
             # Create model based on policy configuration options
             model = create_model(
@@ -724,7 +726,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # create model instance based in template data
             inst = model.create_instance(year_template)
             # These presolve capacity on a clustered form
-            if self.cluster:
+            if self.cluster and not self.templatetest:
                 clus = InstanceCluster(inst, self.cluster_max_d)
                 ccap = ClusterRun(
                     clus,
