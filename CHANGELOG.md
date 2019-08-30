@@ -1,6 +1,13 @@
 # Changelog
 
 Notable changes to openCEM
+## [0.9.6](https://github.com/CEMOsuite/openCEM/tree/0.9.6) - UNRELEASED
+
+### Added
+*   Changed the format of the JSON output file from a single dictionary to separate dictionaries in each line (PR #9)
+*   Conda `environment.yml` file and testing also passes in MacOS and CPLEX (PR #12)
+*   Added historical capital servicing data for existing fleet (PR #13) based on ITP estimates
+*   Minor fixes (enabled Travis CI in repo for pytest check of commits, pylint warnings, etc)
 
 ## [0.9.4](https://github.com/CEMOsuite/openCEM/tree/0.9.4) - UNRELEASED
 
