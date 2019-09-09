@@ -59,7 +59,7 @@ class ClusterData:
                  lastdow=3,
                  max_d=12,
                  regions=None,
-                 maxsynth=False):
+                 maxsynth=True):
         self.firstdow = firstdow  # Day of week starting period
         self.lastdow = lastdow  # Day of week ending period`
         self.max_d = max_d  # Maximum number of clusters
@@ -190,7 +190,7 @@ class CSVCluster(ClusterData):
             source='tests/SampleDemand.csv.gz',
     ):
         self.source = source
-        ClusterData.__init__(self, max_d=max_d)
+        ClusterData.__init__(self, max_d=max_d, regions=[1])
 
     def _data_query(self, region):
         df = pd.read_csv(
@@ -201,6 +201,10 @@ class CSVCluster(ClusterData):
         if df.empty:
             raise SystemExit("CSVCluster: Unable to open data file")
         self.year = df.index[-1].year
+        # filter by region
+        df = df[df['region'] == region]
+        # drop region column
+        df = df.drop('region', axis=1)
         return df
 
 
