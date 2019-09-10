@@ -377,6 +377,7 @@ class SolveTemplate:
         self.gentech = {}
         self.stortech = {}
         self.retiretech = {}
+        self.strategictech = {}
         for i in self.all_tech_per_zone:
             self.fueltech.update({
                 i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.FUEL_TECH]
@@ -404,6 +405,9 @@ class SolveTemplate:
             })
             self.retiretech.update({
                 i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.RETIRE_TECH]
+            })
+            self.strategictech.update({
+                i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.STRATEGIC_TECH]
             })
 
     def carryforwardcap(self, year):
@@ -665,6 +669,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace(
                         '[committech]', dclist(self.committech))
                     line = line.replace('[regentech]', dclist(self.regentech))
+                    line = line.replace('[strategictech]', dclist(self.strategictech))
                     line = line.replace(
                         '[dispgentech]', dclist(self.dispgentech))
                     line = line.replace(
