@@ -59,7 +59,7 @@ class ClusterData:
                  lastdow=3,
                  max_d=12,
                  regions=None,
-                 maxsynth=True):
+                 maxsynth=False):
         self.firstdow = firstdow  # Day of week starting period
         self.lastdow = lastdow  # Day of week ending period`
         self.max_d = max_d  # Maximum number of clusters
