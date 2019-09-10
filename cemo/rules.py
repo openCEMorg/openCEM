@@ -70,6 +70,13 @@ def build_carry_fwd_cost_per_zone(model):
             zone] + model.cost_cap_carry_forward_hist[zone]
 
 
+def build_set_strategic_gen_cap_factor(model):
+    '''Set capacity factor to zero to supress dispatch during capacity calculations'''
+    for (zone, tech) in model.strategic_gen_tech_in_zones:
+        for time in model.t:
+            model.gen_cap_factor[zone, tech, time] = 0
+
+
 def dispatch(model, r):
     '''calculate sum of all dispatch'''
     return sum(model.gen_disp[z, n, t]
@@ -154,9 +161,9 @@ def con_operating_reserve(model, region, time):
     -spare capacity from dispatchable flexible genenerators
     -spare committed capacity from non flexible generators
     -spare capacity from storage (considering charge),
-    -spare capacity from hybrids (considering charge),
-    storage and hybrids must be greater or equal than a percentage
-    of the load, determined by the `operating_reserve` parameter'''
+    -spare capacity from hybrids,
+    reserve capacity must be greater or equal than a percentage
+    of the load each hour, determined by the `nem_operating_reserve` parameter'''
     return sum(model.gen_cap_op[zone, gen_tech] - model.gen_disp[zone, gen_tech, time]
                for zone in model.zones_per_region[region]
                for gen_tech in set(model.disp_gen_tech_per_zone[zone]) - set(model.commit_gen_tech_per_zone[zone])
