@@ -1,24 +1,26 @@
-NEM Capacity total: 21.02 GW	NEM Dispatch total: 997.90 GWh
-          biomass: 113.2 MW | dispatch:  10.9 GWh | avg cap factor: 1.00(1.00)
-             ccgt: 710.0 MW | dispatch:  12.3 GWh | avg cap factor: 0.18(1.00)
-    brown_coal_sc:   4.7 GW | dispatch: 392.1 GWh | avg cap factor: 0.86(1.00)
-             ocgt:   2.3 GW | dispatch:  18.9 GWh | avg cap factor: 0.08(1.00)
+NEM Capacity total: 20.56 GW	NEM Dispatch total: 975.51 GWh
+          biomass:  55.0 MW | dispatch:   5.3 GWh | avg cap factor: 1.00(1.00)
+             ccgt: 710.0 MW | dispatch:  12.0 GWh | avg cap factor: 0.18(1.00)
+    brown_coal_sc:   4.7 GW | dispatch: 381.5 GWh | avg cap factor: 0.84(1.00)
+             ocgt:   2.3 GW | dispatch:  17.9 GWh | avg cap factor: 0.08(1.00)
      solar_pv_sat:  55.0 MW | dispatch:   1.3 GWh | avg cap factor: 0.24(0.24)
-             wind:   6.2 GW | dispatch: 353.1 GWh | avg cap factor: 0.60(0.54)
-           cst_6h:   2.9 GW | dispatch:  98.7 GWh | avg cap factor: 0.36(0.37)
+             wind:   6.2 GW | dispatch: 353.0 GWh | avg cap factor: 0.60(0.54)
+           cst_6h:   2.8 GW | dispatch:  96.8 GWh | avg cap factor: 0.36(0.37)
           phes_6h: 225.2 MW | dispatch:   1.4 GWh | avg cap factor: 0.06(0.50)
-       battery_2h:   1.5 GW | dispatch:   9.0 GWh | avg cap factor: 0.06(0.50)
+       battery_2h:   1.2 GW | dispatch:   6.3 GWh | avg cap factor: 0.05(0.50)
             hydro:   2.3 GW | dispatch: 100.2 GWh | avg cap factor: 0.46(1.00)
-Total Cost:	    $6,344,409,411.07
-Build cost:	    $1,676,161,981.26
+              DSP:      --W | dispatch:  19.0 GWh | avg cap factor: --(--)
+Total Cost:	    $6,229,107,190.49
+Build cost:	    $1,619,064,068.49
 Repayment cost:	    $1,836,973,760.16
-Operating cost:	    $1,900,367,588.08
-Fixed cost:	      $838,735,458.00
-Trans. build cost:	 $92,170,013.65
-Trans. flow cost:	      $609.92
+Operating cost:	    $1,845,148,106.12
+Fixed cost:	      $826,737,617.21
+Trans. build cost:	 $90,624,584.56
+Trans. flow cost:	      $607.35
+DSP cost:	       $10,558,446.60
 Unserved cost:	                $0.00
 Emission cost:	                $0.00
 Retirmt cost:	                $0.00
 Unserved %:[0. 0.]
-Total Emission rate: 451.779 kg/MWh
+Total Emission rate: 448.937 kg/MWh
 End of results for CTV_trans

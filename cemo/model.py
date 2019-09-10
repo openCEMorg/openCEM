@@ -25,7 +25,7 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim, con_committed_cap,
+                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim, con_committed_cap, con_dsp_limits, build_dsp_limits,
                         con_disp_ramp_down, con_disp_ramp_up, con_emissions,
                         con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
                         con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
@@ -48,7 +48,8 @@ def create_model(namestr,
                  nem_ret_gwh=False,
                  region_ret_ratio=False,
                  nem_disp_ratio=False,
-                 nem_re_disp_ratio=False):
+                 nem_re_disp_ratio=False,
+                 disp_strategic_reserve=True):
     """Creates an instance of the pyomo definition of openCEM"""
     m = AbstractModel(name=namestr)
     # Sets
@@ -71,6 +72,9 @@ def create_model(namestr,
     m.hyb_tech = Set(initialize=cemo.const.HYB_TECH) & m.all_tech
     # Set of dispatch intervals
     m.t = Set(ordered=True)
+
+    # Set of DSP price bands
+    m.dsp_bands = Set(initialize=cemo.const.DSP_BANDS.keys())
 
     # Sparse set of zones per region
     m.zones_in_regions = Set(dimen=2, initialize=init_zones_in_regions)
@@ -234,6 +238,8 @@ def create_model(namestr,
     # carry forward capital costs total
     m.cost_cap_carry_forward = Param(m.zones, mutable=True)
 
+    m.dsp_limits = Param(m.zones, m.dsp_bands, m.t, default=0, mutable=True)
+
     # Build action to Compute carry forward costs
     m.cost_carry_forward_build = BuildAction(rule=build_carry_fwd_cost_per_zone)
 
@@ -300,6 +306,7 @@ def create_model(namestr,
         within=NonNegativeReals)  # Charge level for storage
 
     m.unserved = Var(m.zones, m.t, within=NonNegativeReals)  # unserved power
+    m.dsp = Var(m.zones, m.dsp_bands, m.t, within=NonNegativeReals)  # Demand side participation
     m.surplus = Var(
         m.zones, m.t, within=NonNegativeReals)  # surplus power (if any)
 
@@ -342,6 +349,7 @@ def create_model(namestr,
     m.con_uptime_commitment = Constraint(
         m.commit_gen_tech_in_zones, m.t, rule=con_uptime_commitment)
     m.con_committed_cap = Constraint(m.commit_gen_tech_in_zones, m.t, rule=con_committed_cap)
+    m.con_dsp_limits = Constraint(m.zones, m.dsp_bands, m.t, rule=con_dsp_limits)
     # NEM operating reserve constraint
     m.con_operating_reserve = Constraint(
         m.regions, m.t, rule=con_operating_reserve)
@@ -379,6 +387,9 @@ def create_model(namestr,
         # NEM wide minimum hourly dispatch from dispatchable sources constraint
         m.con_nem_re_disp_ratio = Constraint(
             m.regions, m.t, rule=con_nem_re_disp_ratio)
+    if disp_strategic_reserve:
+        # Set non zero limits for dsp_limits
+        m.build_dsp_limits = BuildAction(rule=build_dsp_limits)
 
     # Storage charge/discharge dynamic
     m.StCharDis = Constraint(m.stor_tech_in_zones, m.t, rule=con_storcharge)

@@ -7,6 +7,8 @@ __version__ = "0.9.5"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
+import datetime
+
 from pyomo.environ import Constraint
 
 import cemo.const
@@ -14,7 +16,9 @@ import cemo.const
 
 def region_in_zone(zone):
     '''Return region where a given zone belongs to'''
-    result = [pair[0] for pair in cemo.const.ZONES_IN_REGIONS if pair[1] == zone]
+    result = [
+        pair[0] for pair in cemo.const.ZONES_IN_REGIONS if pair[1] == zone
+    ]
     return result[0]
 
 
@@ -68,6 +72,27 @@ def build_carry_fwd_cost_per_zone(model):
             zone] + model.cost_cap_carry_forward_hist[zone]
 
 
+def build_dsp_limits(model):
+    '''Set limits for DSP according to zone, price band and season'''
+    year = 2050  # datetime.datetime.strptime(model.t.last(),
+    #                                '%Y-%m-%d %H:%M:%S').year
+    winter_start = datetime.datetime.strptime("01-09-" + str(year - 1),
+                                              "%d-%m-%Y")
+    winter_end = datetime.datetime.strptime("01-03-" + str(year), "%d-%m-%Y")
+    for zone in model.zones:
+        for band in model.dsp_bands:
+            for time in model.t:
+                date_time = datetime.datetime.strptime(time, '%Y-%m-%d %H:%M:%S')
+                if winter_start <= date_time < winter_end:
+                    model.dsp_limits[zone, band, time] = cemo.const.DSP_LIMITS.get(
+                            year).get(
+                                region_in_zone(zone)).get(band).get('winter')* model.zone_demand_factor[zone, time]
+                else:
+                    model.dsp_limits[zone, band, time] = cemo.const.DSP_LIMITS.get(
+                            year).get(
+                                region_in_zone(zone)).get(band).get('summer')* model.zone_demand_factor[zone, time]
+
+
 def dispatch(model, r):
     '''calculate sum of all dispatch'''
     return sum(model.gen_disp[z, n, t]
@@ -88,12 +113,10 @@ def emissions(model, r):
     '''calculate emissions in kg'''
     return (sum(model.fuel_emit_rate[n] * model.gen_disp[z, n, t]
                 for z in model.zones_per_region[r]
-                for n in model.fuel_gen_tech_per_zone[z]
-                for t in model.t) +
+                for n in model.fuel_gen_tech_per_zone[z] for t in model.t) +
             sum(model.fuel_emit_rate[n] * model.gen_disp_com_p[z, n, t]
                 for z in model.zones_per_region[r]
-                for n in model.commit_gen_tech_per_zone[z]
-                for t in model.t))
+                for n in model.commit_gen_tech_per_zone[z] for t in model.t))
 
 
 def con_nem_ret_ratio(model):
@@ -284,7 +307,8 @@ def con_intercon_cap(model, zone_source, zone_dest):
 
 def con_stor_flow_lim(model, z, s, t):
     '''limit flow of charge/discharge to storage to be less than storage nameplate capacity'''
-    return model.stor_charge[z, s, t] + model.stor_disp[z, s, t] + model.stor_reserve[z, s, t] <= model.stor_cap_op[z, s]
+    return model.stor_charge[z, s, t] + model.stor_disp[
+        z, s, t] + model.stor_reserve[z, s, t] <= model.stor_cap_op[z, s]
 
 
 def con_stor_reserve_lim(model, z, s, t):
@@ -332,7 +356,8 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
 
 def con_hyb_reserve_lim(model, zone, hyb_tech, time):
     '''limit hybrid reserves to be within storage charge. '''
-    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[zone, hyb_tech, time]
+    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[
+        zone, hyb_tech, time]
 
 
 def con_maxchargehy(model, z, h, t):
@@ -347,6 +372,7 @@ def con_ldbal(model, z, t):
         + sum(model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
         + sum(model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
         + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
+        + sum(model.dsp[z, b, t] for b in model.dsp_bands)\
         + model.unserved[z, t]\
         == model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
         + sum((1.0 + model.intercon_loss_factor[z, p]) * model.intercon_disp[z, p, t]
@@ -470,6 +496,11 @@ def con_committed_cap(model, z, n, t):
         model.gen_disp_com_p[z, n, model.t.prevw(t)]
 
 
+def con_dsp_limits(model, zone, band, time):
+    '''Capacity limitation for DSP in each band at each time'''
+    return model.dsp[zone, band, time] <= model.dsp_limits[zone, band, time]
+
+
 def con_uns(model, r):
     '''constraint limiting unserved energy'''
     return sum(model.unserved[z, t] for z in model.zones_per_region[r] for t in model.t) \
@@ -518,10 +549,8 @@ def cost_fixed(model):
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
     return model.year_correction_factor * model.cost_unserved * sum(
-        model.unserved[z, t]
-        for r in model.regions
-        for z in model.zones_per_region[r]
-        for t in model.t)
+        model.unserved[z, t] for r in model.regions
+        for z in model.zones_per_region[r] for t in model.t)
 
 
 def cost_operating(model):
@@ -541,22 +570,20 @@ def cost_operating(model):
             for t in model.t) +
         sum(model.cost_fuel[z, f] * model.fuel_heat_rate[z, f] *
             model.gen_disp[z, f, t] for z in model.zones
-            for f in set(model.fuel_gen_tech_per_zone[z]) - set(model.commit_gen_tech_per_zone[z])
-            for t in model.t) +
-        sum(cost_fuel_non_flexible(model, z, f, t) for z in model.zones
-            for f in model.commit_gen_tech_per_zone[z]
-            for t in model.t) +
-        sum(model.cost_fuel[z, n] * cemo.const.GEN_COMMIT['penalty'].get(n, 0) * model.gen_disp_com_p[z, n, t]
-            for z in model.zones
-            for n in model.commit_gen_tech_per_zone[z]
-            for t in model.t) +
-        sum(model.cost_stor_vom[s] * model.stor_disp[z, s, t]
-            for z in model.zones for s in model.stor_tech_per_zone[z]
-            for t in model.t) +
-        sum(model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
-            for z in model.zones
-            for h in model.hyb_tech_per_zone[z] for t in model.t)
-        )
+            for f in set(model.fuel_gen_tech_per_zone[z]) -
+            set(model.commit_gen_tech_per_zone[z]) for t in model.t) + sum(
+                cost_fuel_non_flexible(model, z, f, t) for z in model.zones
+                for f in model.commit_gen_tech_per_zone[z] for t in model.t)
+        + sum(model.cost_fuel[z, n] * cemo.const.GEN_COMMIT['penalty'].get(
+            n, 0) * model.gen_disp_com_p[z, n, t] for z in model.zones
+              for n in model.commit_gen_tech_per_zone[z]
+              for t in model.t) + sum(
+                  model.cost_stor_vom[s] * model.stor_disp[z, s, t]
+                  for z in model.zones for s in model.stor_tech_per_zone[z]
+                  for t in model.t) + sum(
+                      model.cost_hyb_vom[h] * model.hyb_disp[z, h, t]
+                      for z in model.zones for h in model.hyb_tech_per_zone[z]
+                      for t in model.t))
 
 
 def cost_fuel_non_flexible(model, zone, tech, time):
@@ -568,8 +595,8 @@ def cost_fuel_non_flexible(model, zone, tech, time):
     return model.cost_fuel[zone, tech] * (
         mincap * model.gen_disp_com[zone, tech, time] *
         model.fuel_heat_rate[zone, tech] / effrate +
-        (model.gen_disp[zone, tech, time] - mincap *
-         model.gen_disp_com[zone, tech, time]) * model.fuel_heat_rate[zone, tech] *
+        (model.gen_disp[zone, tech, time] - mincap * model.
+         gen_disp_com[zone, tech, time]) * model.fuel_heat_rate[zone, tech] *
         (1 - mincap / effrate) / (1 - mincap))
 
 
@@ -581,11 +608,12 @@ def cost_transmission(model):
 
 def cost_trans_build_per_zone(model, zone):
     '''Tally transmission build costs from a zone'''
-    return sum(model.cost_intercon_build[zone, dest] *
-               cemo.const.ZONE_INTERCONS.get(zone).get(dest).get('length')
-               * (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
-               * model.intercon_fixed_charge_rate
-               for dest in model.intercon_per_zone[zone])
+    return sum(
+        model.cost_intercon_build[zone, dest] *
+        cemo.const.ZONE_INTERCONS.get(zone).get(dest).get('length') *
+        (model.intercon_cap_new[zone, dest] +
+         model.intercon_cap_exo[zone, dest]) * model.intercon_fixed_charge_rate
+        for dest in model.intercon_per_zone[zone])
 
 
 def cost_trans_flow(model):
@@ -593,6 +621,14 @@ def cost_trans_flow(model):
     return model.year_correction_factor * model.cost_trans * sum(
         model.intercon_disp[zone, dest, time] for zone in model.zones
         for dest in model.intercon_per_zone[zone] for time in model.t)
+
+
+def cost_dsp(model):
+    '''Calculate costs due to Demand side participation'''
+    return sum(model.dsp[zone, band, time] * cemo.const.DSP_BANDS[band]
+               for zone in model.zones
+               for band in model.dsp_bands
+               for time in model.t)
 
 
 def cost_emissions(model):
@@ -627,4 +663,4 @@ def obj_cost(model):
     return cost_capital(model) + cost_repayment(model)\
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
         + cost_transmission(model) + cost_emissions(model)\
-        + cost_retirement(model) + cost_shadow(model)
+        + cost_retirement(model) + cost_shadow(model) + cost_dsp(model)

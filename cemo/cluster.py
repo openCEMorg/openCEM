@@ -328,7 +328,8 @@ class ClusterRun:
             refmodel += "                     region_ret_ratio=" + str(
                 self.model_options['region_ret_ratio']) + ",\n"
             refmodel += "                     nem_disp_ratio=" + str(
-                self.model_options['nem_disp_ratio']) + ")\n"
+                self.model_options['nem_disp_ratio']) + ",\n"
+            refmodel += "                     disp_strategic_reserve=False)\n"
             fo.write(refmodel)
 
     def run_cluster(self):

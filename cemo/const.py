@@ -550,6 +550,57 @@ RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
 NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
 
+DSP_BANDS = {
+    1: 300,
+    2: 500,
+    3: 1000,
+    4: 7500,
+    5: 13400  # MPC
+}
+
+# Year, region, band season, MW
+DSP_LIMITS = {
+    2050: {
+        1: {
+            1: {'summer': 443.15, 'winter': 457.14},
+            2: {'summer': 1.54, 'winter': 1.59},
+            3: {'summer': 0, 'winter': 0},
+            4: {'summer': 153.99, 'winter': 158.85},
+            5: {'summer': 0, 'winter': 0},
+        },
+        2: {
+            1: {'summer': 66.90, 'winter': 71.03},
+            2: {'summer': 0.74, 'winter': 0.79},
+            3: {'summer': 2.25, 'winter': 2.39},
+            4: {'summer': 13.17, 'winter': 13.98},
+            5: {'summer': 362.86, 'winter': 341.51},
+            },
+        3: {
+            1: {'summer': 21.90, 'winter': 21.31},
+            2: {'summer': 15.44, 'winter': 15.02},
+            3: {'summer': 0, 'winter': 0},
+            4: {'summer': 78.09, 'winter': 75.06},
+            5: {'summer': 0, 'winter': 0},
+            },
+        4: {
+            1: {'summer': 8.76, 'winter': 10.62},
+            2: {'summer': 20.84, 'winter': 25.27},
+            3: {'summer': 0.79, 'winter': 0.96},
+            4: {'summer': 3.62, 'winter': 4.38},
+            5: {'summer': 2.63, 'winter': 3.19},
+            },
+        5: {
+            1: {'summer': 140.61, 'winter': 240.83},
+            2: {'summer': 15.06, 'winter': 25.80},
+            3: {'summer': 7.93, 'winter': 13.58},
+            4: {'summer': 3.27, 'winter': 5.60},
+            5: {'summer': 215.55, 'winter': 55.16},
+            },
+        }
+}
+
+
+
 PALETTE = {
     1: (161 / 255, 135 / 255, 111 / 255, 1),  # biomass
     2: (251 / 255, 177 / 255, 98 / 255, 1),  # ccgt

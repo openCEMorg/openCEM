@@ -93,7 +93,8 @@ MODEL = create_model(MODEL_NAME,
                      nem_ret_ratio=check_arg(MODEL_NAME, 'nem_ret_ratio'),
                      nem_ret_gwh=check_arg(MODEL_NAME, 'nem_ret_gwh'),
                      region_ret_ratio=check_arg(MODEL_NAME, 'region_ret_ratio'),
-                     nem_re_disp_ratio=check_arg(MODEL_NAME, 'nem_re_disp_ratio'))
+                     nem_re_disp_ratio=check_arg(MODEL_NAME, 'nem_re_disp_ratio'),
+                     disp_strategic_reserve=True)
 # create a specific instance using file modelName.dat
 INSTANCE = MODEL.create_instance(MODEL_NAME + '.dat')
 

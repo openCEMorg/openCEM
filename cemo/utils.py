@@ -203,6 +203,9 @@ def _printcosts(inst):
     print("Trans. flow cost:\t %12s" %
           locale.currency(value(cemo.rules.cost_trans_flow(inst)),
                           grouping=True))
+    print("DSP cost:\t %20s" %
+          locale.currency(value(cemo.rules.cost_dsp(inst)),
+                          grouping=True))
     print("Unserved cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_unserved(inst)),
                           grouping=True))
@@ -280,6 +283,13 @@ def _printcapacity(instance):
                 si_format(disptotal[idx.index(j)] * 1e6, precision=1),
                 disptotal[idx.index(j)] / hours / techtotal[idx.index(j)],
                 capftotal[idx.index(j)] / hours / nperz[idx.index(j)]
+            ))
+    print("%17s: %7sW | dispatch: %7sWh | avg cap factor: %.2s(%.2s)" % (
+                'DSP',
+                 '--',
+                si_format(value(sum(instance.dsp[z, b, t] for z in instance.zones for b in instance.dsp_bands for t in instance.t)) * 1e6, precision=1),
+                '----',
+                '--'
             ))
 
 
