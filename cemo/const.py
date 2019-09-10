@@ -37,7 +37,8 @@ TECH_TYPE = {
     25: 'phes_12h',
     26: 'battery_1h',
     27: 'battery_3h',
-    28: 'coal_sc_new'
+    28: 'coal_sc_new',
+    29: 'hydro_reserve',
 }
 
 ZONE = {
@@ -303,6 +304,22 @@ DEFAULT_MAX_MWH_PER_ZONE = {
         2747264,  # openNEM data shows the 2009-2018 yearly average to be 2747264
         14: 0,
         16: 9165993  # openNEM 2009-2018 LTA is 9165993
+    },
+    29: {
+        1: 100000,  # Strategic dispatch reserve, in addition to LTA
+        3: 0,
+        4: 0,
+        5:
+        967579,  # Strategic dispatch reserve, in addition to LTA
+        6: 0,
+        7: 0,
+        8: 0,
+        9: 0,
+        10: 0,
+        12:
+        2005736,  # Strategic dispatch reserve, in addition to LTA
+        14: 0,
+        16: 2121007  # Strategic dispatch reserve, in addition to LTA
     }
 }
 
@@ -531,23 +548,23 @@ GEN_COMMIT = {
     }
 }
 
-ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28]
+ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28, 29]
 
 DISPLAY_ORDER = [
-    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
+    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 29, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
 
-GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28]
-RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
-DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28]
-RE_DISP_GEN_TECH = [1, 18]
+GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28, 29]
+RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18, 19, 29]
+DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28, 29]
+RE_DISP_GEN_TECH = [1, 18, 29]
 GEN_TRACE = [9, 10, 11, 12, 17]
 FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 28]
 COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19, 28]
 HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21, 24, 25, 26, 27]
-
+STRATEGIC_TECH = [29]
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
-NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
+NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21, 29]  # 3, 5 and 7 no build due to incomplete data
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
 
 PALETTE = {
