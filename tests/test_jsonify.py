@@ -23,8 +23,6 @@ def dumped_data(entry):
 def test_json_init(solution):
     '''Assert that generated jsoninit of solution matches known output'''
     data = jsoninit(solution, 2020)
-    with open('tests/jsoninit_test.json', 'w') as known:
-        json.dump(data,known)
     with open('tests/jsoninit_test.json', 'r') as known:
         data2 = json.load(known)
     for key in data:
