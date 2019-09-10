@@ -34,6 +34,8 @@ def ScanForTechperZone(model):
         model.disp_gen_tech_per_zone[i].add(j)
     for (i, j) in model.re_disp_gen_tech_in_zones:
         model.re_disp_gen_tech_per_zone[i].add(j)
+    for (i, j) in model.strategic_gen_tech_in_zones:
+        model.strategic_gen_tech_per_zone[i].add(j)
 
 
 def ScanForStorageperZone(model):

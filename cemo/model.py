@@ -25,15 +25,17 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim, con_committed_cap,
-                        con_disp_ramp_down, con_disp_ramp_up, con_emissions,
-                        con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
-                        con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
-                        con_intercon_cap, con_ldbal, con_max_mhw_per_zone,
-                        con_max_mwh_nem_wide, con_max_trans, con_maxcap,
-                        con_maxcharge, con_maxchargehy, con_min_load_commit,
-                        con_operating_reserve, con_nem_re_disp_ratio,
-                        con_nem_ret_gwh, con_nem_ret_ratio,
+                        build_carry_fwd_cost_per_zone, build_intercon_per_zone,
+                        build_set_strategic_gen_cap_factor, con_caplim,
+                        con_committed_cap, con_disp_ramp_down,
+                        con_disp_ramp_up, con_emissions, con_gen_cap,
+                        con_hyb_cap, con_hyb_flow_lim, con_hyb_level_max,
+                        con_hyb_reserve_lim, con_hybcharge, con_intercon_cap,
+                        con_ldbal, con_max_mhw_per_zone, con_max_mwh_nem_wide,
+                        con_max_trans, con_maxcap, con_maxcharge,
+                        con_maxchargehy, con_min_load_commit,
+                        con_nem_re_disp_ratio, con_nem_ret_gwh,
+                        con_nem_ret_ratio, con_operating_reserve,
                         con_ramp_down_uptime, con_region_ret_ratio,
                         con_slackbuild, con_slackretire, con_stor_cap,
                         con_stor_flow_lim, con_stor_reserve_lim,
@@ -48,7 +50,8 @@ def create_model(namestr,
                  nem_ret_gwh=False,
                  region_ret_ratio=False,
                  nem_disp_ratio=False,
-                 nem_re_disp_ratio=False):
+                 nem_re_disp_ratio=False,
+                 no_disp_strategic_reserve=False):
     """Creates an instance of the pyomo definition of openCEM"""
     m = AbstractModel(name=namestr)
     # Sets
@@ -65,6 +68,8 @@ def create_model(namestr,
     m.retire_gen_tech = Set(initialize=cemo.const.RETIRE_TECH) & m.all_tech
     # set of retireable technologies
     m.nobuild_gen_tech = Set(initialize=cemo.const.NOBUILD_TECH) & m.all_tech
+    # set of strategic reserve techs
+    m.strategic_gen_tech = Set(initialize=cemo.const.STRATEGIC_TECH) & m.all_tech
     # Set of storage technologies
     m.stor_tech = Set(initialize=cemo.const.STOR_TECH) & m.all_tech
     # set of hybrid (gen+storage) technologies
@@ -88,6 +93,8 @@ def create_model(namestr,
     m.disp_gen_tech_in_zones = Set(dimen=2)
     # Renewable Dispatchable technologies avaialable per zone (like a sparsity pattern)
     m.re_disp_gen_tech_in_zones = Set(dimen=2)
+    # Strategic Dispatchable technologies avaialable per zone (like a sparsity pattern)
+    m.strategic_gen_tech_in_zones = Set(dimen=2)
     # Set listing storage avaialable per zone (like a sparsity pattern)
     m.hyb_tech_in_zones = Set(dimen=2)
     # Set listing storage avaialable per zone (like a sparsity pattern)
@@ -107,6 +114,8 @@ def create_model(namestr,
     m.re_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
     m.disp_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
     m.re_disp_gen_tech_per_zone = Set(
+        m.zones, within=m.all_tech, initialize=[])
+    m.strategic_gen_tech_per_zone = Set(
         m.zones, within=m.all_tech, initialize=[])
     # Returns a tuple with retirable techs in each zone
     m.retire_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
@@ -196,7 +205,7 @@ def create_model(namestr,
 
     m.gen_cap_factor = Param(
         m.gen_tech_in_zones, m.t,
-        initialize=init_cap_factor)  # Capacity factors for generators
+        initialize=init_cap_factor, mutable=True)  # Capacity factors for generators
     m.hyb_cap_factor = Param(
         m.hyb_tech_in_zones, m.t,
         initialize=init_cap_factor)  # Capacity factors for generators
@@ -359,9 +368,10 @@ def create_model(namestr,
         m.nem_ret_ratio = Param(default=0)
         # NEM wide renewable energy constraint
         m.con_nem_ret_ratio = Constraint(rule=con_nem_ret_ratio)
-
-
-# NEM wide RET constraint as a ratio
+    # Suppress dispatch of strategic reserves during capacity building calcs
+    if no_disp_strategic_reserve:
+        m.con_strategic_no_disp = BuildAction(rule=build_set_strategic_gen_cap_factor)
+    # NEM wide RET constraint as a ratio
     if nem_ret_gwh:
         # NEM wide renewable energy target for current year
         m.nem_ret_gwh = Param(default=0)
