@@ -98,7 +98,7 @@ def jsonify(inst, year):
                 inst.intercon_loss_factor.name:
                 fill_complex_param(inst.intercon_loss_factor),
                 inst.gen_cap_factor.name:
-                fill_complex_param(inst.gen_cap_factor),
+                fill_complex_mutable_param(inst.gen_cap_factor),
                 inst.hyb_cap_factor.name:
                 fill_complex_param(inst.hyb_cap_factor),
                 inst.gen_build_limit.name:
