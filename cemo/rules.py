@@ -241,7 +241,7 @@ def con_region_ret_ratio(model, r):
 
 
 def con_max_mhw_per_zone(model, zone, tech):
-    '''limit maximum generation over a period for a tech in a zone.
+   '''limit maximum generation over a period for a tech in a zone.
 
        Results scaled to yearly MWH using year correction factor'''
     if cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech) is not None:
@@ -435,6 +435,8 @@ def con_caplim(model, z, n, t):  # z and n come both from TechinZones
     if cemo.const.GEN_COMMIT['penalty'].get(n) is not None:
         return model.gen_disp_com[
             z, n, t] <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+    if n==29:  # FIXME hack to prevent double counting
+        return model.gen_disp[z,n,t]+model.gen_disp[z,18,t] <= model.gen_cap_factor[z,n,t]*model.gen_cap_op[z,n]
     return model.gen_disp[z, n, t] \
         <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
 
