@@ -17,17 +17,20 @@ set fuel_gen_tech_in_zones :=
 set commit_gen_tech_in_zones :=
 [committech];
 
-
 # Set of renewable energy generator technologies
 set re_gen_tech_in_zones :=
 [regentech];
+
+# Set of generator technologies that are only strategically dispatched
+set strategic_gen_tech_in_zones :=
+[strategictech];
 
 # Set of dispatchable generators
 set disp_gen_tech_in_zones :=
 [dispgentech];
 
 # Set of dispatchable generators
-set disp_gen_tech_in_zones :=
+set disp_re_gen_tech_in_zones :=
 [redispgentech];
 
 #Set of storage technologies in each zones
