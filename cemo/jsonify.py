@@ -385,9 +385,10 @@ def fill_complex_var(var):
     '''Return complex variable dictionary'''
     out = []
     for i in var.keys():
+        var_value = var[i].value if isinstance(var[i].value,float) else 0.0
         out.append({
             'index': i,
-            'value': 0 if -1e-6 < var[i].value < 0 else var[i].value
+            'value': 0 if -1e-6 < var_value < 0 else var_value
         })
 
     return out
