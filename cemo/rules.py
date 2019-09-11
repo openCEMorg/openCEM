@@ -435,11 +435,16 @@ def con_caplim(model, z, n, t):  # z and n come both from TechinZones
     if cemo.const.GEN_COMMIT['penalty'].get(n) is not None:
         return model.gen_disp_com[
             z, n, t] <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
-    if n == 29:  # FIXME hack to prevent double counting
-        return model.gen_disp[z, n, t] + model.gen_disp[z, 18, t]\
-            <= model.gen_cap_factor[z, n, t]*model.gen_cap_op[z, n]
     return model.gen_disp[z, n, t] \
         <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+
+
+def con_caplim_reserve(model, z, n, t):  # z and n come both from TechinZones
+    '''Prevent reserve hydro from double counting capacity during dispatch'''
+    if n == 29:
+        return model.gen_disp[z, n, t] + model.gen_disp[z, 18, t]\
+            <= model.gen_cap_op[z, 18]
+    return Constraint.Skip
 
 
 def con_min_load_commit(model, z, n, t):

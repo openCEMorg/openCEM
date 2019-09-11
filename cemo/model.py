@@ -27,13 +27,13 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
                         build_carry_fwd_cost_per_zone, build_intercon_per_zone,
                         build_set_strategic_gen_cap_factor, con_caplim,
-                        con_committed_cap, con_disp_ramp_down,
-                        con_disp_ramp_up, con_emissions, con_gen_cap,
-                        con_hyb_cap, con_hyb_flow_lim, con_hyb_level_max,
-                        con_hyb_reserve_lim, con_hybcharge, con_intercon_cap,
-                        con_ldbal, con_max_mhw_per_zone, con_max_mwh_nem_wide,
-                        con_max_trans, con_maxcap, con_maxcharge,
-                        con_maxchargehy, con_min_load_commit,
+                        con_caplim_reserve, con_committed_cap,
+                        con_disp_ramp_down, con_disp_ramp_up, con_emissions,
+                        con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
+                        con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
+                        con_intercon_cap, con_ldbal, con_max_mhw_per_zone,
+                        con_max_mwh_nem_wide, con_max_trans, con_maxcap,
+                        con_maxcharge, con_maxchargehy, con_min_load_commit,
                         con_nem_re_disp_ratio, con_nem_ret_gwh,
                         con_nem_ret_ratio, con_operating_reserve,
                         con_ramp_down_uptime, con_region_ret_ratio,
@@ -41,6 +41,7 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         con_stor_flow_lim, con_stor_reserve_lim,
                         con_storcharge, con_uns, con_uptime_commitment,
                         obj_cost)
+
 
 
 def create_model(namestr,
@@ -323,7 +324,9 @@ def create_model(namestr,
     # Load balance
     m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
     # Dispatch to be within capacity, RE have variable capacity factors
-    m.caplim = Constraint(m.gen_tech_in_zones, m.t, rule=con_caplim)
+    m.con_caplim = Constraint(m.gen_tech_in_zones, m.t, rule=con_caplim)
+    # Dispatch of strategic reserve must not double count existing capacity
+    m.con_caplim_reserve = Constraint(m.gen_tech_in_zones, m.t, rule=con_caplim_reserve)
     # Limit maximum capacity to be built in each region and each technology
     m.maxcap = Constraint(m.gen_tech_in_zones, rule=con_maxcap)
     # gen_cap_op in existing period is previous gen_cap_op plus gen_cap_new
