@@ -460,6 +460,7 @@ GEN_CAP_FACTOR = {
     10: 0,
     11: 0,
     12: 0,
+    29: 0,
 }
 
 DEFAULT_STOR_PROPS = {

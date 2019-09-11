@@ -74,7 +74,7 @@ def build_set_strategic_gen_cap_factor(model):
     '''Set capacity factor to zero to supress dispatch during capacity calculations'''
     for (zone, tech) in model.strategic_gen_tech_in_zones:
         for time in model.t:
-            model.gen_cap_factor[zone, tech, time] = 0
+            model.gen_cap_factor[zone, tech, time] = 1
 
 
 def dispatch(model, r):

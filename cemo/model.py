@@ -51,7 +51,7 @@ def create_model(namestr,
                  region_ret_ratio=False,
                  nem_disp_ratio=False,
                  nem_re_disp_ratio=False,
-                 no_disp_strategic_reserve=False):
+                 disp_strategic_reserve=True):
     """Creates an instance of the pyomo definition of openCEM"""
     m = AbstractModel(name=namestr)
     # Sets
@@ -369,7 +369,7 @@ def create_model(namestr,
         # NEM wide renewable energy constraint
         m.con_nem_ret_ratio = Constraint(rule=con_nem_ret_ratio)
     # Suppress dispatch of strategic reserves during capacity building calcs
-    if no_disp_strategic_reserve:
+    if disp_strategic_reserve:
         m.con_strategic_no_disp = BuildAction(rule=build_set_strategic_gen_cap_factor)
     # NEM wide RET constraint as a ratio
     if nem_ret_gwh:
