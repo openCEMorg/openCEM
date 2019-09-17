@@ -599,8 +599,7 @@ def cost_transmission(model):
 def cost_trans_build_per_zone(model, zone):
     '''Tally transmission build costs from a zone'''
     return sum(model.cost_intercon_build[zone, dest] *
-               cemo.const.ZONE_INTERCONS.get(zone).get(dest).get('length')
-               * (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
+               (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
                * model.intercon_fixed_charge_rate
                for dest in model.intercon_per_zone[zone])
 
