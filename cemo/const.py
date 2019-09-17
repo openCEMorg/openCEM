@@ -181,7 +181,7 @@ ZONE_INTERCONS = {
     4: {
         2: {'loss': 0.02, 'limit': 1421, 'length': 500, 'buildcost': 2500},
         3: {'loss': 0.02, 'limit': 5288, 'length': 130, 'buildcost': 2500},
-        8: {'loss': 0.02, 'limit': 234, 'length': 375, ' buildcost': 2500},
+        8: {'loss': 0.02, 'limit': 234, 'length': 375, 'buildcost': 2500},
     },
     5: {
         6: {'loss': 0.02, 'limit': 2022, 'length': 85, 'buildcost': 2500},
