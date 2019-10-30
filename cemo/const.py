@@ -456,7 +456,7 @@ DEFAULT_STOR_PROPS = {
 }
 
 DEFAULT_HYB_PROPS = {
-    13: {"col_mult": 2.5, "charge_hours": 6},
+    13: {"col_mult": 1, "charge_hours": 0},
     22: {"col_mult": 2.1, "charge_hours": 3},
     23: {"col_mult": 3.1, "charge_hours": 12},
 }
