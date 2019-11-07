@@ -29,4 +29,4 @@ The [Wiki](https://github.com/openCEMorg/openCEM/wiki) for this repository is th
 
 ## Examples
 
-Example input files for openCEM can be found in the [Examples](https://github.com/openCEMorg/openCEM/openCEM_examples) repository
+Example input files for openCEM can be found in the [Examples](https://github.com/openCEMorg/openCEM_examples) repository
