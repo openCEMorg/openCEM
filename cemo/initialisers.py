@@ -82,6 +82,14 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
+def init_default_capex(model, zone, tech):
+    # pylint: disable=unused-argument
+    '''Initialise capex with default values per technology
+
+       Defaults can catch gaps in data sources in a manner that is
+       numerically safer than declaring a very big number'''
+    return cemo.const.DEFAULT_CAPEX.get(tech, 9e6)
+
 def init_default_fuel_price(model, zone, tech):
     # pylint: disable=unused-argument
     '''Assign default price across zone and technologies'''

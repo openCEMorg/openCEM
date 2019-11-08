@@ -246,6 +246,9 @@ ZONE_INTERCONS = {
     }
 }
 
+DEFAULT_CAPEX = {
+    16: 1588176 # GHD estimates for AEMO based on Barker Inlet
+}
 
 DEFAULT_FUEL_PRICE = {
     1: 0.5,

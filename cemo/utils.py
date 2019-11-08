@@ -18,8 +18,6 @@ from si_prefix import si_format
 import cemo.const
 import cemo.rules
 
-locale.setlocale(locale.LC_ALL, '')
-
 
 def printonly(instance, key):  # pragma: no cover
     '''pprint specified instance variable and exit'''
@@ -182,13 +180,14 @@ def plotcapacity(instance):  # pragma: no cover
 
 
 def _printcosts(inst):
+    locale.setlocale(locale.LC_ALL, 'en_AU.UTF-8')
     print("Total Cost:\t %20s" %
-          locale.currency(value(inst.Obj - cemo.rules.cost_shadow(inst)), grouping=True))
+          locale.currency(value(cemo.rules.system_cost(inst)), grouping=True))
     print("Build cost:\t %20s" %
-          locale.currency(sum(value(cemo.rules.cost_build_per_zone(inst, zone)) for zone in inst.zones),
+          locale.currency(value(cemo.rules.cost_capital(inst)),
                           grouping=True))
     print("Repayment cost:\t %20s" %
-          locale.currency(value(sum(inst.cost_cap_carry_forward[zone] for zone in inst.zones)),
+          locale.currency(value(cemo.rules.cost_repayment(inst)),
                           grouping=True))
     print("Operating cost:\t %20s" %
           locale.currency(value(cemo.rules.cost_operating(inst)),
@@ -197,8 +196,7 @@ def _printcosts(inst):
           locale.currency(value(cemo.rules.cost_fixed(inst)),
                           grouping=True))
     print("Trans. build cost:\t %12s" %
-          locale.currency(sum(value(cemo.rules.cost_trans_build_per_zone(inst, zone))
-                              for zone in inst.zones),
+          locale.currency(value(cemo.rules.cost_trans_build(inst)),
                           grouping=True))
     print("Trans. flow cost:\t %12s" %
           locale.currency(value(cemo.rules.cost_trans_flow(inst)),

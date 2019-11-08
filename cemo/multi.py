@@ -56,7 +56,7 @@ def roundup(cap):
     '''
     Round results to 2 signigicant digits.
     Catching small negative numbers due to solver numerical tolerance.
-    Let big negative numners pass to raise exception.
+    Let bigger negative numners pass to raise exceptions.
     '''
     if -1e-6 < cap < 0:
         return 0
@@ -64,35 +64,38 @@ def roundup(cap):
 
 
 def setinstancecapacity(instance, clustercap):
-    ''' write cluster gen_cap_op results for instance'''
+    ''' Fix capacity varibles from cluster results to speed up dispatch calculation'''
     data = clustercap.data
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
             key = str(z) + ',' + str(n)
-            instance.gen_cap_new[z, n] = roundup(
-                data['gen_cap_new[' + key + ']']['solution'])
+            instance.gen_cap_new[z, n].setlb(roundup(
+                data['gen_cap_new[' + key + ']']['solution']))
+            instance.gen_cap_new[z, n].setub(roundup(
+                    data['gen_cap_new[' + key + ']']['solution']))
         for s in instance.stor_tech_per_zone[z]:
             key = str(z) + ',' + str(s)
-            instance.stor_cap_new[z, s] = roundup(
-                data['stor_cap_new[' + key + ']']['solution'])
+            instance.stor_cap_new[z, s].setlb(roundup(
+                data['stor_cap_new[' + key + ']']['solution']))
+            instance.stor_cap_new[z, s].setub(roundup(
+                data['stor_cap_new[' + key + ']']['solution']))
         for h in instance.hyb_tech_per_zone[z]:
             key = str(z) + ',' + str(h)
-            instance.hyb_cap_new[z, h] = roundup(
-                data['hyb_cap_new[' + key + ']']['solution'])
+            instance.hyb_cap_new[z, h].setlb(roundup(
+                data['hyb_cap_new[' + key + ']']['solution']))
+            instance.hyb_cap_new[z, h].setub(roundup(
+                data['hyb_cap_new[' + key + ']']['solution']))
         for i in instance.intercon_per_zone[z]:
             key = str(z) + ',' + str(i)
-            instance.intercon_cap_new[z, i] = roundup(
-                data['intercon_cap_new[' + key + ']']['solution'])
+            instance.intercon_cap_new[z, i].setlb(roundup(
+                data['intercon_cap_new[' + key + ']']['solution']))
+            instance.intercon_cap_new[z, i].setub(roundup(
+                data['intercon_cap_new[' + key + ']']['solution']))
         for r in instance.retire_gen_tech_per_zone[z]:
             key = str(z) + ',' + str(r)
-            instance.gen_cap_ret[z, r] \
-                = roundup(data['gen_cap_ret[' + key + ']']['solution'])
+            instance.gen_cap_ret[z, r].setlb(roundup(data['gen_cap_ret[' + key + ']']['solution']))
+            instance.gen_cap_ret[z, r].setub(roundup(data['gen_cap_ret[' + key + ']']['solution']))
 
-    instance.gen_cap_new.fix()
-    instance.stor_cap_new.fix()
-    instance.hyb_cap_new.fix()
-    instance.intercon_cap_new.fix()
-    instance.gen_cap_ret.fix()
     return instance
 
 
@@ -773,7 +776,6 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             for year in self.Years:
                 with open(self.tmpdir + str(year) + '.json', 'r') as in_file:
                     copyfileobj(in_file, out_file)
-
 
     def generate_metadata(self):
         '''Append simulation metadata to full JSON output'''

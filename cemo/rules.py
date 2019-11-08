@@ -130,7 +130,7 @@ def con_nem_ret_ratio(model):
 def con_nem_ret_gwh(model):
     '''inequality constraint setting renewable generation must be greater or equal
     than a defined GWh per year across the system'''
-    return sum(model.gen_disp[z, n, t]
+    return 1e-3*sum(model.gen_disp[z, n, t]
                for r in model.regions
                for z in model.zones_per_region[r]
                for n in model.re_gen_tech_per_zone[z]
@@ -142,7 +142,7 @@ def con_nem_ret_gwh(model):
               for h in model.hyb_tech_per_zone[z]
               for t in model.t
               )\
-        >= model.nem_ret_gwh * 1000 / model.year_correction_factor
+        >= model.nem_ret_gwh / model.year_correction_factor
 
 
 def con_operating_reserve(model, region, time):
@@ -236,8 +236,8 @@ def con_max_mhw_per_zone(model, zone, tech):
 
        Results scaled to yearly MWH using year correction factor'''
     if cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech) is not None:
-        return sum(model.gen_disp[zone, tech, time] for time in model.t)\
-            <= cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech).get(zone, 0) /\
+        return 1e-3*sum(model.gen_disp[zone, tech, time] for time in model.t)\
+            <= 1e-3*cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech).get(zone, 0) /\
             model.year_correction_factor
     return Constraint.Skip
 
@@ -247,10 +247,10 @@ def con_max_mwh_nem_wide(model, tech):
 
        Results scaled to yearly MWH using year correction factor'''
     if cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) is not None:
-        return sum(model.gen_disp[zone, tech, time]
+        return 1e-3 *sum(model.gen_disp[zone, tech, time]
                    for zone in model.zones if tech in model.gen_tech_per_zone[zone]
                    for time in model.t)\
-            <= cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
+            <= 1e-3 * cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
             model.year_correction_factor
     return Constraint.Skip
 
@@ -362,9 +362,9 @@ def con_maxcap(model, zone, tech):
 
 def con_emissions(model):
     '''Emission constraint for the NEM in MT/y for total emissions'''
-    return model.year_correction_factor * sum(
+    return model.year_correction_factor * 1e-5*sum(
         emissions(model, region)
-        for region in model.regions) <= 1e9 * model.nem_year_emit_limit
+        for region in model.regions) <= 1e4 * model.nem_year_emit_limit
 
 
 def con_slackretire(model, z, n):
@@ -476,30 +476,92 @@ def con_uns(model, r):
         <= 0.00002 * sum(model.region_net_demand[r, t] for t in model.t)
 
 
-def cost_capital(model):
-    '''calculate total build costs'''
-    return sum(cost_build_per_zone(model, zone) for zone in model.zones)
-
-
 def cost_repayment(model):
     '''calculate repayment costs per zone'''
     return sum(model.cost_cap_carry_forward[zone] for zone in model.zones)
 
 
-def cost_build_per_zone(model, zone):
-    '''calculate build costs per zone'''
+def cost_capital(model):
+    '''calculate total build costs'''
+    return sum(cost_build_per_zone_model(model, zone) + cost_build_per_zone_exo(model, zone) for zone in model.zones)
+
+
+def cost_capital_model(model):
+    '''calculate total endogenous build costs'''
+    return sum(cost_build_per_zone_model(model, zone) for zone in model.zones)
+
+
+def cost_build_per_zone_model(model, zone):
+    '''calculate endogenous build costs per zone'''
     return sum(model.cost_gen_build[zone, tech]
-               * (model.gen_cap_new[zone, tech] + model.gen_cap_exo[zone, tech])
+               * (model.gen_cap_new[zone, tech])
                * model.fixed_charge_rate[tech]
                for tech in model.gen_tech_per_zone[zone])\
         + sum(model.cost_stor_build[zone, tech]
-              * (model.stor_cap_new[zone, tech] + model.stor_cap_exo[zone, tech])
+              * (model.stor_cap_new[zone, tech])
               * model.fixed_charge_rate[tech]
               for tech in model.stor_tech_per_zone[zone])\
         + sum(model.cost_hyb_build[zone, tech]
-              * (model.hyb_cap_new[zone, tech] + model.hyb_cap_exo[zone, tech])
+              * (model.hyb_cap_new[zone, tech])
               * model.fixed_charge_rate[tech]
               for tech in model.hyb_tech_per_zone[zone])
+
+
+def cost_build_per_zone_exo(model, zone):
+    '''calculate exogenous build costs per zone'''
+    return sum(model.cost_gen_build[zone, tech]
+               * (model.gen_cap_exo[zone, tech])
+               * model.fixed_charge_rate[tech]
+               for tech in model.gen_tech_per_zone[zone])\
+        + sum(model.cost_stor_build[zone, tech]
+              * (model.stor_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.stor_tech_per_zone[zone])\
+        + sum(model.cost_hyb_build[zone, tech]
+              * (model.hyb_cap_exo[zone, tech])
+              * model.fixed_charge_rate[tech]
+              for tech in model.hyb_tech_per_zone[zone])
+
+
+def cost_trans_build(model):
+    '''Add total build costs for transmission upgrades'''
+    return sum(cost_trans_build_per_zone_model(model, zone)
+              + cost_trans_build_per_zone_exo(model, zone) for zone in model.zones)
+
+
+def cost_trans_build_model(model):
+    '''Add build costs for endogenous transmission upgrades'''
+    return sum(cost_trans_build_per_zone_model(model, zone) for zone in model.zones)
+
+
+def cost_trans_build_per_zone_model(model, zone):
+    '''Tally endogenous transmission build costs from a zone'''
+    return sum(model.cost_intercon_build[zone, dest] *
+               (model.intercon_cap_new[zone, dest])
+               * model.intercon_fixed_charge_rate
+               for dest in model.intercon_per_zone[zone])
+
+
+def cost_trans_build_per_zone_exo(model, zone):
+    '''Tally exogenous transmission build costs from a zone'''
+    return sum(model.cost_intercon_build[zone, dest] *
+               (model.intercon_cap_exo[zone, dest])
+               * model.intercon_fixed_charge_rate
+               for dest in model.intercon_per_zone[zone])
+
+
+def cost_retirement(model):
+    '''Calculate total retirment costs for all retired capacity'''
+    return sum(model.cost_retire[n] *
+               (model.gen_cap_ret[z, n] + model.ret_gen_cap_exo[z, n])
+               for z in model.zones for n in model.retire_gen_tech_per_zone[z])
+
+
+def cost_retirement_model(model):
+    '''Calculate Endogenous retirment costs for all retired capacity'''
+    return sum(model.cost_retire[n] *
+               (model.gen_cap_ret[z, n])
+               for z in model.zones for n in model.retire_gen_tech_per_zone[z])
 
 
 def cost_fixed(model):
@@ -573,20 +635,6 @@ def cost_fuel_non_flexible(model, zone, tech, time):
         (1 - mincap / effrate) / (1 - mincap))
 
 
-def cost_transmission(model):
-    '''Add transmission build and transmission flow costs for convenience'''
-    return cost_trans_flow(model)\
-        + sum(cost_trans_build_per_zone(model, zone) for zone in model.zones)
-
-
-def cost_trans_build_per_zone(model, zone):
-    '''Tally transmission build costs from a zone'''
-    return sum(model.cost_intercon_build[zone, dest] *
-               (model.intercon_cap_new[zone, dest] + model.intercon_cap_exo[zone, dest])
-               * model.intercon_fixed_charge_rate
-               for dest in model.intercon_per_zone[zone])
-
-
 def cost_trans_flow(model):
     '''Calculate transmission flow costs'''
     return model.year_correction_factor * model.cost_trans * sum(
@@ -601,29 +649,31 @@ def cost_emissions(model):
         emissions(model, r) for r in model.regions)
 
 
-def cost_retirement(model):
-    '''Calculate retirment costs for all retired capacity'''
-    return sum(model.cost_retire[n] *
-               (model.gen_cap_ret[z, n] + model.ret_gen_cap_exo[z, n])
-               for z in model.zones for n in model.retire_gen_tech_per_zone[z])
-
-
 def cost_shadow(model):
     '''Calculate shadow costs, i.e. penalties applied to
     ensure numerical stability of model'''
-    return 10000000 * sum(model.gen_cap_ret_neg[z, n]
+    return 1000000 * sum(model.gen_cap_ret_neg[z, n]
                           for z in model.zones
                           for n in model.retire_gen_tech_per_zone[z])\
-        + 10000000 * sum(model.gen_cap_exo_neg[z, n]
+        + 1000000 * sum(model.gen_cap_exo_neg[z, n]
                          for z in model.zones
                          for n in model.gen_tech_per_zone[z])\
-        + 10000 * sum(model.surplus[z, t] for z in model.zones
-                      for t in model.t)
+        + 1000000 * sum(model.surplus[z, t]
+                       for z in model.zones
+                       for t in model.t)
+
+
+def system_cost(model):
+    """Total cost of system"""
+    return cost_capital(model) + cost_repayment(model)\
+        + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
+        + cost_trans_build(model) + cost_trans_flow(model) + cost_emissions(model)\
+        + cost_retirement(model)
 
 
 def obj_cost(model):
-    """Objective function as total annualised cost for model"""
-    return cost_capital(model) + cost_repayment(model)\
+    """Model optimisation objective"""
+    return cost_capital_model(model) \
         + cost_fixed(model) + cost_unserved(model) + cost_operating(model)\
-        + cost_transmission(model) + cost_emissions(model)\
-        + cost_retirement(model) + cost_shadow(model)
+        + cost_trans_build_model(model) + cost_trans_flow(model) + cost_emissions(model)\
+        + cost_retirement_model(model) + cost_shadow(model)

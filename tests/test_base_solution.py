@@ -3,6 +3,7 @@
 import pytest
 
 from pyomo.environ import value
+from cemo.rules import cost_trans_build
 
 
 @pytest.mark.parametrize("zone,tech", [
@@ -63,10 +64,15 @@ def test_hybrid(solution, benchmark, zone, time, tech):
     (11, 10, '2020-01-02 16:00:00'),
     (12, 10, '2020-01-02 17:00:00'),
 ])
-def test_transmission(solution, benchmark, tfrom, tto, time):
-    '''Assert transmission decisions match known value'''
+def test_trans_flow(solution, benchmark, tfrom, tto, time):
+    '''Assert transmission flow decisions match known value'''
     assert value(solution.intercon_disp[tfrom, tto, time])\
         == pytest.approx(value(benchmark.intercon_disp[tfrom, tto, time]), abs=1e-4)
+
+
+def test_trans_build(solution, benchmark):
+    '''Assert transmission builds and costs match knnown value'''
+    assert value(cost_trans_build(solution)) == pytest.approx(value(cost_trans_build(benchmark)))
 
 
 def test_problemsize(solution, benchmark):

@@ -13,6 +13,7 @@ from pyomo.environ import (AbstractModel, BuildAction, Constraint, Expression,
                            Var)
 import cemo.const
 from cemo.initialisers import (init_cap_factor, init_cost_retire,
+                               init_default_capex,
                                init_default_fuel_emit_rate,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
@@ -132,7 +133,7 @@ def create_model(namestr,
     # @@ Parameters
     # Capital costs generators
     # Build costs for generators
-    m.cost_gen_build = Param(m.gen_tech_in_zones, default=9e7)
+    m.cost_gen_build = Param(m.gen_tech_in_zones, initialize=init_default_capex)
     m.cost_stor_build = Param(m.stor_tech_in_zones)  # Capital costs storage
     m.cost_hyb_build = Param(m.hyb_tech_in_zones)  # Capital costs hybrid
     # Capital costs $/MW/km trans
@@ -299,9 +300,9 @@ def create_model(namestr,
         m.hyb_tech_in_zones, m.t,
         within=NonNegativeReals)  # Charge level for storage
 
+    # Numerical relaxation to load balance and capacity decisions
     m.unserved = Var(m.zones, m.t, within=NonNegativeReals)  # unserved power
-    m.surplus = Var(
-        m.zones, m.t, within=NonNegativeReals)  # surplus power (if any)
+    m.surplus = Var(m.zones, m.t, within=NonNegativeReals)  # surplus power
 
     # Interconnector flow
     m.intercon_disp = Var(m.intercons_in_zones, m.t, within=NonNegativeReals)

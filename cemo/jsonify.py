@@ -18,8 +18,10 @@ import linecache
 
 from pyomo.environ import value
 
-from cemo.rules import (cost_build_per_zone, cost_shadow,
-                        cost_trans_build_per_zone)
+from cemo.rules import (cost_build_per_zone_model,
+                        cost_build_per_zone_exo, system_cost,
+                        cost_trans_build_per_zone_model,
+                        cost_trans_build_per_zone_exo)
 
 
 def jsonify(inst, year):
@@ -217,7 +219,7 @@ def jsonify(inst, year):
             'duals': {
                 'srmc': fill_dual_suffix(inst.dual, inst.ldbal)
             },
-            'objective_value': value(inst.Obj - cost_shadow(inst))
+            'objective_value': value(system_cost(inst))
         }
     }
     if hasattr(inst, 'nem_year_emit_limit'):
@@ -286,8 +288,10 @@ def json_carry_forward_cap(inst):
             zone,
             "value":
             value(
-                cost_build_per_zone(inst, zone) +
-                cost_trans_build_per_zone(inst, zone) +
+                cost_build_per_zone_model(inst, zone) +
+                cost_build_per_zone_exo(inst, zone) +
+                cost_trans_build_per_zone_model(inst, zone) +
+                cost_trans_build_per_zone_exo(inst, zone) +
                 inst.cost_cap_carry_forward_sim[zone])
         } for zone in inst.zones]
     }
