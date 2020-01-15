@@ -22,7 +22,7 @@ def test_multi_conf_file_not_found():
       'region_ret_ratio = [[1, [0.1, 1.2, 0.3, 0.4, 0.5, 0.6]]]'),
      ('region_ret_ratio',
       'region_ret_ratio = [[2, [ 0.2, 0.3, 0.4, 0.5, 0.6]]]'),
-     ('emitlimit', 'emitlimit = [-100, 100, 100, 100, 100, 100]'),
+     ('nem_emit_limit', 'nem_emit_limit = [-100, 100, 100, 100, 100, 100]'),
      ('Years', 'Years=[2020,2022,2071]'), ('discountrate', 'discountrate=1.1'),
      ('cost_emit', 'cost_emit = [-11,2,3,4,5,6,8]'),
      ('nem_disp_ratio', 'nem_disp_ratio=[0,0,0,2,0,0,0]'),

@@ -19,7 +19,7 @@ from pyomo.opt import SolverFactory
 import cemo.const
 from cemo.cluster import ClusterRun, InstanceCluster
 from cemo.jsonify import json_carry_forward_cap, jsonify
-from cemo.model import create_model
+from cemo.model import CreateModel, model_options
 from cemo.utils import printstats
 
 from shutil import copyfileobj
@@ -116,35 +116,16 @@ class SolveTemplate:
         Scenario = config['Scenario']
         self.Name = Scenario['Name']
         self.Years = json.loads(Scenario['Years'])
-        # Read policy constraints from config file
-        self.nem_ret_ratio = None
-        if config.has_option('Scenario', 'nem_ret_ratio'):
-            self.nem_ret_ratio = json.loads(Scenario['nem_ret_ratio'])
-        self.nem_ret_gwh = None
-        if config.has_option('Scenario', 'nem_ret_gwh'):
-            self.nem_ret_gwh = json.loads(Scenario['nem_ret_gwh'])
-        self.region_ret_ratio = None
-        if config.has_option('Scenario', 'region_ret_ratio'):
-            self.region_ret_ratio = dict(
-                json.loads(Scenario['region_ret_ratio']))
-        self.emitlimit = None
-        if config.has_option('Scenario', 'emitlimit'):
-            self.emitlimit = json.loads(Scenario['emitlimit'])
-        self.nem_disp_ratio = None
-        if config.has_option('Scenario', 'nem_disp_ratio'):
-            self.nem_disp_ratio = json.loads(Scenario['nem_disp_ratio'])
-        self.nem_re_disp_ratio = None
-        if config.has_option('Scenario', 'nem_re_disp_ratio'):
-            self.nem_re_disp_ratio = json.loads(Scenario['nem_re_disp_ratio'])
+        # Read model options and policy constraints from config file
+        options = {}
+        for option in model_options()._fields:
+            if config.has_option('Scenario', option):
+                setattr(self, option, json.loads(Scenario[option]))
+                options.update({option: True})
+            else:
+                setattr(self, option, None)
         # Keep track of policy options to configure model instances down the line
-        self.model_options = {
-            'nem_ret_ratio': self.nem_ret_ratio is not None,
-            'nem_ret_gwh': self.nem_ret_gwh is not None,
-            'region_ret_ratio': self.region_ret_ratio is not None,
-            'emitlimit': self.emitlimit is not None,
-            'nem_disp_ratio': self.nem_disp_ratio is not None,
-            'nem_re_disp_ratio': self.nem_re_disp_ratio is not None
-        }
+        self.model_options = model_options(**options)
 
         self.discountrate = Scenario['discountrate']
         self.cost_emit = None
@@ -273,31 +254,31 @@ class SolveTemplate:
     def region_ret_ratio(self, data):
         if data is not None:
             for d in data:
-                if len(data[d]) != len(self.Years):
+                if len(d[1]) != len(self.Years):
                     raise ValueError(
                         'openCEM-region_ret_ratio: List %s length does not match Years list'
                         % d)
-                if any(x < 0 for x in data[d]) or any(x > 1 for x in data[d]):
+                if any(x < 0 for x in d[1]) or any(x > 1 for x in d[1]):
                     raise ValueError(
                         'openCEM-region_ret_ratio: Element(s) in list %s outside range [0,1]'
                         % d)
-        self._region_ret_ratio = data
+        self._region_ret_ratio = dict(data)
 
     @property
-    def emitlimit(self):
-        '''Property getter for emitlimit'''
+    def nem_emit_limit(self):
+        '''Property getter for nem_emit_limit'''
         return self._emitrate
 
-    @emitlimit.setter
-    def emitlimit(self, data):
+    @nem_emit_limit.setter
+    def nem_emit_limit(self, data):
         if data is not None:
             if len(data) != len(self.Years):
                 raise ValueError(
-                    'openCEM-emitlimit: List %s length does not match Years list'
+                    'openCEM-nem_emit_limit: List %s length does not match Years list'
                 )
             if any(x < 0 for x in data):
                 raise ValueError(
-                    'openCEM-emitlimit: Element(s) in list must be positive')
+                    'openCEM-nem_emit_limit: Element(s) in list must be positive')
         self._emitrate = data
 
     @property
@@ -605,11 +586,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 ' '.join(str(i) + " " + str(self.region_ret_ratio[i][self.Years.index(year)])
                          for i in self.region_ret_ratio) + ";\n"
 
-        emitlimit = ""
-        if self.emitlimit:
-            emitlimit = "\n #NEM wide emission limit (in GT)\n"\
-                + "param nem_year_emit_limit := " +\
-                  str(self.emitlimit[self.Years.index(year)]) + ";\n"
+        nem_emit_limit = ""
+        if self.nem_emit_limit:
+            nem_emit_limit = "\n #NEM wide emission limit (in GT)\n"\
+                + "param nem_emit_limit := " +\
+                  str(self.nem_emit_limit[self.Years.index(year)]) + ";\n"
 
         nem_disp_ratio = ""
         if self.nem_disp_ratio:
@@ -692,7 +673,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 fo.write(nem_ret_ratio)
                 fo.write(nem_ret_gwh)
                 fo.write(region_ret_ratio)
-                fo.write(emitlimit)
+                fo.write(nem_emit_limit)
                 fo.write(nem_disp_ratio)
                 fo.write(nem_re_disp_ratio)
         return dcfName
@@ -718,14 +699,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             year_template = self.generateyeartemplate(y, self.templatetest)
             # Solve full year capacity and dispatch instance
             # Create model based on policy configuration options
-            model = create_model(
-                y,
-                nem_ret_ratio=self.model_options['nem_ret_ratio'],
-                nem_ret_gwh=self.model_options['nem_ret_gwh'],
-                region_ret_ratio=self.model_options['region_ret_ratio'],
-                emitlimit=self.model_options['emitlimit'],
-                nem_disp_ratio=self.model_options['nem_disp_ratio'],
-                nem_re_disp_ratio=self.model_options['nem_re_disp_ratio'])
+            model = CreateModel(y, self.model_options).create_model()
             # create model instance based in template data
             inst = model.create_instance(year_template)
             # These presolve capacity on a clustered form
@@ -792,7 +766,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "NEM wide RET as ratio": self.nem_ret_ratio,
             "NEM wide RET as GWh": self.nem_ret_gwh,
             "Regional based RET": self.region_ret_ratio,
-            "System emission limit": self.emitlimit,
+            "System emission limit": self.nem_emit_limit,
             "Dispatchable generation ratio ": self.nem_disp_ratio,
             "Renewable Dispatchable generation ratio ": self.nem_re_disp_ratio,
             "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone': 0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,

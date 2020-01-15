@@ -90,6 +90,7 @@ def init_default_capex(model, zone, tech):
        numerically safer than declaring a very big number'''
     return cemo.const.DEFAULT_CAPEX.get(tech, 9e6)
 
+
 def init_default_fuel_price(model, zone, tech):
     # pylint: disable=unused-argument
     '''Assign default price across zone and technologies'''
@@ -130,8 +131,8 @@ def init_fcr(model, tech):
     # pylint: disable=unused-argument
     '''Calculate fixed charge rate for each technology'''
     return model.all_tech_discount_rate / (
-        (model.all_tech_discount_rate + 1)**model.all_tech_lifetime[tech] -
-        1) + model.all_tech_discount_rate
+        (model.all_tech_discount_rate + 1)**model.all_tech_lifetime[tech]
+        - 1) + model.all_tech_discount_rate
 
 
 def init_intercon_fcr(model):
@@ -139,8 +140,8 @@ def init_intercon_fcr(model):
     '''Calculate fixed charge rate for transmission
     Assumed lifetime: 50 years'''
     return model.all_tech_discount_rate / (
-        (model.all_tech_discount_rate + 1)**50 -
-        1) + model.all_tech_discount_rate
+        (model.all_tech_discount_rate + 1)**50
+        - 1) + model.all_tech_discount_rate
 
 
 def init_intercon_cap_initial(model, zone_source, zone_dest):
@@ -161,7 +162,6 @@ def init_intercon_build_cost(model, zone_source, zone_dest):
     return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get(
         'buildcost', 2500) * cemo.const.ZONE_INTERCONS.get(zone_source).get(
             zone_dest).get('length')
-
 
 
 def init_cap_factor(model, zone, tech, time):

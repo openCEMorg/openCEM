@@ -97,7 +97,7 @@ param : cost_hyb_fom cost_hyb_vom :=
 13 75600 5.99
 ;
 
-param : nem_year_emit_limit := 140;
+param : nem_emit_limit := 140;
 
 param : hyb_col_mult hyb_charge_hours :=
 13 1 0
@@ -112,7 +112,7 @@ param cost_trans:= 0.00001;
 # Cost of emissions $/kg
 param cost_emit:= 0.0;
 
-param nem_operating_reserve :=0.075;
+param nem_disp_ratio :=0.075;
 
 param nem_re_disp_ratio :=0.0;
 

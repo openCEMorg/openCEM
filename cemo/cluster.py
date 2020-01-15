@@ -4,7 +4,7 @@ __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
 __license__ = "GPLv3"
-__version__ = "0.9.5"
+__version__ = "1.0.0"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
@@ -21,7 +21,8 @@ import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
-import cemo.jsonify
+from cemo.jsonify import fill_complex_param
+from cemo.const import GEN_TECH, HYB_TECH, TRACE_TECH
 
 
 def next_weekday(date, int_weekday):
@@ -85,9 +86,9 @@ class ClusterData:
         self.nplen = len(self.regions) * self.plen
 
         # generate a set of max_d clusters
-        self.clusterset(self.max_d)
+        self.generate_cluster()
 
-    def __repr__(self):  # pragma: no cover
+    def __repr__(self):
         return 'Cluster Data generator\n %r' % self.Xcluster
 
     def _init_timeseries_data(self):
@@ -180,6 +181,37 @@ class ClusterData:
         self.Xcluster = pd.DataFrame(
             Xcl, columns=['week', 'date', 'weight']).sort_values(by='date')
 
+    def append_to_cluster(self, date):
+        '''Append arbitrary weeks to cluster'''
+        if date is None:
+            return
+        cluster = self.Xcluster
+        # rescale weights to weeks
+        cluster.weight *= self.periods
+        # deduct 1 week from the largest cluster
+        row = cluster.weight.idxmax()
+        cluster.at[row, 'weight'] -= 1
+        # Add injected week
+        clus = cluster.append(pd.DataFrame.from_dict(
+            {'week': [52 if cluster.week.max() < 52 else cluster.week.max()+1],
+             'date': [pd.Timestamp(date)],
+             'weight': [1]
+             }
+        ))
+        # scale back weights to sum 1
+        clus.weight *= 1 / self.periods
+        clus.reset_index(drop=True, inplace=True)
+        # save cluster back in object
+        self.Xcluster = clus
+        self.max_d += 1
+
+    def _detect_dunkelflaute(self):
+        return None
+
+    def generate_cluster(self):
+        self.clusterset(self.max_d)
+        # self.append_to_cluster(self._detect_dunkelflaute())
+
 
 class CSVCluster(ClusterData):
     """Weekly Cluster from CSV file, to perform unit tests and standalone clustering studies"""
@@ -193,23 +225,29 @@ class CSVCluster(ClusterData):
         ClusterData.__init__(self, max_d=max_d)
 
     def _data_query(self, region):
-        df = pd.read_csv(
-            filepath_or_buffer=self.source,
-            compression='infer',
-            index_col='timestamp',
-            parse_dates=['timestamp'])
-        if df.empty:
+        try:
+            df = pd.read_csv(
+                filepath_or_buffer=self.source,
+                compression='infer',
+                index_col='timestamp',
+                parse_dates=['timestamp'])
+            self.year = df.index[-1].year
+            return df
+        except FileNotFoundError:
             raise SystemExit("CSVCluster: Unable to open data file")
-        self.year = df.index[-1].year
-        return df
 
 
 class InstanceCluster(ClusterData):
     """Create weekly clusters from demand data in model instance"""
 
     def __init__(self, instance, max_d=12):
-        self.demand = cemo.jsonify.jsonifyld(
-            instance)
+        self.demand = fill_complex_param(instance.region_net_demand)
+        self.time = instance.t
+        self.gen_cap_factor = fill_complex_param(instance.gen_cap_factor)
+        self.hyb_cap_factor = fill_complex_param(instance.hyb_cap_factor)
+        self.regions = instance.regions
+        self.zones_per_region = instance.zones_per_region
+        self.windowidth = 24*7
         ClusterData.__init__(self, max_d=max_d, regions=instance.regions)
 
     def _data_query(self, region):
@@ -233,6 +271,35 @@ class InstanceCluster(ClusterData):
         self.year = df.iloc[-1].name.year
         return df
 
+    def _detect_dunkelflaute(self):
+        '''Return a date as string with the beginning of a dark/doldrum week period'''
+        MAXLOAD = np.array([i['value'] for i in self.demand]).max()
+        TIME = np.array([np.datetime64(i) for i in self.time])
+        RATIO = np.zeros(len(TIME))
+        for region in self.regions:
+            LOAD = np.array([j if j >= 100 else 100
+                             for j in [i['value'] for i in self.demand if i['index'][0] == region]])
+            VRE_RESOURCE = np.zeros(len(TIME))
+            for tech in TRACE_TECH:
+                if tech in GEN_TECH:
+                    tech_trace = 'gen_cap_factor'
+                if tech in HYB_TECH:
+                    tech_trace = 'hyb_cap_factor'
+                for zone in self.zones_per_region[region]:
+                    TRACE = np.array([i['value']
+                                      for i in getattr(self, tech_trace)
+                                      if i['index'][0] == zone and i['index'][1] == tech])
+                    if len(TRACE) == len(TIME):
+                        VRE_RESOURCE += TRACE
+                        print("region %s, zone %s, tech %s" % (region, zone, tech))
+            RATIO += (VRE_RESOURCE / LOAD) * MAXLOAD
+        ww = int(self.windowidth / 2)
+        RATIO = np.pad(RATIO, (ww, ww), 'wrap')
+        W_RATIO = pd.Series(RATIO).rolling(self.windowidth,
+                                           center=True,
+                                           win_type='boxcar').mean()[ww:-ww].reset_index(drop=True)
+        return str(TIME[W_RATIO.idxmin()] - np.timedelta64(3, 'D'))[:10]
+
 
 class ClusterRun:
     """Class to run a model based on supplied cluster information"""
@@ -244,8 +311,11 @@ class ClusterRun:
                  solver='cbc',
                  log=False):
         self.cluster = cluster
-        self.template = template
         self.model_options = model_options
+        if self.cluster:
+            # Force unserved constraint for cluster run
+            self.model_options = model_options._replace(unslim=True)
+        self.template = template
         self.solver = solver
         self.log = log
         # Internal variables to class
@@ -316,19 +386,9 @@ class ClusterRun:
         # Not pretty but it will do
         with open(self.tmpdir + '/ReferenceModel.py', 'wt') as fo:
             refmodel = "'''Temporary openCEM model instance for runef simulations'''\n"
-            refmodel += "from cemo.model import create_model\n"
-            refmodel += "model = create_model('openCEM',\n"
-            refmodel += "                     unslim=True,\n"
-            refmodel += "                     emitlimit=" + str(
-                self.model_options['emitlimit']) + ",\n"
-            refmodel += "                     nem_ret_ratio=" + str(
-                self.model_options['nem_ret_ratio']) + ",\n"
-            refmodel += "                     nem_ret_gwh=" + str(
-                self.model_options['nem_ret_gwh']) + ",\n"
-            refmodel += "                     region_ret_ratio=" + str(
-                self.model_options['region_ret_ratio']) + ",\n"
-            refmodel += "                     nem_disp_ratio=" + str(
-                self.model_options['nem_disp_ratio']) + ")\n"
+            refmodel += "from cemo.model import create_model, model_options\n"
+            refmodel += "options =" + str(self.model_options) + " \n"
+            refmodel += "model = create_model('openCEM',options)\n"
             fo.write(refmodel)
 
     def run_cluster(self):

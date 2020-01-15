@@ -222,10 +222,10 @@ def jsonify(inst, year):
             'objective_value': value(system_cost(inst))
         }
     }
-    if hasattr(inst, 'nem_year_emit_limit'):
+    if hasattr(inst, 'nem_emit_limit'):
         out[year]['params'].update({
-            inst.nem_year_emit_limit.name:
-            inst.nem_year_emit_limit.value
+            inst.nem_emit_limit.name:
+            inst.nem_emit_limit.value
         })
     if hasattr(inst, 'nem_ret_ratio'):
         out[year]['params'].update({
@@ -288,11 +288,11 @@ def json_carry_forward_cap(inst):
             zone,
             "value":
             value(
-                cost_build_per_zone_model(inst, zone) +
-                cost_build_per_zone_exo(inst, zone) +
-                cost_trans_build_per_zone_model(inst, zone) +
-                cost_trans_build_per_zone_exo(inst, zone) +
-                inst.cost_cap_carry_forward_sim[zone])
+                cost_build_per_zone_model(inst, zone)
+                + cost_build_per_zone_exo(inst, zone)
+                + cost_trans_build_per_zone_model(inst, zone)
+                + cost_trans_build_per_zone_exo(inst, zone)
+                + inst.cost_cap_carry_forward_sim[zone])
         } for zone in inst.zones]
     }
     return out
@@ -305,12 +305,6 @@ def jsonopcap0(inst):
         inst.stor_cap_initial.name: fill_complex_param(inst.stor_cap_initial),
         inst.hyb_cap_initial.name: fill_complex_param(inst.hyb_cap_initial)
     }
-    return out
-
-
-def jsonifyld(inst):
-    '''Produce JSON net demand indexed by region and timestamp'''
-    out = fill_complex_param(inst.region_net_demand)
     return out
 
 
@@ -375,6 +369,7 @@ def fill_scalar_key_param(par):
         out[str(i)] = par[i]
 
     return out
+
 
 def fill_scalar_key_mutable_param(par):
     '''Return scalar key mutableparameter dictionary'''

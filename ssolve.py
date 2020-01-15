@@ -18,7 +18,7 @@ import time
 from pyomo.opt import SolverFactory, TerminationCondition
 
 import cemo.utils
-from cemo.model import create_model
+from cemo.model import CreateModel, model_options
 
 
 def check_arg(config_file, parameter):
@@ -85,15 +85,14 @@ ARGS = PARSER.parse_args()
 # Model name comes from command line
 MODEL_NAME = ARGS.name
 
+# Parse model options from file
+OPTIONS = {'unslim': ARGS.unserved}
+for option in model_options()._fields:
+    if check_arg(MODEL_NAME, option):
+        OPTIONS.update({option: True})
 # create cemo model
-MODEL = create_model(MODEL_NAME,
-                     unslim=ARGS.unserved,
-                     emitlimit=check_arg(MODEL_NAME, 'nem_year_emit_limit'),
-                     nem_disp_ratio=check_arg(MODEL_NAME, 'nem_disp_ratio'),
-                     nem_ret_ratio=check_arg(MODEL_NAME, 'nem_ret_ratio'),
-                     nem_ret_gwh=check_arg(MODEL_NAME, 'nem_ret_gwh'),
-                     region_ret_ratio=check_arg(MODEL_NAME, 'region_ret_ratio'),
-                     nem_re_disp_ratio=check_arg(MODEL_NAME, 'nem_re_disp_ratio'))
+MODEL = CreateModel(MODEL_NAME, model_options(**OPTIONS)).create_model()
+
 # create a specific instance using file modelName.dat
 INSTANCE = MODEL.create_instance(MODEL_NAME + '.dat')
 

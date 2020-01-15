@@ -242,12 +242,13 @@ ZONE_INTERCONS = {
     },
     16: {
         9: {'loss': 0.02, 'limit': 594, 'length': 320, 'buildcost': 2500},
-        10: {'loss': 0.02, 'limit': 0, 'length': 320, 'buildcost': 2500},  # Estimate based on ISP 2018 VIC-TAS option
+        10: {'loss': 0.02, 'limit': 0, 'length': 320, 'buildcost': 2500},
+        # Estimate based on ISP 2018 VIC-TAS option
     }
 }
 
 DEFAULT_CAPEX = {
-    16: 1588176 # GHD estimates for AEMO based on Barker Inlet
+    16: 1588176  # GHD estimates for AEMO based on Barker Inlet
 }
 
 DEFAULT_FUEL_PRICE = {
@@ -470,6 +471,11 @@ DEFAULT_COSTS = {
     "emit": 0,
 }
 
+DEFAULT_MODEL_OPT = {
+    "nem_disp_ratio": {"value": 0.075},
+    "region_ret_ratio": {"index": 'self.m.regions'}
+}
+
 
 GEN_COMMIT = {
     "penalty": {  # Startup fuel cost in GJ/MWh
@@ -534,7 +540,8 @@ GEN_COMMIT = {
     }
 }
 
-ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28]
+ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+            12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28]
 
 DISPLAY_ORDER = [
     6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
@@ -543,7 +550,7 @@ GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28]
 RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
 DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28]
 RE_DISP_GEN_TECH = [1, 18]
-GEN_TRACE = [9, 10, 11, 12, 17]
+TRACE_TECH = [11, 12, 13, 17]
 FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 28]
 COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19, 28]
 HYB_TECH = [13, 22, 23]

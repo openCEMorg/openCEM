@@ -722,7 +722,7 @@ param nem_ret_gwh :=42483;
 param region_ret_ratio := 1 0 2 0 3 0 4 0 5 0.5;
 
  #NEM wide emission limit (in GT)
-param nem_year_emit_limit := 110;
+param nem_emit_limit := 110;
 
  #NEM wide minimum generation ratio from dispatchable tech
 param nem_re_disp_ratio := 0;

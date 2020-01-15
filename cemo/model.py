@@ -8,6 +8,7 @@ __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 __status__ = "Development"
 
+from collections import namedtuple
 from pyomo.environ import (AbstractModel, BuildAction, Constraint, Expression,
                            NonNegativeReals, Objective, Param, Set, Suffix,
                            Var)
@@ -26,8 +27,8 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim, con_committed_cap,
-                        con_disp_ramp_down, con_disp_ramp_up, con_emissions,
+                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim,
+                        con_committed_cap, con_disp_ramp_down, con_disp_ramp_up, con_emissions,
                         con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
                         con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
                         con_intercon_cap, con_ldbal, con_max_mhw_per_zone,
@@ -42,380 +43,461 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         obj_cost)
 
 
-def create_model(namestr,
-                 unslim=False,
-                 emitlimit=False,
-                 nem_ret_ratio=False,
-                 nem_ret_gwh=False,
-                 region_ret_ratio=False,
-                 nem_disp_ratio=False,
-                 nem_re_disp_ratio=False):
-    """Creates an instance of the pyomo definition of openCEM"""
-    m = AbstractModel(name=namestr)
-    # Sets
-    m.regions = Set(initialize=cemo.const.REGION.keys())  # Set of NEM regions
-    m.zones = Set(
-        initialize=cemo.const.ZONE.keys())  # Set of NTNDP planning zones
-    m.all_tech = Set(
-        initialize=cemo.const.ALL_TECH)  # Set of generation technologies
-    # set of fuel based gen technologies
-    m.fuel_gen_tech = Set(initialize=cemo.const.FUEL_TECH) & m.all_tech
-    # set of gen techs that obey linearised unit commitment constraints
-    m.commit_gen_tech = Set(initialize=cemo.const.COMMIT_TECH) & m.all_tech
-    # set of retireable technologies
-    m.retire_gen_tech = Set(initialize=cemo.const.RETIRE_TECH) & m.all_tech
-    # set of retireable technologies
-    m.nobuild_gen_tech = Set(initialize=cemo.const.NOBUILD_TECH) & m.all_tech
-    # Set of storage technologies
-    m.stor_tech = Set(initialize=cemo.const.STOR_TECH) & m.all_tech
-    # set of hybrid (gen+storage) technologies
-    m.hyb_tech = Set(initialize=cemo.const.HYB_TECH) & m.all_tech
-    # Set of dispatch intervals
-    m.t = Set(ordered=True)
+def model_options(**kwargs):
+    '''Container for model options'''
+    fields = ['unslim',
+              'nem_emit_limit',
+              'nem_ret_ratio',
+              'nem_ret_gwh',
+              'region_ret_ratio',
+              'nem_disp_ratio',
+              'nem_re_disp_ratio']
+    opt = namedtuple('model_options', fields)
+    opt.__new__.__defaults__ = (False,) * len(opt._fields)
+    return opt(**kwargs)
 
-    # Sparse set of zones per region
-    m.zones_in_regions = Set(dimen=2, initialize=init_zones_in_regions)
-    # Set listing technologies avaialable per zone (like a sparsity pattern)
-    m.gen_tech_in_zones = Set(dimen=2)
-    # Retirable technologies avaialable per zone (like a sparsity pattern)
-    m.retire_gen_tech_in_zones = Set(dimen=2)
-    # Fuel/emmitting technologies avaialable per zone (like a sparsity pattern)
-    m.fuel_gen_tech_in_zones = Set(dimen=2)
-    # Fuel/emmitting technologies avaialable per zone (like a sparsity pattern)
-    m.commit_gen_tech_in_zones = Set(dimen=2)
-    # Renewable technologies avaialable per zone (like a sparsity pattern)
-    m.re_gen_tech_in_zones = Set(dimen=2)
-    # Dispatchable technologies avaialable per zone (like a sparsity pattern)
-    m.disp_gen_tech_in_zones = Set(dimen=2)
-    # Renewable Dispatchable technologies avaialable per zone (like a sparsity pattern)
-    m.re_disp_gen_tech_in_zones = Set(dimen=2)
-    # Set listing storage avaialable per zone (like a sparsity pattern)
-    m.hyb_tech_in_zones = Set(dimen=2)
-    # Set listing storage avaialable per zone (like a sparsity pattern)
-    m.stor_tech_in_zones = Set(dimen=2)
-    # Set listing transmission lines to other regions in each region
-    m.intercons_in_zones = Set(dimen=2, initialize=init_intercons_in_zones)
 
-    # sparse sets built by build actions
-    # Returns a list of planning zones for each region in R
-    m.zones_per_region = Set(m.regions, within=m.zones, initialize=[])
-    # Returns a tuple with generating techs in each zone
-    m.gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    # Returns a tuple with emitting techs in each zone
-    m.fuel_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    # tuple for techs that obey linearised unit commitment constraints
-    m.commit_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    m.re_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    m.disp_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    m.re_disp_gen_tech_per_zone = Set(
-        m.zones, within=m.all_tech, initialize=[])
-    # Returns a tuple with retirable techs in each zone
-    m.retire_gen_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    # Returns a tuple with storage techs in each zone
-    m.stor_tech_per_zone = Set(m.zones, within=m.stor_tech, initialize=[])
-    # Returns a tuple with emitting techs in each zone
-    m.hyb_tech_per_zone = Set(m.zones, within=m.all_tech, initialize=[])
-    # returns a tuple with transmission links in each region
-    m.intercon_per_zone = Set(m.zones, initialize=[])
+class CreateModel():
+    def __init__(self, namestr, model_options):
+        self.m = AbstractModel(name=namestr)
+        self.model_options = model_options
 
-    # @@ Build actions
-    # Scan TechinZones and populate ?_gen_tech_per_zone
-    m.TpZ_build = BuildAction(rule=ScanForTechperZone)
-    # Scan HybTechinZones and populate hyb_tech_per_zone
-    m.HpZ_build = BuildAction(rule=ScanForHybridperZone)
-    # Scan ZinR and populate ZperR
-    m.ZpR_build = BuildAction(rule=ScanForZoneperRegion)
-    # Scan TransLines and populate intercon_per_zone
-    m.intercon_build = BuildAction(rule=build_intercon_per_zone)
-    # Scan StorinZones and populate stor_tech_per_zone
-    m.SpZ_build = BuildAction(rule=ScanForStorageperZone)
+    def create_sets(self):
+        # Sets
+        # Set of NEM regions
+        self.m.regions = Set(initialize=cemo.const.REGION.keys())
+        self.m.zones = Set(
+            initialize=cemo.const.ZONE.keys())  # Set of NTNDP planning zones
+        self.m.all_tech = Set(
+            initialize=cemo.const.ALL_TECH)  # Set of generation technologies
+        # set of fuel based gen technologies
+        self.m.fuel_gen_tech = Set(
+            initialize=cemo.const.FUEL_TECH) & self.m.all_tech
+        # set of gen techs that obey linearised unit commitment constraints
+        self.m.commit_gen_tech = Set(
+            initialize=cemo.const.COMMIT_TECH) & self.m.all_tech
+        # set of retireable technologies
+        self.m.retire_gen_tech = Set(
+            initialize=cemo.const.RETIRE_TECH) & self.m.all_tech
+        # set of retireable technologies
+        self.m.nobuild_gen_tech = Set(
+            initialize=cemo.const.NOBUILD_TECH) & self.m.all_tech
+        # Set of storage technologies
+        self.m.stor_tech = Set(
+            initialize=cemo.const.STOR_TECH) & self.m.all_tech
+        # set of hybrid (gen+storage) technologies
+        self.m.hyb_tech = Set(initialize=cemo.const.HYB_TECH) & self.m.all_tech
+        # Set of dispatch intervals
+        self.m.t = Set(ordered=True)
 
-    # @@ Parameters
-    # Capital costs generators
-    # Build costs for generators
-    m.cost_gen_build = Param(m.gen_tech_in_zones, initialize=init_default_capex)
-    m.cost_stor_build = Param(m.stor_tech_in_zones)  # Capital costs storage
-    m.cost_hyb_build = Param(m.hyb_tech_in_zones)  # Capital costs hybrid
-    # Capital costs $/MW/km trans
-    m.cost_intercon_build = Param(m.intercons_in_zones, initialize=init_intercon_build_cost)
+        # Sparse set of zones per region
+        self.m.zones_in_regions = Set(
+            dimen=2, initialize=init_zones_in_regions)
+        # Set listing technologies avaialable per zone (like a sparsity pattern)
+        self.m.gen_tech_in_zones = Set(dimen=2)
+        # Retirable technologies avaialable per zone (like a sparsity pattern)
+        self.m.retire_gen_tech_in_zones = Set(dimen=2)
+        # Fuel/emmitting technologies avaialable per zone (like a sparsity pattern)
+        self.m.fuel_gen_tech_in_zones = Set(dimen=2)
+        # Fuel/emmitting technologies avaialable per zone (like a sparsity pattern)
+        self.m.commit_gen_tech_in_zones = Set(dimen=2)
+        # Renewable technologies avaialable per zone (like a sparsity pattern)
+        self.m.re_gen_tech_in_zones = Set(dimen=2)
+        # Dispatchable technologies avaialable per zone (like a sparsity pattern)
+        self.m.disp_gen_tech_in_zones = Set(dimen=2)
+        # Renewable Dispatchable technologies avaialable per zone (like a sparsity pattern)
+        self.m.re_disp_gen_tech_in_zones = Set(dimen=2)
+        # Set listing storage avaialable per zone (like a sparsity pattern)
+        self.m.hyb_tech_in_zones = Set(dimen=2)
+        # Set listing storage avaialable per zone (like a sparsity pattern)
+        self.m.stor_tech_in_zones = Set(dimen=2)
+        # Set listing transmission lines to other regions in each region
+        self.m.intercons_in_zones = Set(
+            dimen=2, initialize=init_intercons_in_zones)
 
-    m.cost_fuel = Param(
-        m.fuel_gen_tech_in_zones,
-        initialize=init_default_fuel_price)  # Fuel cost
+        # sparse sets built by build actions
+        # Returns a list of planning zones for each region in R
+        self.m.zones_per_region = Set(
+            self.m.regions, within=self.m.zones, initialize=[])
+        # Returns a tuple with generating techs in each zone
+        self.m.gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        # Returns a tuple with emitting techs in each zone
+        self.m.fuel_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        # tuple for techs that obey linearised unit commitment constraints
+        self.m.commit_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        self.m.re_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        self.m.disp_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        self.m.re_disp_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        # Returns a tuple with retirable techs in each zone
+        self.m.retire_gen_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        # Returns a tuple with storage techs in each zone
+        self.m.stor_tech_per_zone = Set(
+            self.m.zones, within=self.m.stor_tech, initialize=[])
+        # Returns a tuple with emitting techs in each zone
+        self.m.hyb_tech_per_zone = Set(
+            self.m.zones, within=self.m.all_tech, initialize=[])
+        # returns a tuple with transmission links in each region
+        self.m.intercon_per_zone = Set(self.m.zones, initialize=[])
 
-    # Fixed operating costs generators
-    m.cost_gen_fom = Param(m.all_tech)
-    # Variable operating costs generators
-    m.cost_gen_vom = Param(m.all_tech)
-    # Fixed operating costs storage
-    m.cost_stor_fom = Param(m.stor_tech)
-    # Variable operating costs storage
-    m.cost_stor_vom = Param(m.stor_tech)
-    # Fixed operating costs hybrid
-    m.cost_hyb_fom = Param(m.hyb_tech)
-    # Variable operating costs hybrid
-    m.cost_hyb_vom = Param(m.hyb_tech)
-    # Technology lifetime in years
-    m.all_tech_lifetime = Param(m.all_tech, initialize=init_default_lifetime)
-    # Project discount rate
-    m.all_tech_discount_rate = Param(default=0.05)
+        # @@ Build actions
+        # Scan TechinZones and populate ?_gen_tech_per_zone
+        self.m.TpZ_build = BuildAction(rule=ScanForTechperZone)
+        # Scan HybTechinZones and populate hyb_tech_per_zone
+        self.m.HpZ_build = BuildAction(rule=ScanForHybridperZone)
+        # Scan ZinR and populate ZperR
+        self.m.ZpR_build = BuildAction(rule=ScanForZoneperRegion)
+        # Scan TransLines and populate intercon_per_zone
+        self.m.intercon_build = BuildAction(rule=build_intercon_per_zone)
+        # Scan StorinZones and populate stor_tech_per_zone
+        self.m.SpZ_build = BuildAction(rule=ScanForStorageperZone)
 
-    # Generator tech fixed charge rate
-    m.fixed_charge_rate = Param(m.all_tech, initialize=init_fcr)
-    # Transmission tech fixed charge rate
-    m.intercon_fixed_charge_rate = Param(initialize=init_intercon_fcr)
-    # Per year cost adjustment for sims shorter than 1 year of dispatch
-    m.year_correction_factor = Param(initialize=init_year_correction_factor)
+    def create_params(self):
+        # @@ Parameters
+        # Capital costs generators
+        # Build costs for generators
+        self.m.cost_gen_build = Param(
+            self.m.gen_tech_in_zones, initialize=init_default_capex)
+        self.m.cost_stor_build = Param(
+            self.m.stor_tech_in_zones)  # Capital costs storage
+        self.m.cost_hyb_build = Param(
+            self.m.hyb_tech_in_zones)  # Capital costs hybrid
+        # Capital costs $/MW/km trans
+        self.m.cost_intercon_build = Param(
+            self.m.intercons_in_zones, initialize=init_intercon_build_cost)
 
-    m.cost_retire = Param(m.retire_gen_tech, initialize=init_cost_retire)
-    m.cost_unserved = Param(
-        initialize=cemo.const.
-        DEFAULT_COSTS["unserved"])  # cost of unserved power
-    # cost in $/kg of total emissions
-    m.cost_emit = Param(initialize=cemo.const.DEFAULT_COSTS["emit"])
-    m.cost_trans = Param(
-        initialize=cemo.const.DEFAULT_COSTS["trans"])  # cost of transmission
+        self.m.cost_fuel = Param(
+            self.m.fuel_gen_tech_in_zones,
+            initialize=init_default_fuel_price)  # Fuel cost
 
-    # Round trip efficiency of storage technology
-    m.stor_rt_eff = Param(m.stor_tech, initialize=init_stor_rt_eff)
-    # Number of hours of storage technology
-    m.stor_charge_hours = Param(m.stor_tech, initialize=init_stor_charge_hours)
+        # Fixed operating costs generators
+        self.m.cost_gen_fom = Param(self.m.all_tech)
+        # Variable operating costs generators
+        self.m.cost_gen_vom = Param(self.m.all_tech)
+        # Fixed operating costs storage
+        self.m.cost_stor_fom = Param(self.m.stor_tech)
+        # Variable operating costs storage
+        self.m.cost_stor_vom = Param(self.m.stor_tech)
+        # Fixed operating costs hybrid
+        self.m.cost_hyb_fom = Param(self.m.hyb_tech)
+        # Variable operating costs hybrid
+        self.m.cost_hyb_vom = Param(self.m.hyb_tech)
+        # Technology lifetime in years
+        self.m.all_tech_lifetime = Param(
+            self.m.all_tech, initialize=init_default_lifetime)
+        # Project discount rate
+        self.m.all_tech_discount_rate = Param(default=0.05)
 
-    # Collector multiple of hybrid technology
-    m.hyb_col_mult = Param(m.hyb_tech, initialize=init_hyb_col_mult)
-    # Number of hours of storage technology
-    m.hyb_charge_hours = Param(m.hyb_tech, initialize=init_hyb_charge_hours)
+        # Generator tech fixed charge rate
+        self.m.fixed_charge_rate = Param(self.m.all_tech, initialize=init_fcr)
+        # Transmission tech fixed charge rate
+        self.m.intercon_fixed_charge_rate = Param(initialize=init_intercon_fcr)
+        # Per year cost adjustment for sims shorter than 1 year of dispatch
+        self.m.year_correction_factor = Param(
+            initialize=init_year_correction_factor)
 
-    m.fuel_heat_rate = Param(
-        m.fuel_gen_tech_in_zones, initialize=init_default_heat_rate)
-    # Emission rates
-    m.fuel_emit_rate = Param(
-        m.fuel_gen_tech, initialize=init_default_fuel_emit_rate)
-    # proportioning factors for notional interconnectors
-    m.intercon_loss_factor = Param(
-        m.intercons_in_zones, initialize=init_intercon_loss_factor)
+        self.m.cost_retire = Param(
+            self.m.retire_gen_tech, initialize=init_cost_retire)
+        self.m.cost_unserved = Param(
+            initialize=cemo.const.
+            DEFAULT_COSTS["unserved"])  # cost of unserved power
+        # cost in $/kg of total emissions
+        self.m.cost_emit = Param(initialize=cemo.const.DEFAULT_COSTS["emit"])
+        self.m.cost_trans = Param(
+            initialize=cemo.const.DEFAULT_COSTS["trans"])  # cost of transmission
 
-    m.gen_cap_factor = Param(
-        m.gen_tech_in_zones, m.t,
-        initialize=init_cap_factor)  # Capacity factors for generators
-    m.hyb_cap_factor = Param(
-        m.hyb_tech_in_zones, m.t,
-        initialize=init_cap_factor)  # Capacity factors for generators
+        # Round trip efficiency of storage technology
+        self.m.stor_rt_eff = Param(
+            self.m.stor_tech, initialize=init_stor_rt_eff)
+        # Number of hours of storage technology
+        self.m.stor_charge_hours = Param(
+            self.m.stor_tech, initialize=init_stor_charge_hours)
 
-    # Maximum capacity per generating technology per zone
-    m.gen_build_limit = Param(
-        m.gen_tech_in_zones, initialize=init_gen_build_limit)
-    m.gen_cap_initial = Param(
-        m.gen_tech_in_zones, default=0)  # operating capacity
-    m.stor_cap_initial = Param(
-        m.stor_tech_in_zones, default=0)  # operating capacity
-    m.hyb_cap_initial = Param(
-        m.hyb_tech_in_zones, default=0)  # operating capacity
-    m.intercon_cap_initial = Param(
-        m.intercons_in_zones, initialize=init_intercon_cap_initial)  # operating capacity
-    # exogenous new capacity
-    m.gen_cap_exo = Param(m.gen_tech_in_zones, default=0)
-    # exogenous new storage capacity
-    m.stor_cap_exo = Param(m.stor_tech_in_zones, default=0)
-    # exogenous new hybrid capacity
-    m.hyb_cap_exo = Param(m.hyb_tech_in_zones, default=0)
-    # exogenous transmission capacity
-    m.intercon_cap_exo = Param(m.intercons_in_zones, default=0)
-    m.ret_gen_cap_exo = Param(m.retire_gen_tech_in_zones, default=0)
-    # Net Electrical load (may include rooftop and EV)
-    m.region_net_demand = Param(m.regions, m.t)
-    # Zone load distribution factors as a pct of region demand
-    m.zone_demand_factor = Param(m.zones, m.t, initialize=init_zone_demand_factors)
-    # NEM operating reserve margin
-    m.nem_operating_reserve = Param(default=0.075)
-    # carry forward capital costs calculated
-    m.cost_cap_carry_forward_sim = Param(m.zones, default=0)
-    # carry forward capital costs NEM historical estimate
-    m.cost_cap_carry_forward_hist = Param(m.zones, default=0)
-    # carry forward capital costs total
-    m.cost_cap_carry_forward = Param(m.zones, mutable=True)
+        # Collector multiple of hybrid technology
+        self.m.hyb_col_mult = Param(
+            self.m.hyb_tech, initialize=init_hyb_col_mult)
+        # Number of hours of storage technology
+        self.m.hyb_charge_hours = Param(
+            self.m.hyb_tech, initialize=init_hyb_charge_hours)
 
-    # Build action to Compute carry forward costs
-    m.cost_carry_forward_build = BuildAction(rule=build_carry_fwd_cost_per_zone)
+        self.m.fuel_heat_rate = Param(
+            self.m.fuel_gen_tech_in_zones, initialize=init_default_heat_rate)
+        # Emission rates
+        self.m.fuel_emit_rate = Param(
+            self.m.fuel_gen_tech, initialize=init_default_fuel_emit_rate)
+        # proportioning factors for notional interconnectors
+        self.m.intercon_loss_factor = Param(
+            self.m.intercons_in_zones, initialize=init_intercon_loss_factor)
 
-    # @@ Variables
-    m.gen_cap_new = Var(
-        m.gen_tech_in_zones, within=NonNegativeReals)  # New capacity
-    m.gen_cap_op = Var(
-        m.gen_tech_in_zones,
-        within=NonNegativeReals)  # Total generation capacity
-    m.stor_cap_new = Var(
-        m.stor_tech_in_zones, within=NonNegativeReals)  # New storage capacity
-    m.stor_cap_op = Var(
-        m.stor_tech_in_zones,
-        within=NonNegativeReals)  # Total storage capacity
-    m.hyb_cap_new = Var(m.hyb_tech_in_zones, within=NonNegativeReals)
-    m.hyb_cap_op = Var(m.hyb_tech_in_zones, within=NonNegativeReals)
-    m.intercon_cap_new = Var(m.intercons_in_zones, within=NonNegativeReals)
-    m.intercon_cap_op = Var(m.intercons_in_zones, within=NonNegativeReals)
-    m.gen_cap_ret = Var(
-        m.retire_gen_tech_in_zones,
-        within=NonNegativeReals)  # retireable capacity
-    m.gen_cap_ret_neg = Var(
-        m.retire_gen_tech_in_zones, within=NonNegativeReals
-    )  # slack for exogenous retires beyond gen_op_cap
-    m.gen_cap_exo_neg = Var(
-        m.gen_tech_in_zones, within=NonNegativeReals
-    )  # slack for exogenous builds exceeding gen_build_limit
-    m.gen_disp = Var(
-        m.gen_tech_in_zones, m.t, within=NonNegativeReals)  # dispatched power
-    # Variables for committed power constraints
-    m.gen_disp_com = Var(m.commit_gen_tech_in_zones, m.t, within=NonNegativeReals)
-    m.gen_disp_com_p = Var(m.commit_gen_tech_in_zones, m.t, within=NonNegativeReals)
-    m.gen_disp_com_m = Var(m.commit_gen_tech_in_zones, m.t, within=NonNegativeReals)
-    m.gen_disp_com_s = Var(m.commit_gen_tech_in_zones, m.t, within=NonNegativeReals)
+        self.m.gen_cap_factor = Param(
+            self.m.gen_tech_in_zones, self.m.t,
+            initialize=init_cap_factor)  # Capacity factors for generators
+        self.m.hyb_cap_factor = Param(
+            self.m.hyb_tech_in_zones, self.m.t,
+            initialize=init_cap_factor)  # Capacity factors for generators
 
-    m.stor_disp = Var(
-        m.stor_tech_in_zones, m.t,
-        within=NonNegativeReals)  # dispatched power from storage
-    m.stor_reserve = Var(
-        m.stor_tech_in_zones, m.t,
-        within=NonNegativeReals)  # dispatched power from storage
-    m.stor_charge = Var(
-        m.stor_tech_in_zones, m.t,
-        within=NonNegativeReals)  # power to charge storage
+        # Maximum capacity per generating technology per zone
+        self.m.gen_build_limit = Param(
+            self.m.gen_tech_in_zones, initialize=init_gen_build_limit)
+        self.m.gen_cap_initial = Param(
+            self.m.gen_tech_in_zones, default=0)  # operating capacity
+        self.m.stor_cap_initial = Param(
+            self.m.stor_tech_in_zones, default=0)  # operating capacity
+        self.m.hyb_cap_initial = Param(
+            self.m.hyb_tech_in_zones, default=0)  # operating capacity
+        self.m.intercon_cap_initial = Param(
+            self.m.intercons_in_zones, initialize=init_intercon_cap_initial)  # operating capacity
+        # exogenous new capacity
+        self.m.gen_cap_exo = Param(self.m.gen_tech_in_zones, default=0)
+        # exogenous new storage capacity
+        self.m.stor_cap_exo = Param(self.m.stor_tech_in_zones, default=0)
+        # exogenous new hybrid capacity
+        self.m.hyb_cap_exo = Param(self.m.hyb_tech_in_zones, default=0)
+        # exogenous transmission capacity
+        self.m.intercon_cap_exo = Param(self.m.intercons_in_zones, default=0)
+        self.m.ret_gen_cap_exo = Param(
+            self.m.retire_gen_tech_in_zones, default=0)
+        # Net Electrical load (may include rooftop and EV)
+        self.m.region_net_demand = Param(self.m.regions, self.m.t)
+        # Zone load distribution factors as a pct of region demand
+        self.m.zone_demand_factor = Param(
+            self.m.zones, self.m.t, initialize=init_zone_demand_factors)
+        # carry forward capital costs calculated
+        self.m.cost_cap_carry_forward_sim = Param(self.m.zones, default=0)
+        # carry forward capital costs NEM historical estimate
+        self.m.cost_cap_carry_forward_hist = Param(self.m.zones, default=0)
+        # carry forward capital costs total
+        self.m.cost_cap_carry_forward = Param(self.m.zones, mutable=True)
 
-    m.hyb_disp = Var(
-        m.hyb_tech_in_zones, m.t,
-        within=NonNegativeReals)  # dispatched power from hybrid
+        # Build action to Compute carry forward costs
+        self.m.cost_carry_forward_build = BuildAction(
+            rule=build_carry_fwd_cost_per_zone)
+        # Create params for model options
+        for option in self.model_options._fields:
+            if cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get("index", None) is None:
+                setattr(self.m,
+                        option,
+                        Param(default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                        )
+            else:
+                setattr(self.m,
+                        option,
+                        Param(eval(cemo.const.DEFAULT_MODEL_OPT[option].get("index", None)),
+                              default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                        )
 
-    m.hyb_reserve = Var(
-        m.hyb_tech_in_zones, m.t,
-        within=NonNegativeReals)  # reserve capacity for hybrids
+    def create_vars(self):
+        # @@ Variables
+        self.m.gen_cap_new = Var(
+            self.m.gen_tech_in_zones, within=NonNegativeReals)  # New capacity
+        self.m.gen_cap_op = Var(
+            self.m.gen_tech_in_zones,
+            within=NonNegativeReals)  # Total generation capacity
+        self.m.stor_cap_new = Var(
+            self.m.stor_tech_in_zones, within=NonNegativeReals)  # New storage capacity
+        self.m.stor_cap_op = Var(
+            self.m.stor_tech_in_zones,
+            within=NonNegativeReals)  # Total storage capacity
+        self.m.hyb_cap_new = Var(
+            self.m.hyb_tech_in_zones, within=NonNegativeReals)
+        self.m.hyb_cap_op = Var(self.m.hyb_tech_in_zones,
+                                within=NonNegativeReals)
+        self.m.intercon_cap_new = Var(
+            self.m.intercons_in_zones, within=NonNegativeReals)
+        self.m.intercon_cap_op = Var(
+            self.m.intercons_in_zones, within=NonNegativeReals)
+        self.m.gen_cap_ret = Var(
+            self.m.retire_gen_tech_in_zones,
+            within=NonNegativeReals)  # retireable capacity
+        self.m.gen_cap_ret_neg = Var(
+            self.m.retire_gen_tech_in_zones, within=NonNegativeReals
+        )  # slack for exogenous retires beyond gen_op_cap
+        self.m.gen_cap_exo_neg = Var(
+            self.m.gen_tech_in_zones, within=NonNegativeReals
+        )  # slack for exogenous builds exceeding gen_build_limit
+        self.m.gen_disp = Var(
+            self.m.gen_tech_in_zones, self.m.t, within=NonNegativeReals)  # dispatched power
+        # Variables for committed power constraints
+        self.m.gen_disp_com = Var(
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+        self.m.gen_disp_com_p = Var(
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+        self.m.gen_disp_com_m = Var(
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+        self.m.gen_disp_com_s = Var(
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
 
-    m.hyb_charge = Var(
-        m.hyb_tech_in_zones, m.t,
-        within=NonNegativeReals)  # charging power from hybrid
+        self.m.stor_disp = Var(
+            self.m.stor_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # dispatched power from storage
+        self.m.stor_reserve = Var(
+            self.m.stor_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # dispatched power from storage
+        self.m.stor_charge = Var(
+            self.m.stor_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # power to charge storage
 
-    m.stor_level = Var(
-        m.stor_tech_in_zones, m.t,
-        within=NonNegativeReals)  # Charge level for storage
+        self.m.hyb_disp = Var(
+            self.m.hyb_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # dispatched power from hybrid
 
-    m.hyb_level = Var(
-        m.hyb_tech_in_zones, m.t,
-        within=NonNegativeReals)  # Charge level for storage
+        self.m.hyb_reserve = Var(
+            self.m.hyb_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # reserve capacity for hybrids
 
-    # Numerical relaxation to load balance and capacity decisions
-    m.unserved = Var(m.zones, m.t, within=NonNegativeReals)  # unserved power
-    m.surplus = Var(m.zones, m.t, within=NonNegativeReals)  # surplus power
+        self.m.hyb_charge = Var(
+            self.m.hyb_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # charging power from hybrid
 
-    # Interconnector flow
-    m.intercon_disp = Var(m.intercons_in_zones, m.t, within=NonNegativeReals)
+        self.m.stor_level = Var(
+            self.m.stor_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # Charge level for storage
 
-    # @@ Constraints
-    # Transmission limits
-    m.con_max_trans = Constraint(m.intercons_in_zones, m.t, rule=con_max_trans)
-    # Transmission capacity balance
-    m.con_intercon_cap = Constraint(m.intercons_in_zones, rule=con_intercon_cap)
-    # Load balance
-    m.ldbal = Constraint(m.zones, m.t, rule=con_ldbal)
-    # Dispatch to be within capacity, RE have variable capacity factors
-    m.caplim = Constraint(m.gen_tech_in_zones, m.t, rule=con_caplim)
-    # Limit maximum capacity to be built in each region and each technology
-    m.maxcap = Constraint(m.gen_tech_in_zones, rule=con_maxcap)
-    # gen_cap_op in existing period is previous gen_cap_op plus gen_cap_new
-    m.con_gen_cap = Constraint(m.gen_tech_in_zones, rule=con_gen_cap)
-    # MaxMWh limit
-    m.con_max_mwh_per_zone = Constraint(m.gen_tech_in_zones, rule=con_max_mhw_per_zone)
-    # MaxMWh limit (currently only for hydro)
-    m.con_max_mwh_nem_wide = Constraint(
-        m.all_tech, rule=con_max_mwh_nem_wide)
-    # Slack constraint on exogenous retirement to prevent it to go nevative
-    m.con_slackretire = Constraint(
-        m.retire_gen_tech_in_zones, rule=con_slackretire)
-    # Slack constraint on exogenous retirement to prevent it to go nevative
-    m.con_slackbuild = Constraint(m.gen_tech_in_zones, rule=con_slackbuild)
+        self.m.hyb_level = Var(
+            self.m.hyb_tech_in_zones, self.m.t,
+            within=NonNegativeReals)  # Charge level for storage
 
-    # linearised unit commitment constraints
-    m.con_min_load_commit = Constraint(
-        m.commit_gen_tech_in_zones, m.t, rule=con_min_load_commit)
-    m.con_disp_ramp_down = Constraint(
-        m.commit_gen_tech_in_zones, m.t, rule=con_disp_ramp_down)
-    m.con_disp_ramp_up = Constraint(
-        m.commit_gen_tech_in_zones, m.t, rule=con_disp_ramp_up)
-    m.con_ramp_down_uptime = Constraint(
-        m.commit_gen_tech_in_zones, m.t, rule=con_ramp_down_uptime)
-    m.con_uptime_commitment = Constraint(
-        m.commit_gen_tech_in_zones, m.t, rule=con_uptime_commitment)
-    m.con_committed_cap = Constraint(m.commit_gen_tech_in_zones, m.t, rule=con_committed_cap)
-    # NEM operating reserve constraint
-    m.con_operating_reserve = Constraint(
-        m.regions, m.t, rule=con_operating_reserve)
-    # Hard constraint on unserved energy
-    if unslim:
-        m.con_uns = Constraint(m.regions, rule=con_uns)
-    # Emmissions constraint
-    if emitlimit:
-        m.con_emissions = Constraint(rule=con_emissions)
-        # maximum kg/MWh rate of total emissions
-        m.nem_year_emit_limit = Param()
+        # Numerical relaxation to load balance and capacity decisions
+        self.m.unserved = Var(self.m.zones, self.m.t,
+                              within=NonNegativeReals)  # unserved power
+        self.m.surplus = Var(self.m.zones, self.m.t,
+                             within=NonNegativeReals)  # surplus power
+
+        # Interconnector flow
+        self.m.intercon_disp = Var(
+            self.m.intercons_in_zones, self.m.t, within=NonNegativeReals)
+
+    def create_constraints(self):
+        # @@ Constraints
+        # Transmission limits
+        self.m.con_max_trans = Constraint(
+            self.m.intercons_in_zones, self.m.t, rule=con_max_trans)
+        # Transmission capacity balance
+        self.m.con_intercon_cap = Constraint(
+            self.m.intercons_in_zones, rule=con_intercon_cap)
+        # Load balance
+        self.m.ldbal = Constraint(self.m.zones, self.m.t, rule=con_ldbal)
+        # Dispatch to be within capacity, RE have variable capacity factors
+        self.m.caplim = Constraint(
+            self.m.gen_tech_in_zones, self.m.t, rule=con_caplim)
+        # Limit maximum capacity to be built in each region and each technology
+        self.m.maxcap = Constraint(self.m.gen_tech_in_zones, rule=con_maxcap)
+        # gen_cap_op in existing period is previous gen_cap_op plus gen_cap_new
+        self.m.con_gen_cap = Constraint(
+            self.m.gen_tech_in_zones, rule=con_gen_cap)
+        # MaxMWh limit
+        self.m.con_max_mwh_per_zone = Constraint(
+            self.m.gen_tech_in_zones, rule=con_max_mhw_per_zone)
+        # MaxMWh limit (currently only for hydro)
+        self.m.con_max_mwh_nem_wide = Constraint(
+            self.m.all_tech, rule=con_max_mwh_nem_wide)
+        # Slack constraint on exogenous retirement to prevent it to go nevative
+        self.m.con_slackretire = Constraint(
+            self.m.retire_gen_tech_in_zones, rule=con_slackretire)
+        # Slack constraint on exogenous retirement to prevent it to go nevative
+        self.m.con_slackbuild = Constraint(
+            self.m.gen_tech_in_zones, rule=con_slackbuild)
+
+        # linearised unit commitment constraints
+        self.m.con_min_load_commit = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_min_load_commit)
+        self.m.con_disp_ramp_down = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_disp_ramp_down)
+        self.m.con_disp_ramp_up = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_disp_ramp_up)
+        self.m.con_ramp_down_uptime = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_ramp_down_uptime)
+        self.m.con_uptime_commitment = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_uptime_commitment)
+        self.m.con_committed_cap = Constraint(
+            self.m.commit_gen_tech_in_zones, self.m.t, rule=con_committed_cap)
+        # NEM operating reserve constraint
+        self.m.con_operating_reserve = Constraint(
+            self.m.regions, self.m.t, rule=con_operating_reserve)
+        # Hard constraint on unserved energy
+        if self.model_options.unslim:
+            self.m.con_uns = Constraint(self.m.regions, rule=con_uns)
+        # Emmissions constraint
+        if self.model_options.nem_emit_limit:
+            self.m.con_emissions = Constraint(rule=con_emissions)
+            # NEM wide RET constraint as a ratio
+        if self.model_options.nem_ret_ratio:
+            # NEM wide renewable energy constraint
+            self.m.con_nem_ret_ratio = Constraint(rule=con_nem_ret_ratio)
+
     # NEM wide RET constraint as a ratio
-    if nem_ret_ratio:
-        # NEM wide renewable energy target for current year
-        m.nem_ret_ratio = Param(default=0)
-        # NEM wide renewable energy constraint
-        m.con_nem_ret_ratio = Constraint(rule=con_nem_ret_ratio)
+        if self.model_options.nem_ret_gwh:
+            # NEM wide renewable energy constraint
+            self.m.con_nem_ret_gwh = Constraint(rule=con_nem_ret_gwh)
 
+        if self.model_options.region_ret_ratio:
+            # Regional RET constraint
+            self.m.con_region_ret = Constraint(
+                self.m.regions, rule=con_region_ret_ratio)
+        if self.model_options.nem_re_disp_ratio:
+            # NEM wide minimum hourly dispatch from dispatchable sources constraint
+            self.m.con_nem_re_disp_ratio = Constraint(
+                self.m.regions, self.m.t, rule=con_nem_re_disp_ratio)
 
-# NEM wide RET constraint as a ratio
-    if nem_ret_gwh:
-        # NEM wide renewable energy target for current year
-        m.nem_ret_gwh = Param(default=0)
-        # NEM wide renewable energy constraint
-        m.con_nem_ret_gwh = Constraint(rule=con_nem_ret_gwh)
+        # Storage charge/discharge dynamic
+        self.m.StCharDis = Constraint(
+            self.m.stor_tech_in_zones, self.m.t, rule=con_storcharge)
+        # Maxiumum rate of storage charge
+        self.m.con_stor_flow_lim = Constraint(
+            self.m.stor_tech_in_zones, self.m.t, rule=con_stor_flow_lim)
+        # Maxiumum rate of storage discharge
+        self.m.con_stor_reserve_lim = Constraint(
+            self.m.stor_tech_in_zones, self.m.t, rule=con_stor_reserve_lim)
+        # Maxiumum charge capacity of storage
+        self.m.MaxCharge = Constraint(
+            self.m.stor_tech_in_zones, self.m.t, rule=con_maxcharge)
+        # StCap in existing period is previous stor_cap_op plus stor_cap_new
+        self.m.con_stor_cap = Constraint(
+            self.m.stor_tech_in_zones, rule=con_stor_cap)
 
-    if region_ret_ratio:
-        # Regional RET targets for current year
-        m.region_ret_ratio = Param(m.regions, default=0)
-        # Regional RET constraint
-        m.con_region_ret = Constraint(m.regions, rule=con_region_ret_ratio)
-    if nem_re_disp_ratio:
-        # NEM wide minimum hour by our generation from "dispatchable" sources
-        m.nem_re_disp_ratio = Param(default=0)
-        # NEM wide minimum hourly dispatch from dispatchable sources constraint
-        m.con_nem_re_disp_ratio = Constraint(
-            m.regions, m.t, rule=con_nem_re_disp_ratio)
+        # Hybrid charge/discharge dynamic
+        self.m.HybCharDis = Constraint(
+            self.m.hyb_tech_in_zones, self.m.t, rule=con_hybcharge)
+        # Maxiumum level of hybrid storage discharge
+        self.m.con_hyb_level_max = Constraint(
+            self.m.hyb_tech_in_zones, self.m.t, rule=con_hyb_level_max)
+        # Maxiumum rate of hybrid storage charge/discharge
+        self.m.con_hyb_flow_lim = Constraint(
+            self.m.hyb_tech_in_zones, self.m.t, rule=con_hyb_flow_lim)
+        # Limit hybrid reserve capacity to be within storage level
+        self.m.con_hyb_reserve_lim = Constraint(
+            self.m.hyb_tech_in_zones, self.m.t, rule=con_hyb_reserve_lim)
+        # Maxiumum charge capacity of storage
+        self.m.MaxChargehy = Constraint(
+            self.m.hyb_tech_in_zones, self.m.t, rule=con_maxchargehy)
+        # HyCap in existing period is previous stor_cap_op plus stor_cap_new
+        self.m.con_hyb_cap = Constraint(
+            self.m.hyb_tech_in_zones, rule=con_hyb_cap)
 
-    # Storage charge/discharge dynamic
-    m.StCharDis = Constraint(m.stor_tech_in_zones, m.t, rule=con_storcharge)
-    # Maxiumum rate of storage charge
-    m.con_stor_flow_lim = Constraint(m.stor_tech_in_zones, m.t, rule=con_stor_flow_lim)
-    # Maxiumum rate of storage discharge
-    m.con_stor_reserve_lim = Constraint(
-        m.stor_tech_in_zones, m.t, rule=con_stor_reserve_lim)
-    # Maxiumum charge capacity of storage
-    m.MaxCharge = Constraint(m.stor_tech_in_zones, m.t, rule=con_maxcharge)
-    # StCap in existing period is previous stor_cap_op plus stor_cap_new
-    m.con_stor_cap = Constraint(m.stor_tech_in_zones, rule=con_stor_cap)
+    def create_objective(self):
+        # @@ Objective
+        # Minimise capital, variable and fixed costs of system
+        self.m.FSCost = Expression(expr=0)
+        self.m.SSCost = Expression(rule=obj_cost)
+        # objective: minimise all other objectives
+        self.m.Obj = Objective(expr=self.m.FSCost + self.m.SSCost)
 
-    # Hybrid charge/discharge dynamic
-    m.HybCharDis = Constraint(m.hyb_tech_in_zones, m.t, rule=con_hybcharge)
-    # Maxiumum level of hybrid storage discharge
-    m.con_hyb_level_max = Constraint(
-        m.hyb_tech_in_zones, m.t, rule=con_hyb_level_max)
-    # Maxiumum rate of hybrid storage charge/discharge
-    m.con_hyb_flow_lim = Constraint(
-        m.hyb_tech_in_zones, m.t, rule=con_hyb_flow_lim)
-    # Limit hybrid reserve capacity to be within storage level
-    m.con_hyb_reserve_lim = Constraint(
-        m.hyb_tech_in_zones, m.t, rule=con_hyb_reserve_lim)
-    # Maxiumum charge capacity of storage
-    m.MaxChargehy = Constraint(m.hyb_tech_in_zones, m.t, rule=con_maxchargehy)
-    # HyCap in existing period is previous stor_cap_op plus stor_cap_new
-    m.con_hyb_cap = Constraint(m.hyb_tech_in_zones, rule=con_hyb_cap)
+        # Short run marginal prices
+        self.m.dual = Suffix(direction=Suffix.IMPORT)
 
-    # @@ Objective
-    # Minimise capital, variable and fixed costs of system
-    m.FSCost = Expression(expr=0)
-    m.SSCost = Expression(rule=obj_cost)
-    # objective: minimise all other objectives
-    m.Obj = Objective(expr=m.FSCost + m.SSCost)
-
-    # Short run marginal prices
-    m.dual = Suffix(direction=Suffix.IMPORT)
-    return m
+    def create_model(self, test=False):
+        """Creates an instance of the pyomo definition of openCEM"""
+        self.create_sets()
+        self.create_params()
+        if test:
+            return self.m
+        self.create_vars()
+        self.create_constraints()
+        self.create_objective()
+        return self.m

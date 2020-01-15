@@ -171,7 +171,7 @@ def con_operating_reserve(model, region, time):
               for zone in model.zones_per_region[region]
               for hyb_tech in model.hyb_tech_per_zone[zone]
               )\
-        >= model.nem_operating_reserve * model.region_net_demand[region, time]
+        >= model.nem_disp_ratio * model.region_net_demand[region, time]
 
 
 def con_nem_re_disp_ratio(model, r, t):
@@ -364,7 +364,7 @@ def con_emissions(model):
     '''Emission constraint for the NEM in MT/y for total emissions'''
     return model.year_correction_factor * 1e-5*sum(
         emissions(model, region)
-        for region in model.regions) <= 1e4 * model.nem_year_emit_limit
+        for region in model.regions) <= 1e4 * model.nem_emit_limit
 
 
 def con_slackretire(model, z, n):
