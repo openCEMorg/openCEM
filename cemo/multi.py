@@ -60,6 +60,8 @@ def roundup(cap):
     '''
     if -1e-6 < cap < 0:
         return 0
+    if cap < -1e-6:
+        return cap
     return round(cap, 2)
 
 

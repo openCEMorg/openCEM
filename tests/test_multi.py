@@ -5,7 +5,34 @@ import tempfile
 
 import pytest
 
-from cemo.multi import SolveTemplate
+from cemo.multi import SolveTemplate, sql_tech_pairs, sql_list, roundup
+
+
+@pytest.mark.parametrize(
+    "value,result",
+    [({1: [1, 3, 5]}, '((1, 1), (1, 3), (1, 5))'),
+     ({}, '((99, 99))'),
+     ])
+def test_sql_tech_pairs(value, result):
+    '''Test behaviour of sql_tech_pairs'''
+    assert sql_tech_pairs(value) == result
+
+
+@pytest.mark.parametrize(
+    "value,result",
+    [([1, 3, 5], '1, 3, 5'),
+     ([], '99'),
+     ])
+def test_sql_list(value, result):
+    '''Test behaviour of sql_list'''
+    assert sql_list(value) == result
+
+
+def test_roundup():
+    '''Test behaviour of roundup cap'''
+    assert roundup(-1e-7) == 0
+    assert roundup(-1e-5) == -1e-5
+    assert roundup(1344) == 1344
 
 
 def test_multi_conf_file_not_found():
