@@ -100,9 +100,9 @@ def jsonify(inst, year):
                 inst.intercon_loss_factor.name:
                 fill_complex_param(inst.intercon_loss_factor),
                 inst.gen_cap_factor.name:
-                fill_complex_param(inst.gen_cap_factor),
+                fill_complex_mutable_param(inst.gen_cap_factor),
                 inst.hyb_cap_factor.name:
-                fill_complex_param(inst.hyb_cap_factor),
+                fill_complex_mutable_param(inst.hyb_cap_factor),
                 inst.gen_build_limit.name:
                 fill_complex_param(inst.gen_build_limit),
                 inst.gen_cap_initial.name:
@@ -114,7 +114,7 @@ def jsonify(inst, year):
                 inst.intercon_cap_initial.name:
                 fill_complex_param(inst.intercon_cap_initial),
                 inst.gen_cap_exo.name:
-                fill_complex_param(inst.gen_cap_exo),
+                fill_complex_mutable_param(inst.gen_cap_exo),
                 inst.stor_cap_exo.name:
                 fill_complex_param(inst.stor_cap_exo),
                 inst.hyb_cap_exo.name:
@@ -122,7 +122,7 @@ def jsonify(inst, year):
                 inst.intercon_cap_exo.name:
                 fill_complex_param(inst.intercon_cap_exo),
                 inst.ret_gen_cap_exo.name:
-                fill_complex_param(inst.ret_gen_cap_exo),
+                fill_complex_mutable_param(inst.ret_gen_cap_exo),
                 inst.region_net_demand.name:
                 fill_complex_param(inst.region_net_demand),
 
@@ -191,18 +191,14 @@ def jsonify(inst, year):
                 fill_complex_var(inst.intercon_cap_op),
                 inst.gen_cap_ret.name:
                 fill_complex_var(inst.gen_cap_ret),
-                inst.gen_cap_ret_neg.name:
-                fill_complex_var(inst.gen_cap_ret_neg),
-                inst.gen_cap_exo_neg.name:
-                fill_complex_var(inst.gen_cap_exo_neg),
                 inst.gen_disp.name:
-                fill_complex_var(inst.gen_disp),
+                fill_complex_var(inst.gen_disp, 1e3),
                 inst.stor_disp.name:
-                fill_complex_var(inst.stor_disp),
+                fill_complex_var(inst.stor_disp, 1e3),
                 inst.stor_charge.name:
                 fill_complex_var(inst.stor_charge),
                 inst.hyb_disp.name:
-                fill_complex_var(inst.hyb_disp),
+                fill_complex_var(inst.hyb_disp, 1e3),
                 inst.hyb_charge.name:
                 fill_complex_var(inst.hyb_charge),
                 inst.stor_level.name:
@@ -214,7 +210,7 @@ def jsonify(inst, year):
                 inst.surplus.name:
                 fill_complex_var(inst.surplus),
                 inst.intercon_disp.name:
-                fill_complex_var(inst.intercon_disp)
+                fill_complex_var(inst.intercon_disp, 1e3)
             },
             'duals': {
                 'srmc': fill_dual_suffix(inst.dual, inst.ldbal)
@@ -380,13 +376,13 @@ def fill_scalar_key_mutable_param(par):
     return out
 
 
-def fill_complex_var(var):
+def fill_complex_var(var, scale=1):
     '''Return complex variable dictionary'''
     out = []
     for i in var.keys():
         out.append({
             'index': i,
-            'value': 0 if -1e-6 < var[i].value < 0 else var[i].value
+            'value': 0 if -1e-6 < var[i].value < 0 else scale*var[i].value
         })
 
     return out

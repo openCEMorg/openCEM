@@ -2,22 +2,31 @@
 
 import json
 
-from cemo.jsonify import json_readr, json_readr_meta, json_readr_year, jsoninit
+from cemo.jsonify import json_readr, json_readr_meta, json_readr_year, jsoninit, jsonify
 
 
-def sort_func(entry):
+def sort_func(item):
     '''Sort list of dictionaries by index'''
-    if not isinstance(entry, int):
-        if isinstance(entry, dict):
-            return entry['index']
-    return entry
+    if isinstance(item, dict):
+        return item['index']
+    return item
 
 
 def dumped_data(entry):
-    '''create sorted dumps of dictionary'''
-    if not isinstance(entry, (int, float, str)):
-        return json.dumps(sorted(entry, key=sort_func))
-    return json.dumps(entry)
+    '''Return sorted list of dicts for entry, and convert list to tuples in entry items'''
+    if isinstance(entry, list):
+        if all(isinstance(n, list) for n in entry):
+            entry = [tuple(i) for i in entry]
+        if all(isinstance(n, dict) and 'index' in n for n in entry):
+            entry = [{
+                "index": tuple(i['index']) if isinstance(i['index'], list) else i['index'],
+                "value": round(i['value'], 3) if not isinstance(i['value'], list) else i['value']
+            } for i in entry]
+        return sorted(entry, key=sort_func)
+    if isinstance(entry, dict):
+        if all(isinstance(entry[n], list) for n in entry):
+            return {i: sorted(entry[i], key=sort_func) for i in entry}
+    return entry
 
 
 def test_json_init(solution):
@@ -27,6 +36,24 @@ def test_json_init(solution):
         data2 = json.load(known)
     for key in data:
         assert dumped_data(data[key]) == dumped_data(data2[key])
+
+
+def test_jsonify_sol(solution):
+    '''Assert that generated jsonify of solution matches known output
+
+    There are multiple types of data in jsonify and they need to be handled'''
+    data = jsonify(solution, '2020')
+    with open('tests/jsonify_test.json', 'r') as known:
+        data2 = json.load(known)
+    for bunch in data['2020']:
+        try:
+            for key in data['2020'][bunch]:
+                assert dumped_data(data['2020'][bunch][key]) == dumped_data(
+                    data2['2020'][bunch][key])
+        except TypeError:
+            # Objective bunch has a single entry, a float
+            assert dumped_data(data['2020'][bunch]) == dumped_data(
+                data2['2020'][bunch])
 
 
 def test_json_readr():

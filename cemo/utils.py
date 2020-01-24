@@ -91,15 +91,15 @@ def plotresults(instance):  # pragma: no cover
         for z in instance.zones_per_region[r]:
             for n in instance.gen_tech_per_zone[z]:
                 q_z_r[pos[n], :] = q_z_r[pos[n], :] + \
-                    np.array([value(instance.gen_disp[z, n, t])
+                    np.array([value(1e3*instance.gen_disp[z, n, t])
                               for t in instance.t])
             for s in instance.stor_tech_per_zone[z]:
                 q_z_r[pos[s], :] = q_z_r[pos[s], :] + \
-                    np.array([value(instance.stor_disp[z, s, t])
+                    np.array([value(1e3*instance.stor_disp[z, s, t])
                               for t in instance.t])
             for h in instance.hyb_tech_per_zone[z]:
                 q_z_r[pos[h], :] = q_z_r[pos[h], :] + \
-                    np.array([value(instance.hyb_disp[z, h, t])
+                    np.array([value(1e3*instance.hyb_disp[z, h, t])
                               for t in instance.t])
         # Plotting instructions
         # pick respective subplot
@@ -243,21 +243,21 @@ def _printcapacity(instance):
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
             techtotal[idx.index(n)] += value(instance.gen_cap_op[z, n])
-            disptotal[idx.index(n)] += value(sum(instance.gen_disp[z, n, t]
+            disptotal[idx.index(n)] += value(sum(1e3*instance.gen_disp[z, n, t]
                                                  for t in instance.t))
             capftotal[idx.index(n)] += value(sum(instance.gen_cap_factor[z, n, t]
                                                  for t in instance.t))
             nperz[idx.index(n)] += 1
         for s in instance.stor_tech_per_zone[z]:
             techtotal[idx.index(s)] += value(instance.stor_cap_op[z, s])
-            disptotal[idx.index(s)] += value(sum(instance.stor_disp[z, s, t]
+            disptotal[idx.index(s)] += value(sum(1e3*instance.stor_disp[z, s, t]
                                                  for t in instance.t))
             capftotal[idx.index(s)] += 0.5 * hours
             nperz[idx.index(s)] += 1
 
         for h in instance.hyb_tech_per_zone[z]:
             techtotal[idx.index(h)] += value(instance.hyb_cap_op[z, h])
-            disptotal[idx.index(h)] += value(sum(instance.hyb_disp[z, h, t]
+            disptotal[idx.index(h)] += value(sum(1e3*instance.hyb_disp[z, h, t]
                                                  for t in instance.t))
             capftotal[idx.index(h)] += value(sum(instance.hyb_cap_factor[z, h, t]
                                                  for t in instance.t))

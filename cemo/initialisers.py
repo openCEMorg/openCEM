@@ -57,7 +57,8 @@ def init_stor_charge_hours(model, tech):
 
 def init_zone_demand_factors(model, zone, timestamp):
     dt = datetime.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
-    not_holiday = dt.date() not in holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov'))
+    not_holiday = dt.date() not in (
+            holidays.AU(prov=cemo.const.ZONE_DEMAND_PCT.get(zone).get('prov')))
     is_peak = 'off peak'
     if dt.weekday() < 5 and 8 <= dt.hour < 20 and not_holiday:
         is_peak = 'peak'
@@ -124,7 +125,7 @@ def init_default_lifetime(model, tech):
 def init_gen_build_limit(model, zone, tech):
     # pylint: disable=unused-argument
     ''' Default build limits per technology and per zone'''
-    return cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech, 100000)
+    return cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech, 50000)
 
 
 def init_fcr(model, tech):

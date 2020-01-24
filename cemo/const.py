@@ -560,6 +560,16 @@ RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
 NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
 
+# Variable bounds for numerical solver performance
+# Intended to inform solver of magnitude of varables, not to limit solution values
+# Select smallest value that will not limit solutions
+# Avoid using conservatively large values may negate the effect of speeding up solution
+CAP_BOUNDS = (0, 2.5e4)  # maximum capacity per zone
+DISP_BOUNDS = (0, 2.5e4)  # maximum dispatch per zone
+SCALED_DISP_BOUNDS = (0, 3e1)  # maximum scaled dispatch per zone
+STOR_BOUNDS = (0, 7.5e5)  # maximum storage level per zone
+
+
 PALETTE = {
     1: (161 / 255, 135 / 255, 111 / 255, 1),  # biomass
     2: (251 / 255, 177 / 255, 98 / 255, 1),  # ccgt

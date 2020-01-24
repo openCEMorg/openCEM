@@ -21,7 +21,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
-from cemo.jsonify import fill_complex_param
+from cemo.jsonify import fill_complex_param, fill_complex_mutable_param
 from cemo.const import GEN_TECH, HYB_TECH, TRACE_TECH
 
 
@@ -210,7 +210,7 @@ class ClusterData:
 
     def generate_cluster(self):
         self.clusterset(self.max_d)
-        # self.append_to_cluster(self._detect_dunkelflaute())
+        self.append_to_cluster(self._detect_dunkelflaute())
 
 
 class CSVCluster(ClusterData):
@@ -243,8 +243,8 @@ class InstanceCluster(ClusterData):
     def __init__(self, instance, max_d=12):
         self.demand = fill_complex_param(instance.region_net_demand)
         self.time = instance.t
-        self.gen_cap_factor = fill_complex_param(instance.gen_cap_factor)
-        self.hyb_cap_factor = fill_complex_param(instance.hyb_cap_factor)
+        self.gen_cap_factor = fill_complex_mutable_param(instance.gen_cap_factor)
+        self.hyb_cap_factor = fill_complex_mutable_param(instance.hyb_cap_factor)
         self.regions = instance.regions
         self.zones_per_region = instance.zones_per_region
         self.windowidth = 24*7
@@ -291,7 +291,6 @@ class InstanceCluster(ClusterData):
                                       if i['index'][0] == zone and i['index'][1] == tech])
                     if len(TRACE) == len(TIME):
                         VRE_RESOURCE += TRACE
-                        print("region %s, zone %s, tech %s" % (region, zone, tech))
             RATIO += (VRE_RESOURCE / LOAD) * MAXLOAD
         ww = int(self.windowidth / 2)
         RATIO = np.pad(RATIO, (ww, ww), 'wrap')
@@ -386,9 +385,9 @@ class ClusterRun:
         # Not pretty but it will do
         with open(self.tmpdir + '/ReferenceModel.py', 'wt') as fo:
             refmodel = "'''Temporary openCEM model instance for runef simulations'''\n"
-            refmodel += "from cemo.model import create_model, model_options\n"
-            refmodel += "options =" + str(self.model_options) + " \n"
-            refmodel += "model = create_model('openCEM',options)\n"
+            refmodel += "from cemo.model import CreateModel, model_options\n"
+            refmodel += "options = " + str(self.model_options) + " \n"
+            refmodel += "model = CreateModel('openCEM', options).create_model()\n"
             fo.write(refmodel)
 
     def run_cluster(self):

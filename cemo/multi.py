@@ -262,7 +262,7 @@ class SolveTemplate:
                     raise ValueError(
                         'openCEM-region_ret_ratio: Element(s) in list %s outside range [0,1]'
                         % d)
-        self._region_ret_ratio = dict(data)
+        self._region_ret_ratio = dict(data) if data is not None else data
 
     @property
     def nem_emit_limit(self):
@@ -625,7 +625,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
                     line = line.replace('[gentechlist]',
                                         sql_list([tech for tech in cemo.const.GEN_TECH
-                                                       if tech in self.all_tech]))
+                                                  if tech in self.all_tech]))
                     line = line.replace('[stortech]', dclist(self.stortech))
                     line = line.replace('[stortechdb]', sql_tech_pairs(self.stortech))
                     line = line.replace('[stortechlist]', sql_list([
@@ -702,7 +702,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             model = CreateModel(y, self.model_options).create_model()
             # create model instance based in template data
             inst = model.create_instance(year_template)
-            # These presolve capacity on a clustered form
+            # These solve capacity on a clustered form
             if self.cluster and not self.templatetest:
                 clus = InstanceCluster(inst, self.cluster_max_d)
                 ccap = ClusterRun(

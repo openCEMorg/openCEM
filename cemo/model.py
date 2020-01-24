@@ -27,7 +27,9 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_zone_demand_factors, init_zones_in_regions)
 from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
-                        build_intercon_per_zone, build_carry_fwd_cost_per_zone, con_caplim,
+                        build_intercon_per_zone, build_carry_fwd_cost_per_zone,
+                        build_adjust_exo_cap, build_adjust_exo_ret, build_cap_factor_thres,
+                        con_caplim,
                         con_committed_cap, con_disp_ramp_down, con_disp_ramp_up, con_emissions,
                         con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
                         con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
@@ -37,7 +39,7 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         con_operating_reserve, con_nem_re_disp_ratio,
                         con_nem_ret_gwh, con_nem_ret_ratio,
                         con_ramp_down_uptime, con_region_ret_ratio,
-                        con_slackbuild, con_slackretire, con_stor_cap,
+                        con_stor_cap,
                         con_stor_flow_lim, con_stor_reserve_lim,
                         con_storcharge, con_uns, con_uptime_commitment,
                         obj_cost)
@@ -237,10 +239,12 @@ class CreateModel():
 
         self.m.gen_cap_factor = Param(
             self.m.gen_tech_in_zones, self.m.t,
-            initialize=init_cap_factor)  # Capacity factors for generators
+            initialize=init_cap_factor, mutable=True)  # Capacity factors for generators
         self.m.hyb_cap_factor = Param(
             self.m.hyb_tech_in_zones, self.m.t,
-            initialize=init_cap_factor)  # Capacity factors for generators
+            initialize=init_cap_factor, mutable=True)  # Capacity factors for generators
+        # Revise cap factors for numbers below threshold of 1e-5
+        self.m.build_cap_factor_thres = BuildAction(rule=build_cap_factor_thres)
 
         # Maximum capacity per generating technology per zone
         self.m.gen_build_limit = Param(
@@ -254,7 +258,7 @@ class CreateModel():
         self.m.intercon_cap_initial = Param(
             self.m.intercons_in_zones, initialize=init_intercon_cap_initial)  # operating capacity
         # exogenous new capacity
-        self.m.gen_cap_exo = Param(self.m.gen_tech_in_zones, default=0)
+        self.m.gen_cap_exo = Param(self.m.gen_tech_in_zones, default=0, mutable=True)
         # exogenous new storage capacity
         self.m.stor_cap_exo = Param(self.m.stor_tech_in_zones, default=0)
         # exogenous new hybrid capacity
@@ -262,7 +266,7 @@ class CreateModel():
         # exogenous transmission capacity
         self.m.intercon_cap_exo = Param(self.m.intercons_in_zones, default=0)
         self.m.ret_gen_cap_exo = Param(
-            self.m.retire_gen_tech_in_zones, default=0)
+            self.m.retire_gen_tech_in_zones, default=0, mutable=True)
         # Net Electrical load (may include rooftop and EV)
         self.m.region_net_demand = Param(self.m.regions, self.m.t)
         # Zone load distribution factors as a pct of region demand
@@ -291,87 +295,85 @@ class CreateModel():
                         Param(eval(cemo.const.DEFAULT_MODEL_OPT[option].get("index", None)),
                               default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
                         )
+        # Build action to prevent exogenous buids to exceed build limits
+        self.m.build_adjust_exo_cap = BuildAction(rule=build_adjust_exo_cap)
+        # Build action to prevent exogenous retires to make capacity negative
+        self.m.build_adjust_exo_ret = BuildAction(rule=build_adjust_exo_ret)
 
     def create_vars(self):
         # @@ Variables
         self.m.gen_cap_new = Var(
-            self.m.gen_tech_in_zones, within=NonNegativeReals)  # New capacity
+            self.m.gen_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # New capacity
         self.m.gen_cap_op = Var(
             self.m.gen_tech_in_zones,
-            within=NonNegativeReals)  # Total generation capacity
+            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total generation capacity
         self.m.stor_cap_new = Var(
-            self.m.stor_tech_in_zones, within=NonNegativeReals)  # New storage capacity
+            self.m.stor_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # New storage capacity
         self.m.stor_cap_op = Var(
             self.m.stor_tech_in_zones,
-            within=NonNegativeReals)  # Total storage capacity
+            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total storage capacity
         self.m.hyb_cap_new = Var(
-            self.m.hyb_tech_in_zones, within=NonNegativeReals)
+            self.m.hyb_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
         self.m.hyb_cap_op = Var(self.m.hyb_tech_in_zones,
-                                within=NonNegativeReals)
+                                within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
         self.m.intercon_cap_new = Var(
-            self.m.intercons_in_zones, within=NonNegativeReals)
+            self.m.intercons_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
         self.m.intercon_cap_op = Var(
-            self.m.intercons_in_zones, within=NonNegativeReals)
+            self.m.intercons_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
         self.m.gen_cap_ret = Var(
             self.m.retire_gen_tech_in_zones,
-            within=NonNegativeReals)  # retireable capacity
-        self.m.gen_cap_ret_neg = Var(
-            self.m.retire_gen_tech_in_zones, within=NonNegativeReals
-        )  # slack for exogenous retires beyond gen_op_cap
-        self.m.gen_cap_exo_neg = Var(
-            self.m.gen_tech_in_zones, within=NonNegativeReals
-        )  # slack for exogenous builds exceeding gen_build_limit
+            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # retireable capacity
         self.m.gen_disp = Var(
-            self.m.gen_tech_in_zones, self.m.t, within=NonNegativeReals)  # dispatched power
+            self.m.gen_tech_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)  # dispatched power
         # Variables for committed power constraints
         self.m.gen_disp_com = Var(
-            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
         self.m.gen_disp_com_p = Var(
-            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
         self.m.gen_disp_com_m = Var(
-            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
         self.m.gen_disp_com_s = Var(
-            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals)
+            self.m.commit_gen_tech_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
 
         self.m.stor_disp = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # dispatched power from storage
+            within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)  # dispatched power from storage
         self.m.stor_reserve = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # dispatched power from storage
+            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # dispatched power from storage
         self.m.stor_charge = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # power to charge storage
+            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # power to charge storage
 
         self.m.hyb_disp = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # dispatched power from hybrid
+            within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)  # dispatched power from hybrid
 
         self.m.hyb_reserve = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # reserve capacity for hybrids
+            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # reserve capacity for hybrids
 
         self.m.hyb_charge = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # charging power from hybrid
+            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # charging power from hybrid
 
         self.m.stor_level = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # Charge level for storage
+            within=NonNegativeReals, bounds=cemo.const.STOR_BOUNDS)  # Charge level for storage
 
         self.m.hyb_level = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals)  # Charge level for storage
+            within=NonNegativeReals, bounds=cemo.const.STOR_BOUNDS)  # Charge level for storage
 
         # Numerical relaxation to load balance and capacity decisions
         self.m.unserved = Var(self.m.zones, self.m.t,
-                              within=NonNegativeReals)  # unserved power
+                              within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # unserved power
         self.m.surplus = Var(self.m.zones, self.m.t,
-                             within=NonNegativeReals)  # surplus power
+                             within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # surplus power
 
         # Interconnector flow
         self.m.intercon_disp = Var(
-            self.m.intercons_in_zones, self.m.t, within=NonNegativeReals)
+            self.m.intercons_in_zones, self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
 
     def create_constraints(self):
         # @@ Constraints
@@ -397,13 +399,6 @@ class CreateModel():
         # MaxMWh limit (currently only for hydro)
         self.m.con_max_mwh_nem_wide = Constraint(
             self.m.all_tech, rule=con_max_mwh_nem_wide)
-        # Slack constraint on exogenous retirement to prevent it to go nevative
-        self.m.con_slackretire = Constraint(
-            self.m.retire_gen_tech_in_zones, rule=con_slackretire)
-        # Slack constraint on exogenous retirement to prevent it to go nevative
-        self.m.con_slackbuild = Constraint(
-            self.m.gen_tech_in_zones, rule=con_slackbuild)
-
         # linearised unit commitment constraints
         self.m.con_min_load_commit = Constraint(
             self.m.commit_gen_tech_in_zones, self.m.t, rule=con_min_load_commit)
@@ -430,8 +425,7 @@ class CreateModel():
         if self.model_options.nem_ret_ratio:
             # NEM wide renewable energy constraint
             self.m.con_nem_ret_ratio = Constraint(rule=con_nem_ret_ratio)
-
-    # NEM wide RET constraint as a ratio
+        # NEM wide RET constraint as a ratio
         if self.model_options.nem_ret_gwh:
             # NEM wide renewable energy constraint
             self.m.con_nem_ret_gwh = Constraint(rule=con_nem_ret_gwh)
