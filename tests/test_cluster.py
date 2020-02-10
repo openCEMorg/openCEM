@@ -111,4 +111,13 @@ def test_append_to_cluster():
 def test_dunkelflaute(inst_lite):
     '''Test Dark calm week algorithm detection'''
     cluster = cemo.cluster.InstanceCluster(inst_lite, max_d=6)
-    assert cluster._detect_dunkelflaute() == '2035-06-02'
+    assert cluster.dunkelflaute_week() == '2035-06-02'
+    # assert cluster.dunkelflaute_week(summer=True) == '2035-01-30'
+
+
+@pytest.mark.slow
+def test_systempeak(inst_lite):
+    '''Test Dark calm week algorithm detection'''
+    cluster = cemo.cluster.InstanceCluster(inst_lite, max_d=6)
+    print(cluster)
+    assert cluster.system_peak_week() == '2035-01-16'

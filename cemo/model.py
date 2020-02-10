@@ -29,7 +29,7 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
                         ScanForTechperZone, ScanForZoneperRegion,
                         build_intercon_per_zone, build_carry_fwd_cost_per_zone,
                         build_adjust_exo_cap, build_adjust_exo_ret, build_cap_factor_thres,
-                        con_caplim,
+                        con_caplim, con_max_cap_factor_per_zone,
                         con_committed_cap, con_disp_ramp_down, con_disp_ramp_up, con_emissions,
                         con_gen_cap, con_hyb_cap, con_hyb_flow_lim,
                         con_hyb_level_max, con_hyb_reserve_lim, con_hybcharge,
@@ -396,6 +396,9 @@ class CreateModel():
         # MaxMWh limit
         self.m.con_max_mwh_per_zone = Constraint(
             self.m.gen_tech_in_zones, rule=con_max_mhw_per_zone)
+        # MaxMWh limit as capacity factor
+        self.m.con_max_cap_factor_per_zone = Constraint(
+            self.m.gen_tech_in_zones, rule=con_max_cap_factor_per_zone)
         # MaxMWh limit (currently only for hydro)
         self.m.con_max_mwh_nem_wide = Constraint(
             self.m.all_tech, rule=con_max_mwh_nem_wide)

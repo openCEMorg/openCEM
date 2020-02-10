@@ -245,13 +245,25 @@ def con_region_ret_ratio(model, r):
 
 
 def con_max_mhw_per_zone(model, zone, tech):
-    '''limit maximum generation over a period for a tech in a zone.
+    '''MWH maximum generation over a period for a tech in a zone.
 
        Results scaled to yearly MWH using year correction factor'''
     if cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech) is not None:
         return sum(model.gen_disp[zone, tech, time] for time in model.t)\
             <= 1e-3*cemo.const.DEFAULT_MAX_MWH_PER_ZONE.get(tech).get(zone, 0) /\
             model.year_correction_factor
+    return Constraint.Skip
+
+
+def con_max_cap_factor_per_zone(model, zone, tech):
+    '''limit maximum generation as capacity factor over a period for a tech in a zone
+
+    Results scaled to yearly capacity factor using year correction factor'''
+    if cemo.const.DEFAULT_MAX_CAP_FACTOR_PER_ZONE.get(tech) is not None:
+        return (sum(model.gen_disp[zone, tech, time] for time in model.t)
+                <= 1e-3 *cemo.const.DEFAULT_MAX_CAP_FACTOR_PER_ZONE.get(tech).get(zone)
+                * 8760 * model.gen_cap_op[zone, tech]
+                / model.year_correction_factor)
     return Constraint.Skip
 
 

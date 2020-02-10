@@ -205,12 +205,20 @@ class ClusterData:
         self.Xcluster = clus
         self.max_d += 1
 
-    def _detect_dunkelflaute(self):
+    def _calculate_dunkelflaute(self):
+        pass
+
+    def dunkelflaute_week(self, summer=False):
+        return None
+
+    def system_peak_week(self):
         return None
 
     def generate_cluster(self):
         self.clusterset(self.max_d)
-        self.append_to_cluster(self._detect_dunkelflaute())
+        self._calculate_dunkelflaute()
+        self.append_to_cluster(self.dunkelflaute_week())
+        self.append_to_cluster(self.system_peak_week())
 
 
 class CSVCluster(ClusterData):
@@ -271,8 +279,8 @@ class InstanceCluster(ClusterData):
         self.year = df.iloc[-1].name.year
         return df
 
-    def _detect_dunkelflaute(self):
-        '''Return a date as string with the beginning of a dark/doldrum week period'''
+    def _calculate_dunkelflaute(self):  # REVIEW, maybe this doesnt need to be 2 steps
+        '''Compute aggregate dark doldrum index for data in instance'''
         MAXLOAD = np.array([i['value'] for i in self.demand]).max()
         TIME = np.array([np.datetime64(i) for i in self.time])
         RATIO = np.zeros(len(TIME))
@@ -297,7 +305,31 @@ class InstanceCluster(ClusterData):
         W_RATIO = pd.Series(RATIO).rolling(self.windowidth,
                                            center=True,
                                            win_type='boxcar').mean()[ww:-ww].reset_index(drop=True)
-        return str(TIME[W_RATIO.idxmin()] - np.timedelta64(3, 'D'))[:10]
+        self.dunkelflaute_index = pd.DataFrame(W_RATIO).set_index(TIME)
+
+    def dunkelflaute_week(self, summer=False):
+        '''Return dark calm week in winter or summer period as a string'''
+        IS_SUMMER = self.dunkelflaute_index.index.month.isin([11, 12, 1, 2])
+        if summer:
+            return str(
+                     self.dunkelflaute_index[IS_SUMMER].idxmin()[0]
+                     - np.timedelta64(3, 'D'))[:10]
+        return str(
+                 self.dunkelflaute_index[~IS_SUMMER].idxmin()[0]
+                 - np.timedelta64(3, 'D'))[:10]
+
+    def system_peak_week(self):
+        '''Compute aggregate demand peak index for instance'''
+        TIME = np.array([np.datetime64(i) for i in self.time])
+        DEMAND = np.zeros(len(TIME))
+        for region in self.regions:
+            DEMAND += np.array([i['value'] for i in self.demand if i['index'][0] == region])
+        ww = int(self.windowidth / 2)
+        DEMAND = np.pad(DEMAND, (ww, ww), 'wrap')
+        W_DEMAND = pd.Series(DEMAND).rolling(self.windowidth,
+                                             center=True,
+                                             win_type='boxcar').mean()[ww:-ww].reset_index(drop=True)
+        return str(TIME[W_DEMAND.idxmax()] - np.timedelta64(3, 'D'))[:10]
 
 
 class ClusterRun:
