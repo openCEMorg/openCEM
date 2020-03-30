@@ -1,0 +1,16 @@
+# Miniconda image 
+
+stages: 
+    - build
+    - test
+
+before_script:
+  - docker info
+
+docker_build:
+    stage: build
+    script: docker build -f Dockerfile -t opencem .
+
+testing:
+    stage: test
+    script: docker run opencem:latest pytest
