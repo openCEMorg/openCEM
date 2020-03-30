@@ -18,7 +18,6 @@ def test_printstats(request, solution, capfd):
     assert captured.out == array
 
 
-
 @pytest.mark.parametrize("zone,result", [
     (6, 1),  # CAN in NSW
     (2, 2),  # CQ in QLD

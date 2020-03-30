@@ -729,6 +729,12 @@ param gen_cap_exo:=
 8 12     500.00
 ;
 
+# Exogenous transmission entry intercon_cap_exo
+param intercon_cap_exo:=
+10 16     500.00
+16 10     500.00
+;
+
 #Discount rate for project
 param all_tech_discount_rate := 0.06;
 #Cost of emissions $/Mhw

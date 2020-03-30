@@ -104,7 +104,11 @@ def setinstancecapacity(instance, clustercap):
 class SolveTemplate:
     """Solve Multi year openCEM simulation based on template"""
 
-    def __init__(self, cfgfile, solver='cbc', log=False, tmpdir=tempfile.mkdtemp() + '/', resume=False, templatetest=False):
+    def __init__(self, cfgfile,
+                 solver='cbc',
+                 log=False, tmpdir=tempfile.mkdtemp() + '/',
+                 resume=False,
+                 templatetest=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -133,6 +137,10 @@ class SolveTemplate:
         self.cost_emit = None
         if config.has_option('Scenario', 'cost_emit'):
             self.cost_emit = json.loads(Scenario['cost_emit'])
+
+        self.manual_intercon_build = None
+        if config.has_option('Scenario', 'manual_intercon_build'):
+            self.manual_intercon_build = json.loads(Scenario['manual_intercon_build'])
         # Miscelaneous options
         self.description = None
         if config.has_option('Scenario', 'Description'):
@@ -148,6 +156,10 @@ class SolveTemplate:
         self.exogenous_capacity = None
         if config.has_option('Advanced', 'exogenous_capacity'):
             self.exogenous_capacity = Advanced['exogenous_capacity']
+
+        self.exogenous_transmission = None
+        if config.has_option('Advanced', 'exogenous_transmission'):
+            self.exogenous_transmission = Advanced['exogenous_transmission']
 
         self.cluster = Advanced.getboolean('cluster')
 
@@ -318,6 +330,23 @@ class SolveTemplate:
         self._nem_re_disp_ratio = data
 
     @property
+    def manual_intercon_build(self):
+        '''Property getter for manual_intercon_build'''
+        return self._manual_intercon_build
+
+    @manual_intercon_build.setter
+    def manual_intercon_build(self, data):
+        if data is not None:
+            if len(data) != len(self.Years):
+                raise ValueError(
+                    'openCEM-manual_intercon_build: List %s length does not match Years list'
+                )
+            if any(not isinstance(x, bool) for x in data):
+                raise ValueError(
+                    'openCEM-manual_intercon_build: Element(s) in list must be boolean')
+        self._manual_intercon_build = data
+
+    @property
     def Template(self):
         '''Propery setter for Template'''
         return self._Template
@@ -352,7 +381,19 @@ class SolveTemplate:
                 raise OSError("openCEM-exogenous_capacity: File not found")
         self._exogenous_capacity = a
 
-    def tracetechs(self):  # TODO refactor this and how tech sets populate template
+    @property
+    def exogenous_transmission(self):
+        '''Property setter for exogenous_transmission'''
+        return self._exogenous_transmission
+
+    @exogenous_transmission.setter
+    def exogenous_transmission(self, a):
+        if a is not None:
+            if not os.path.isfile(a):
+                raise OSError("openCEM-exogenous_transmission: File not found")
+        self._exogenous_transmission = a
+
+    def tracetechs(self):  # TODO refactor this and how tech sets populate template DICT comprehension perhaps? see intercons
         '''Reproduce sparse sets to correctly populate templates'''
         self.fueltech = {}
         self.committech = {}
@@ -363,6 +404,7 @@ class SolveTemplate:
         self.gentech = {}
         self.stortech = {}
         self.retiretech = {}
+        self.intercons = {i: [j for j in cemo.const.ZONE_INTERCONS[i].keys()] for i in cemo.const.ZONE_INTERCONS.keys()}
         for i in self.all_tech_per_zone:
             self.fueltech.update({
                 i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.FUEL_TECH]
@@ -475,8 +517,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             for key in keywords:
                 if year in costs.columns:
                     cost = costs[
-                        (costs['name'] == key) &
-                        (costs['tech'].isin(self.all_tech))
+                        (costs['name'] == key)
+                        & (costs['tech'].isin(self.all_tech))
                     ].dropna(subset=[year])
                 else:
                     cost = pd.DataFrame()
@@ -487,13 +529,13 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         custom_costs += cost[['tech', year]].to_string(header=False,
                                                                        index=False,
                                                                        formatters={
-                                                                           'tech': lambda x: '%i' % x,
-                                                                           year: lambda x: '%10.2f' % x,
+                                                                           'tech': lambda x: '%i' % x,  # noqa
+                                                                           year: lambda x: '%10.2f' % x,  # noqa
                                                                        })
                     else:
                         cost = cost[cost[['zone', 'tech']].apply(tuple, 1).isin([
                             (i, j) for i in self.all_tech_per_zone
-                                   for j in self.all_tech_per_zone[i]])]
+                            for j in self.all_tech_per_zone[i]])]
                         custom_costs += cost[['zone', 'tech', year]
                                              ].to_string(header=False, index=False,
                                                          formatters={
@@ -508,13 +550,13 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
     def produce_exogenous_capacity(self, year):
         '''Produce exogenous capacity builds in template based on instructions
          from configuration file'''
-        exogenous_capacity = '\n'
         keywords = {
             'gen_cap_exo': 'zonetech',
             'stor_cap_exo': 'zonetech',
             'hyb_cap_exo': 'zonetech',
             'ret_gen_cap_exo': 'zonetech',
         }
+        exogenous_capacity ='\n'
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
@@ -524,13 +566,14 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
             for key in keywords:
                 cap = capacity[
-                    (capacity['year'] > int(prevyear)) &
-                    (capacity['year'] <= int(year)) &
-                    (capacity['name'] == key) &
-                    (capacity['tech'].isin(self.all_tech)) &
-                    (capacity['zone'].isin(self.zones))
+                    (capacity['year'] > int(prevyear))
+                    & (capacity['year'] <= int(year))
+                    & (capacity['name'] == key)
+                    & (capacity['tech'].isin(self.all_tech))
+                    & (capacity['zone'].isin(self.zones))
                 ]
                 if not cap.empty:
+                    # TODO reject entries for techs that are not in techs_in_zones
                     exogenous_capacity += '# Exogenous capacity entry ' + key + '\n'
                     exogenous_capacity += 'param ' + key + ':=\n'
                     exogenous_capacity += cap[['zone', 'tech', 'value']
@@ -541,8 +584,48 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                               'value': lambda x: '%10.2f' % x,
                                                           })
                     exogenous_capacity += '\n;\n'
-
         return exogenous_capacity
+
+    def produce_exogenous_transmission(self, year):
+        '''Produce exogenous transmission builds in template based on instructions
+         from configuration file'''
+        keywords = {
+            'intercon_cap_exo': 'zonezone',
+        }
+        if self.exogenous_transmission is not None:
+            capacity = pd.read_csv(
+                self.exogenous_transmission, skipinitialspace=True)
+            prevyear = 2017
+            if self.Years.index(year) > 0:
+                prevyear = self.Years[self.Years.index(year) - 1]
+
+            exo_trans = '\n'
+            for key in keywords:
+                cap = capacity[
+                    (capacity['year'] > int(prevyear))
+                    & (capacity['year'] <= int(year))
+                    & (capacity['name'] == key)
+                    & (capacity['zone_source'].isin(self.zones))
+                    & (capacity['zone_dest'].isin(self.zones))
+                    ]
+                if not cap.empty:
+                    # remove entries that violate intercon link list
+                    for row in cap.itertuples():
+                        if row.zone_dest not in self.intercons[row.zone_source]:
+                            cap = cap.drop(row.Index)
+                    exo_trans += '# Exogenous transmission entry ' + key + '\n'
+                    exo_trans += 'param ' + key + ':=\n'
+                    exo_trans += cap[['zone_source', 'zone_dest', 'value']
+                                     ].to_string(header=False,
+                                                 index=False,
+                                                 formatters={
+                                                  'zone_source': lambda x: '%i' % x,
+                                                  'zone_dest': lambda x: '%i' % x,
+                                                  'value': lambda x: '%10.2f' % x,
+                                                          })
+                    exo_trans += '\n;\n'
+                    return exo_trans
+        return '\n'
 
     def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
@@ -562,6 +645,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         carry_fwd_cap = self.carry_forward_cap_costs(year)
         custom_costs = self.produce_custom_costs(year)
         exogenous_capacity = self.produce_exogenous_capacity(year)
+        exogenous_transmission = self.produce_exogenous_transmission(year)
 
         cemit = ""
         if self.cost_emit:
@@ -669,6 +753,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     fo.write(line)
                 fo.write(custom_costs)
                 fo.write(exogenous_capacity)
+                fo.write(exogenous_transmission)
                 fo.write(fcr)
                 fo.write(cemit)
                 fo.write(carry_fwd_cap)
@@ -679,6 +764,19 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 fo.write(nem_disp_ratio)
                 fo.write(nem_re_disp_ratio)
         return dcfName
+
+    def get_model_options(self, year):
+        '''Return model options appropriate for each year based on cfg'''
+        OPTIONS = {}
+        for option in self.model_options._fields:
+            OPTIONS.update({option: getattr(self.model_options, option)})
+
+        manual_intercon_build = self.manual_intercon_build[self.Years.index(year)] if self.manual_intercon_build is not None else False
+
+        OPTIONS.update(
+         {'build_intercon_manual': manual_intercon_build}
+        )
+        return model_options(**OPTIONS)
 
     def solve(self):
         """
@@ -701,7 +799,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             year_template = self.generateyeartemplate(y, self.templatetest)
             # Solve full year capacity and dispatch instance
             # Create model based on policy configuration options
-            model = CreateModel(y, self.model_options).create_model()
+            model = CreateModel(y, self.get_model_options(y)).create_model()
             # create model instance based in template data
             inst = model.create_instance(year_template)
             # These solve capacity on a clustered form
@@ -710,7 +808,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 ccap = ClusterRun(
                     clus,
                     year_template,
-                    model_options=self.model_options,
+                    model_options=self.get_model_options(y),
                     solver=self.solver,
                     log=self.log).run_cluster()
                 inst = setinstancecapacity(inst, ccap)
@@ -720,6 +818,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.log:
                 print("openCEM multi: Starting full year dispatch simulation")
             opt.solve(inst, tee=self.log, keepfiles=False)
+            del opt
 
             # Carry forward operating capacity to next Inv period
             opcap = json_carry_forward_cap(inst)
@@ -771,8 +870,9 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             "System emission limit": self.nem_emit_limit,
             "Dispatchable generation ratio ": self.nem_disp_ratio,
             "Renewable Dispatchable generation ratio ": self.nem_re_disp_ratio,
-            "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone': 0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,
-            "Exogenous Capacity decisions": pd.read_csv(self.exogenous_capacity).to_dict(orient='records') if self.exogenous_capacity is not None else None,
+            "Custom costs": pd.read_csv(self.custom_costs).fillna(value={'zone': 0}).fillna(99e7).to_dict(orient='records') if self.custom_costs is not None else None,  # noqa
+            "Exogenous Capacity decisions": pd.read_csv(self.exogenous_capacity).to_dict(orient='records') if self.exogenous_capacity is not None else None,  # noqa
+            "Exogenous Transmission decisions": pd.read_csv(self.exogenous_transmission).to_dict(orient='records') if self.exogenous_transmission is not None else None,  # noqa
         }
 
         return {'meta': meta}

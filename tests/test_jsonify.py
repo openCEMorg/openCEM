@@ -2,7 +2,8 @@
 
 import json
 
-from cemo.jsonify import json_readr, json_readr_meta, json_readr_year, jsoninit, jsonify
+from cemo.jsonify import (json_readr, json_readr_meta, json_readr_year,
+     jsoninit, jsonify, json_carry_forward_cap, jsonopcap0)
 
 
 def sort_func(item):
@@ -34,6 +35,24 @@ def test_json_init(solution):
     data = jsoninit(solution, 2020)
     with open('tests/jsoninit_test.json', 'r') as known:
         data2 = json.load(known)
+    for key in data:
+        assert dumped_data(data[key]) == dumped_data(data2[key])
+
+
+def test_json_carry_fwd_cap(solution):
+    '''Assert carry forward cap matches known output'''
+    data = json_carry_forward_cap(solution)
+    with open('tests/jsoncarryfwd_test.json') as known:
+        data2 = json.load(known)
+    for key in data:
+        assert dumped_data(data[key]) == dumped_data(data2[key])
+
+
+def test_jsonopcap0(solution):
+    '''Assert jsonopcap0 matches known output'''
+    data = jsonopcap0(solution)
+    with open('tests/jsonopcap0_test.json') as known:
+        data2 =json.load(known)
     for key in data:
         assert dumped_data(data[key]) == dumped_data(data2[key])
 

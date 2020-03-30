@@ -73,10 +73,10 @@ def build_cap_factor_thres(model):
     for zone in model.zones:
         for time in model.t:
             for tech in model.gen_tech_per_zone[zone]:
-                if value(model.gen_cap_factor[zone, tech, time]) < 1e-5:
+                if value(model.gen_cap_factor[zone, tech, time]) < cemo.const.CAP_FACTOR_THRES:
                     model.gen_cap_factor[zone, tech, time] = 0
             for tech in model.hyb_tech_per_zone[zone]:
-                if value(model.hyb_cap_factor[zone, tech, time]) < 1e-5:
+                if value(model.hyb_cap_factor[zone, tech, time]) < cemo.const.CAP_FACTOR_THRES:
                     model.hyb_cap_factor[zone, tech, time] = 0
 
 
@@ -261,7 +261,7 @@ def con_max_cap_factor_per_zone(model, zone, tech):
     Results scaled to yearly capacity factor using year correction factor'''
     if cemo.const.DEFAULT_MAX_CAP_FACTOR_PER_ZONE.get(tech) is not None:
         return (sum(model.gen_disp[zone, tech, time] for time in model.t)
-                <= 1e-3 *cemo.const.DEFAULT_MAX_CAP_FACTOR_PER_ZONE.get(tech).get(zone)
+                <= 1e-3 * cemo.const.DEFAULT_MAX_CAP_FACTOR_PER_ZONE.get(tech).get(zone)
                 * 8760 * model.gen_cap_op[zone, tech]
                 / model.year_correction_factor)
     return Constraint.Skip
@@ -467,41 +467,41 @@ def con_caplim(model, z, n, t):  # z and n come both from TechinZones
 def con_min_load_commit(model, z, n, t):
     '''Dispatch at least min % pct of committed capacity'''
     mincap = cemo.const.GEN_COMMIT['mincap'].get(n)
-    return 1e3*model.gen_disp[z, n, t] >= mincap * 1e3*model.gen_disp_com[z, n, t]
+    return model.gen_disp[z, n, t] >= mincap * model.gen_disp_com[z, n, t]
 
 
 def con_disp_ramp_down(model, z, n, t):
     '''dispatch less than ramp down commitment'''
     ramp_dn = cemo.const.GEN_COMMIT['rate down'].get(n)
-    return 1e3*model.gen_disp[z, n, t] <= 1e3*model.gen_disp_com[z, n, t] +\
-        (ramp_dn - 1) * 1e3*model.gen_disp_com_m[z, n, model.t.nextw(t)]
+    return model.gen_disp[z, n, t] <= model.gen_disp_com[z, n, t] +\
+        (ramp_dn - 1) * model.gen_disp_com_m[z, n, model.t.nextw(t)]
 
 
 def con_disp_ramp_up(model, z, n, t):
     '''dispatch less than ramp up commitment'''
     ramp_up = cemo.const.GEN_COMMIT['rate up'].get(n)
-    return 1e3*model.gen_disp[z, n, t] <= 1e3*model.gen_disp_com[z, n, model.t.prevw(t)] + \
-        ramp_up * 1e3*model.gen_disp_com_p[z, n, t]
+    return model.gen_disp[z, n, t] <= model.gen_disp_com[z, n, model.t.prevw(t)] + \
+        ramp_up * model.gen_disp_com_p[z, n, t]
 
 
 def con_ramp_down_uptime(model, z, n, t):
     '''commitment ramp down must respect up - time minimum'''
-    return 1e3*model.gen_disp_com_m[z, n, t] <= 1e3*model.gen_disp_com_s[z, n, t]
+    return model.gen_disp_com_m[z, n, t] <= model.gen_disp_com_s[z, n, t]
 
 
 def con_uptime_commitment(model, z, n, t):
     '''capacity that can be switched off, observing up - time'''
     uptime = cemo.const.GEN_COMMIT['uptime'].get(n)
-    return 1e3*model.gen_disp_com_s[z, n, t] == 1e3*model.gen_disp_com_s[z, n, model.t.prevw(t)] +\
-        1e3*model.gen_disp_com_p[z, n, model.t.prevw(
-            t, k=uptime)] - 1e3*model.gen_disp_com_m[z, n, t]
+    return model.gen_disp_com_s[z, n, t] == model.gen_disp_com_s[z, n, model.t.prevw(t)] +\
+        model.gen_disp_com_p[z, n, model.t.prevw(
+            t, k=uptime)] - model.gen_disp_com_m[z, n, t]
 
 
 def con_committed_cap(model, z, n, t):
     '''Committed capacity for each time step'''
-    return 1e3*model.gen_disp_com[z, n, t] == 1e3*model.gen_disp_com[z, n, model.t.prevw(t)] -\
-        1e3*model.gen_disp_com_m[z, n, t] + \
-        1e3*model.gen_disp_com_p[z, n, model.t.prevw(t)]
+    return model.gen_disp_com[z, n, t] == model.gen_disp_com[z, n, model.t.prevw(t)] -\
+        model.gen_disp_com_m[z, n, t] + \
+        model.gen_disp_com_p[z, n, model.t.prevw(t)]
 
 
 def con_uns(model, r):
@@ -614,11 +614,9 @@ def cost_fixed(model):
 
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
-    return model.year_correction_factor * model.cost_unserved * sum(
-        model.unserved[z, t]
-        for r in model.regions
-        for z in model.zones_per_region[r]
-        for t in model.t)
+    return model.year_correction_factor * model.cost_unserved * sum(model.unserved[z, t]
+                                                                    for z in model.zones
+                                                                    for t in model.t)
 
 
 def cost_operating(model):
@@ -688,9 +686,9 @@ def cost_emissions(model):
 def cost_shadow(model):
     '''Calculate shadow costs, i.e. penalties applied to
     ensure numerical stability of model'''
-    return 980100 * sum(model.surplus[z, t]
-                        for z in model.zones
-                        for t in model.t)
+    return model.year_correction_factor * (model.cost_unserved + 10) * sum(model.surplus[z, t]
+                                                                           for z in model.zones
+                                                                           for t in model.t)
 
 
 def system_cost(model):

@@ -53,10 +53,11 @@ def test_multi_conf_file_not_found():
      ('Years', 'Years=[2020,2022,2071]'), ('discountrate', 'discountrate=1.1'),
      ('cost_emit', 'cost_emit = [-11,2,3,4,5,6,8]'),
      ('nem_disp_ratio', 'nem_disp_ratio=[0,0,0,2,0,0,0]'),
-     ('nem_re_disp_ratio', 'nem_re_disp_ratio=[0,0,0,0,0,0]')])
+     ('nem_re_disp_ratio', 'nem_re_disp_ratio=[0,0,0,0,0,0]'),
+     ('manual_intercon_build', 'manual_intercon_build=[0.1,false,true,false,true,false,true]')])
 def test_multi_bad_cfg(option, value):
     ''' Assert validate bad config option by replacing known bad options in sample file'''
-    with open('tests/Sample.cfg') as sample:
+    with open('tests/testConfig.cfg') as sample:
         with tempfile.NamedTemporaryFile(
                 mode='w', delete=False) as temp_sample:
             for line in sample:
@@ -69,13 +70,14 @@ def test_multi_bad_cfg(option, value):
 
 
 @pytest.mark.parametrize("option,value", [
-    ('custom_costs', 'custom_costs=Badfile.csv'),
-    ('exogenous_capacity', 'exogenous_capacity=Badfile.csv'),
-    ('Template', 'Template=Badfile.dat'),
+    ('custom_costs', 'custom_costs=Nofile.csv'),
+    ('exogenous_capacity', 'exogenous_capacity=Nofile.csv'),
+    ('exogenous_transmission', 'exogenous_transmission=Nofile.csv'),
+    ('Template', 'Template=Nofile.dat'),
 ])
 def test_multi_bad_file(option, value):
     ''' Assert that multi detects missing files in config'''
-    with open('tests/Sample.cfg') as sample:
+    with open('tests/testConfig.cfg') as sample:
         with tempfile.NamedTemporaryFile(
                 mode='w', delete=False) as temp_sample:
             for line in sample:
@@ -89,22 +91,33 @@ def test_multi_bad_file(option, value):
 
 def test_multi_template_first():
     '''Tests generate first year template by comparing to known good result'''
-    multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg')
+    multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
     multi_sim.generateyeartemplate(multi_sim.Years[0], test=True)
     assert filecmp.cmp(multi_sim.tmpdir + 'Sim2020.dat', 'tests/Sim2020.dat')
 
 
 def test_multi_template_second(delete_sim2025_dat):
     '''Tests generate second (and later) year template by comparing to known good result'''
-    multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg', tmpdir='')
+    multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg', tmpdir='')
     multi_sim.generateyeartemplate(multi_sim.Years[1], test=True)
     assert filecmp.cmp(multi_sim.tmpdir + 'Sim2025.dat', 'tests/Sim2025.dat')
 
 
 def test_multi_metadata():
     '''Tests generate year template by comparing to known good result'''
-    multi_sim = SolveTemplate(cfgfile='tests/Sample.cfg')
+    multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
     meta = multi_sim.generate_metadata()
     with open('tests/metadata.json', 'r') as test_meta:
         metad = json.load(test_meta)
     assert json.dumps(meta, indent=2) == json.dumps(metad, indent=2)
+
+@pytest.mark.parametrize("year, value", [
+    (2020, True),
+    (2025, False),
+    (2030, True),
+  ])
+def test_multi_get_model_options(year,value):
+    '''Test that model options are generated for each year'''
+    multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
+    options = multi_sim.get_model_options(year)
+    assert options.build_intercon_manual == value

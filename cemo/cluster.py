@@ -62,7 +62,7 @@ class ClusterData:
                  regions=None,
                  maxsynth=False):
         self.firstdow = firstdow  # Day of week starting period
-        self.lastdow = lastdow  # Day of week ending period`
+        self.lastdow = lastdow  # Day of week ending period
         self.max_d = max_d  # Maximum number of clusters
         # NEM region tuple
         self.regions = range(1, 6) if regions is None else regions
@@ -179,7 +179,7 @@ class ClusterData:
 
         # store cluster information in a convenient pandas DataFrame
         self.Xcluster = pd.DataFrame(
-            Xcl, columns=['week', 'date', 'weight']).sort_values(by='date')
+            Xcl, columns=['week', 'date', 'weight'])
 
     def append_to_cluster(self, date):
         '''Append arbitrary weeks to cluster'''
@@ -197,7 +197,7 @@ class ClusterData:
              'date': [pd.Timestamp(date)],
              'weight': [1]
              }
-        ))
+        ), ignore_index=True)
         # scale back weights to sum 1
         clus.weight *= 1 / self.periods
         clus.reset_index(drop=True, inplace=True)
@@ -328,7 +328,7 @@ class InstanceCluster(ClusterData):
         DEMAND = np.pad(DEMAND, (ww, ww), 'wrap')
         W_DEMAND = pd.Series(DEMAND).rolling(self.windowidth,
                                              center=True,
-                                             win_type='boxcar').mean()[ww:-ww].reset_index(drop=True)
+                                             win_type='boxcar').mean()[ww:-ww].reset_index(drop=True)  # noqa
         return str(TIME[W_DEMAND.idxmax()] - np.timedelta64(3, 'D'))[:10]
 
 
@@ -403,9 +403,9 @@ class ClusterRun:
             'setScenariosrep': setScenarios,
             'paramScenLeafrep': paramScenLeaf,
             'setstagevars1':
-            'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',
+            'set StageVariables[FS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',  # noqa
             'setstagevars2':
-            'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',
+            'set StageVariables[SS] := gen_cap_new[*,*] stor_cap_new[*,*] hyb_cap_new[*,*] intercon_cap_new[*,*] gen_cap_ret[*,*];',  # noqa
             'stagecost': 'param StageCost := FS FSCost SS SSCost;',
         }
         with open(self.tmpdir + '/ScenarioStructure.dat', 'wt') as fo:
@@ -418,7 +418,7 @@ class ClusterRun:
         with open(self.tmpdir + '/ReferenceModel.py', 'wt') as fo:
             refmodel = "'''Temporary openCEM model instance for runef simulations'''\n"
             refmodel += "from cemo.model import CreateModel, model_options\n"
-            refmodel += "options = " + str(self.model_options) + " \n"
+            refmodel += "options = " + str(self.model_options) + "  # noqa\n"
             refmodel += "model = CreateModel('openCEM', options).create_model()\n"
             fo.write(refmodel)
 

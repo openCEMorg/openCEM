@@ -149,20 +149,24 @@ def init_intercon_cap_initial(model, zone_source, zone_dest):
     # pylint: disable=unused-argument
     '''Initialise initial transmission limits.
 
-    If a template reads values from JSON, e.g. from a previous year,
+    If a template reads values from other data sources, e.g. from a previous year,
     these defaults are overwritten'''
     return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get('limit', 0)
 
 
 def init_intercon_build_cost(model, zone_source, zone_dest):
     # pylint: disable=unused-argument
-    '''Initialise build transmission costs $/MW/km.
+    '''Initialise build transmission costs $/MW
 
-    If a template reads values from JSON, these defaults are overwritten
-    Return the highest of forward and reverse cposts specified'''
-    return cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get(
+    If a template reads values from data sources, these defaults are overwritten
+    Return the highest of forward and reverse costs specified'''
+    forward = cemo.const.ZONE_INTERCONS.get(zone_source).get(zone_dest).get(
         'buildcost', 2500) * cemo.const.ZONE_INTERCONS.get(zone_source).get(
             zone_dest).get('length')
+    reverse = cemo.const.ZONE_INTERCONS.get(zone_dest).get(zone_source).get(
+        'buildcost', 2500) * cemo.const.ZONE_INTERCONS.get(zone_dest).get(
+            zone_source).get('length')
+    return max(forward, reverse)
 
 
 def init_cap_factor(model, zone, tech, time):

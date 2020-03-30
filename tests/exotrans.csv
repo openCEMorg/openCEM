@@ -1,0 +1,5 @@
+year, name,zone_source,zone_dest,value
+2018,intercon_cap_exo, 10, 16, 500
+2018,intercon_cap_exo,16,10, 500
+2024,intercon_cap_exo,16,10,600
+2024,intercon_cap_exo,15,16,600

@@ -7,6 +7,7 @@ import pytest
 
 import cemo.cluster
 from cemo.cluster import next_weekday, prev_weekday
+from cemo.utils import plotcluster
 
 
 def test_cluster_instantiation():
@@ -97,12 +98,12 @@ def test_append_to_cluster():
     cluster.append_to_cluster(injected_week)
     repr = """Cluster Data generator
     week       date    weight
-0    11 2019-09-13  0.431373
+0    40 2020-04-03  0.411765
 1    25 2019-12-20  0.058824
-2    28 2020-01-10  0.019608
-3    29 2020-01-17  0.019608
-4    31 2020-01-31  0.039216
-5    40 2020-04-03  0.411765
+2    11 2019-09-13  0.431373
+3    31 2020-01-31  0.039216
+4    29 2020-01-17  0.019608
+5    28 2020-01-10  0.019608
 6    52 2019-07-07  0.019608"""
     assert cluster.__repr__() == repr
 
@@ -121,3 +122,10 @@ def test_systempeak(inst_lite):
     cluster = cemo.cluster.InstanceCluster(inst_lite, max_d=6)
     print(cluster)
     assert cluster.system_peak_week() == '2035-01-16'
+
+@pytest.mark.slow
+def test_plot_cluster(inst_lite):
+    '''Test cluster plotting function'''
+    cluster = cemo.cluster.InstanceCluster(inst_lite, max_d=6)
+    plt = plotcluster(cluster, row=2, col=3, ylim=(0,14000))
+    assert plt.gcf().number == 1

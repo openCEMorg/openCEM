@@ -382,7 +382,7 @@ def fill_complex_var(var, scale=1):
     for i in var.keys():
         out.append({
             'index': i,
-            'value': 0 if -1e-6 < var[i].value < 0 else scale*var[i].value
+            'value': 0 if -1e-6 < var[i].value < 0 else scale * var[i].value
         })
 
     return out

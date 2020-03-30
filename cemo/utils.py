@@ -91,15 +91,15 @@ def plotresults(instance):  # pragma: no cover
         for z in instance.zones_per_region[r]:
             for n in instance.gen_tech_per_zone[z]:
                 q_z_r[pos[n], :] = q_z_r[pos[n], :] + \
-                    np.array([value(1e3*instance.gen_disp[z, n, t])
+                    np.array([value(1e3 * instance.gen_disp[z, n, t])
                               for t in instance.t])
             for s in instance.stor_tech_per_zone[z]:
                 q_z_r[pos[s], :] = q_z_r[pos[s], :] + \
-                    np.array([value(1e3*instance.stor_disp[z, s, t])
+                    np.array([value(1e3 * instance.stor_disp[z, s, t])
                               for t in instance.t])
             for h in instance.hyb_tech_per_zone[z]:
                 q_z_r[pos[h], :] = q_z_r[pos[h], :] + \
-                    np.array([value(1e3*instance.hyb_disp[z, h, t])
+                    np.array([value(1e3 * instance.hyb_disp[z, h, t])
                               for t in instance.t])
         # Plotting instructions
         # pick respective subplot
@@ -243,21 +243,21 @@ def _printcapacity(instance):
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
             techtotal[idx.index(n)] += value(instance.gen_cap_op[z, n])
-            disptotal[idx.index(n)] += value(sum(1e3*instance.gen_disp[z, n, t]
+            disptotal[idx.index(n)] += value(sum(1e3 * instance.gen_disp[z, n, t]
                                                  for t in instance.t))
             capftotal[idx.index(n)] += value(sum(instance.gen_cap_factor[z, n, t]
                                                  for t in instance.t))
             nperz[idx.index(n)] += 1
         for s in instance.stor_tech_per_zone[z]:
             techtotal[idx.index(s)] += value(instance.stor_cap_op[z, s])
-            disptotal[idx.index(s)] += value(sum(1e3*instance.stor_disp[z, s, t]
+            disptotal[idx.index(s)] += value(sum(1e3 * instance.stor_disp[z, s, t]
                                                  for t in instance.t))
             capftotal[idx.index(s)] += 0.5 * hours
             nperz[idx.index(s)] += 1
 
         for h in instance.hyb_tech_per_zone[z]:
             techtotal[idx.index(h)] += value(instance.hyb_cap_op[z, h])
-            disptotal[idx.index(h)] += value(sum(1e3*instance.hyb_disp[z, h, t]
+            disptotal[idx.index(h)] += value(sum(1e3 * instance.hyb_disp[z, h, t]
                                                  for t in instance.t))
             capftotal[idx.index(h)] += value(sum(instance.hyb_cap_factor[z, h, t]
                                                  for t in instance.t))
@@ -290,31 +290,36 @@ def printstats(instance):
     print("End of results for %s" % instance.name, flush=True)
 
 
-def plotcluster(cluster, row=3, col=4, ylim=None):  # pragma: no cover
+def plotcluster(cluster, row=3, col=4, ylim=None, show=False):  # pragma: no cover
     '''Plot cluster result from full set of weeks, cluster weeks and weights'''
     t = range(1, cluster.nplen + 1)
     # Make  row * col subplots
     axarr = plt.subplots(row, col, sharex=True)[1]
     # Plot each observation in their respective cluster plot
     for i in range(cluster.periods):
-        axarr.flat[cluster.cluster[i] -
-                   1].plot(t, cluster.X[i][:cluster.nplen], alpha=0.5)
+        axarr.flat[cluster.cluster[i]
+                   - 1].plot(t, cluster.X[i][:cluster.nplen], '0.01', alpha=0.3, linewidth=0.75)
 
     # Add mean and nearest incluster for each cluster plit
-    for j in range(cluster.max_d):
-        axarr.flat[j].plot(t, cluster.Xsynth[j], 'k')  # mean
+    plotrange = cluster.max_d - 2 if isinstance(cluster,cemo.cluster.InstanceCluster) else cluster.max_d
+    for j in range(plotrange):
+
+        axarr.flat[j].plot(t, cluster.Xsynth[j], 'r')  # mean
         axarr.flat[j].plot(t,
                            cluster.X[cluster.Xcluster['week']
                                      [j] - 1][:cluster.nplen],
-                           'r',
-                           linestyle='None',
-                           marker='+')  # closest observation
+                           'k',
+                           # linestyle='None',
+                           # marker='+'
+                           )  # closest observation
     # make yrange the same in all plots
     for ax in axarr.flat:
         if ylim is None:
             # default
-            ax.set_ylim(5500, 16000)
+            ax.set_ylim(0, 16000)
         else:
             ax.set_ylim(ylim[0], ylim[1])
     # Show results
-    plt.show(figsize=(14, 9))
+    if show:
+        plt.show()
+    return plt
