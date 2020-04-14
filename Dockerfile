@@ -1,5 +1,5 @@
 # Miniconda with Python 3
-FROM continuumio/miniconda3
+FROM continuumio/miniconda3:latest
 
 # build new locales
 RUN apt-get clean && apt-get update && apt-get install -y locales
@@ -16,10 +16,7 @@ RUN conda install -y -c conda-forge coincbc
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
-COPY requirements.txt .
+RUN git clone https://github.com/openCEMorg/openCEM.git .
 
 # Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
-
-#Copy repo contents onto container
-COPY . .
