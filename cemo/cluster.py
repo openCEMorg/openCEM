@@ -4,10 +4,9 @@ __author__ = "José Zapata"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["José Zapata", "Dylan McConnell", "Navid Hagdadi"]
 __license__ = "GPLv3"
-__version__ = "1.0.0"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
-__status__ = "Development"
+
 import datetime
 import json
 import shutil

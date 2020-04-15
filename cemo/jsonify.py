@@ -8,10 +8,8 @@ __author__ = "Andrew Hall"
 __copyright__ = "Copyright 2018, ITP Renewables, Australia"
 __credits__ = ["Andrew Hall", "José Zapata"]
 __license__ = "GPLv3"
-__version__ = "0.9.5"
 __maintainer__ = "Andrew Hall"
 __email__ = "andrew.hall@itpau.com.au"
-__status__ = "Development"
 
 import json
 import linecache
