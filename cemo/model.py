@@ -45,16 +45,16 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
 
 def model_options(**kwargs):
     '''Container for model options'''
-    fields = ['unslim',
-              'nem_emit_limit',
-              'nem_ret_ratio',
-              'nem_ret_gwh',
-              'region_ret_ratio',
-              'nem_disp_ratio',
-              'nem_re_disp_ratio',
-              'build_intercon_manual']
-    opt = namedtuple('model_options', fields)
-    opt.__new__.__defaults__ = (False,) * len(opt._fields)
+    FIELDS = {'unslim': False,
+              'nem_emit_limit': False,
+              'nem_ret_ratio': False,
+              'nem_ret_gwh': False,
+              'region_ret_ratio': False,
+              'nem_disp_ratio': True,
+              'nem_re_disp_ratio': False,
+              'build_intercon_manual': False}
+    opt = namedtuple('model_options', [i for i in FIELDS])
+    opt.__new__.__defaults__ = tuple(FIELDS[i] for i in FIELDS)
     return opt(**kwargs)
 
 
