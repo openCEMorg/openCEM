@@ -197,7 +197,7 @@ def jsonify(inst, year):
                 inst.gen_disp.name:
                 fill_complex_var(inst.gen_disp, 1e3),
                 inst.gen_disp_com.name:
-                fill_complex_var(inst.gen_disp, 1e3),
+                fill_complex_var(inst.gen_disp_com, 1e3),
                 inst.gen_disp_com_p.name:
                 fill_complex_var(inst.gen_disp_com_p, 1e3),
                 inst.stor_disp.name:
