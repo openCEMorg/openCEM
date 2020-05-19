@@ -27,6 +27,8 @@ def dumped_data(entry):
     if isinstance(entry, dict):
         if all(isinstance(entry[n], list) for n in entry):
             return {i: sorted(entry[i], key=sort_func) for i in entry}
+        if all(isinstance(n, int) for n in entry.keys()):
+            return {str(i): entry[i] for i in entry}
     return entry
 
 
