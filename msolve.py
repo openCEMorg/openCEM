@@ -10,7 +10,7 @@ __status__ = "Development"
 
 import argparse
 import datetime
-import os
+from pathlib import Path
 import time
 
 from cemo.multi import SolveTemplate
@@ -18,7 +18,7 @@ from cemo.multi import SolveTemplate
 
 def valid_file(param):
     """Validates configuration file has the correct extension"""
-    ext = os.path.splitext(param)[1]
+    ext = Path(param).suffix
     if ext not in (".cfg"):
         raise argparse.ArgumentTypeError("File must have a cfg extension")
     return param
@@ -73,15 +73,19 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Read configuration file name from
-cfgfile = args.config
+cfgfile = Path(args.config)
 
-SIM_DIR = cfgfile.split(".")[0] + "/"
-if not os.path.exists(SIM_DIR):
-    os.mkdir(SIM_DIR)
+SIM_DIR = Path(cfgfile).parent / Path(cfgfile).stem
+if not SIM_DIR.exists():
+    SIM_DIR.mkdir()
 
 # create Multi year simulation
 X = SolveTemplate(
-    cfgfile, solver=args.solver, log=args.log, tmpdir=SIM_DIR, resume=args.resume, templatetest = args.templatetest
+    cfgfile, solver=args.solver,
+    log=args.log,
+    tmpdir=SIM_DIR,
+    resume=args.resume,
+    templatetest = args.templatetest
 )
 
 

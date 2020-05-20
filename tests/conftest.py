@@ -1,6 +1,6 @@
 '''Common fixtures for test suite'''
 import pickle
-import os
+from pathlib import Path
 import pytest
 import tempfile
 import shutil
@@ -104,4 +104,4 @@ def delete_sim2025_dat():
     This is an inconvenient teardown step but enables the most
     accurate test of template generation, using filecmp'''
     yield
-    os.remove('Sim2025.dat')
+    Path('Sim2025.dat').unlink()
