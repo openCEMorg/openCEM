@@ -24,6 +24,13 @@ from cemo.utils import printstats
 from shutil import copyfileobj
 
 
+def make_file_path(pathstring, cfgroot):
+    '''Return a full path for a file reference in cfg file, whether relative or absolute'''
+    if Path(pathstring).is_absolute():
+        return Path(pathstring)
+    return cfgroot.parent / pathstring
+
+
 def sql_tech_pairs(techset):
     """Format zone,tech pairs as a set for SQL query statement"""
     out = []
@@ -112,7 +119,7 @@ class SolveTemplate:
         try:
             with open(cfgfile) as f:
                 config.read_file(f)
-            self.cfgfile = cfgfile
+            self.cfgfile = Path(cfgfile)
         except FileNotFoundError:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
@@ -146,19 +153,20 @@ class SolveTemplate:
             self.description = Scenario['Description']
         # Advanced configuration options
         Advanced = config['Advanced']
-        self.Template = Advanced['Template']
+        self.Template = make_file_path(Advanced['Template'], self.cfgfile)
 
         self.custom_costs = None
         if config.has_option('Advanced', 'custom_costs'):
-            self.custom_costs = Advanced['custom_costs']
+            self.custom_costs = make_file_path(Advanced['custom_costs'], self.cfgfile)
 
         self.exogenous_capacity = None
         if config.has_option('Advanced', 'exogenous_capacity'):
-            self.exogenous_capacity = Advanced['exogenous_capacity']
+            self.exogenous_capacity = make_file_path(Advanced['exogenous_capacity'], self.cfgfile)
 
         self.exogenous_transmission = None
         if config.has_option('Advanced', 'exogenous_transmission'):
-            self.exogenous_transmission = Advanced['exogenous_transmission']
+            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'],
+                                                         self.cfgfile)
 
         self.cluster = Advanced.getboolean('cluster')
 
@@ -352,7 +360,7 @@ class SolveTemplate:
 
     @Template.setter
     def Template(self, a):
-        if not Path(a).exists():
+        if not a.exists():
             raise OSError("openCEM-Template: File not found")
         self._Template = a
 
@@ -791,6 +799,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 if (self.tmpdir / (str(y)+'.json')).exists():
                     print("Skipping year %s" % y)
                     continue
+            if self.templatetest and self.Years.index(y)>0:
+                continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
@@ -836,7 +846,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         # Merge JSON output for all investment periods
         if self.log:
             print("openCEM multi: Saving final results to JSON file")
-        self.mergejsonyears()
+        if not self.templatetest:
+            self.mergejsonyears()
 
     def mergejsonyears(self):
         '''Merge the full year JSON output for each simulated year in a single dictionary'''
@@ -854,7 +865,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         meta = {
             "Name": self.Name,
             "Years": self.Years,
-            "Template": self.Template,
+            "Template": str(self.Template),
             "Clustering": self.cluster,
             "Cluster_number":  self.cluster_max_d if self.cluster else 0,
             "Solver": self.solver,

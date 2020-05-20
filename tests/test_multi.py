@@ -59,7 +59,7 @@ def test_multi_bad_cfg(option, value):
     ''' Assert validate bad config option by replacing known bad options in sample file'''
     with open('tests/testConfig.cfg') as sample:
         with tempfile.NamedTemporaryFile(
-                mode='w', delete=False) as temp_sample:
+                mode='w', dir='tests') as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
@@ -79,12 +79,12 @@ def test_multi_bad_file(option, value):
     ''' Assert that multi detects missing files in config'''
     with open('tests/testConfig.cfg') as sample:
         with tempfile.NamedTemporaryFile(
-                mode='w', delete=False) as temp_sample:
+                mode='w', dir='tests') as temp_sample:
             for line in sample:
                 if option in line:
                     line = value + '\n'
                 temp_sample.write(line)
-            temp_sample.flush()
+                temp_sample.flush()
             with pytest.raises(OSError):
                 SolveTemplate(cfgfile=temp_sample.name)
 
