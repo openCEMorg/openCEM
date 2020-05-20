@@ -237,5 +237,5 @@ AND MINUTE(timestamp)=0
 AND demand_scenario_id =3) roof
 ON poe.timestamp = roof.timestamp AND poe.region_id = roof.region_id
 AND poe.demand_scenario_id =3
-AND poe.region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'))
+AND poe.region_id in ([regionslist])
 order BY regions,t;": [regions,t] region_net_demand;

@@ -697,6 +697,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 for line in fin:
                     line = line.replace('[regions]', " ".join(
                         str(i) for i in self.regions))
+                    line = line.replace('[regionslist]', sql_list(self.regions))
                     line = line.replace('[zones]', " ".join(
                         str(i) for i in self.zones))
                     line = line.replace('[zoneslist]', sql_list(self.zones))
