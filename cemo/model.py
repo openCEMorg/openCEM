@@ -202,7 +202,7 @@ class CreateModel():
         # Per year cost adjustment for sims shorter than 1 year of dispatch
         self.m.year_correction_factor = Param(
             initialize=init_year_correction_factor)
-
+        # TODO, make this initialise from database
         self.m.cost_retire = Param(
             self.m.retire_gen_tech, initialize=init_cost_retire)
         self.m.cost_unserved = Param(
