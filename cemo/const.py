@@ -36,7 +36,8 @@ TECH_TYPE = {
     25: 'phes_12h',
     26: 'battery_1h',
     27: 'battery_3h',
-    28: 'coal_sc_new'
+    28: 'coal_sc_new',
+    34: 'biomass_new'
 }
 
 ZONE = {
@@ -260,7 +261,8 @@ DEFAULT_FUEL_PRICE = {
     7: 3.8,
     8: 9.68,
     16: 9.68,
-    19: 9.68
+    19: 9.68,
+    34: 0.5
 }
 
 DEFAULT_HEAT_RATE = {
@@ -275,6 +277,7 @@ DEFAULT_HEAT_RATE = {
     16: 7.6,
     19: 10.7,
     28: 8.66,
+    34: 13.39
 }
 DEFAULT_FUEL_EMIT_RATE = {
     1: 57.13,
@@ -288,6 +291,7 @@ DEFAULT_FUEL_EMIT_RATE = {
     16: 602.0,
     19: 705.0,
     28: 840.0,
+    34: 57.13,
 }
 
 DEFAULT_MAX_CAP_FACTOR_PER_ZONE = {  # tech->zone
@@ -302,7 +306,11 @@ DEFAULT_MAX_CAP_FACTOR_PER_ZONE = {  # tech->zone
         4: 0.8998,
         7: 0.8626,
         8: 0.8626,
-        }
+        },
+    34: {1: 0.8998, 2: 0.8998, 3: 0.8998, 4: 0.8998, 5: 0.8998, 6: 0.8998, 7: 0.8998, 8: 0.8998,
+         9: 0.8998, 10: 0.8998, 11: 0.8998, 12: 0.8998, 13: 0.8998, 14: 0.8998, 15: 0.8998,
+         16: 0.8998,
+         },
 }
 
 
@@ -327,6 +335,7 @@ DEFAULT_MAX_MWH_PER_ZONE = {
 
 DEFAULT_MAX_MWH_NEM_WIDE = {
     1: 10624e3,  # Source Near term potential for Biomass CEC BioEnergy RoadMap 2008
+    34: 10624e3,  # Source Near term potential for Biomass CEC BioEnergy RoadMap 2008
 }
 
 
@@ -370,6 +379,7 @@ DEFAULT_TECH_LIFETIME = {  # Source GHD 2018 AEMO cost and technical parameter r
     26: 15,
     27: 15,
     28: 50,
+    34: 50,
 
 }
 
@@ -558,24 +568,24 @@ GEN_COMMIT = {
 }
 
 ALL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-            12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28]
+            12, 13, 14, 15, 16, 17, 18, 19, 22, 23, 24, 25, 26, 27, 28, 34]
 
 DISPLAY_ORDER = [
-    6, 7, 4, 5, 1, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
+    6, 7, 4, 5, 1, 34, 16, 19, 2, 3, 8, 24, 14, 25, 21, 18, 26, 15, 27, 12, 17, 22, 13, 23, 9, 10, 11]
 
-GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28]
-RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18]
-DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28]
-RE_DISP_GEN_TECH = [1, 18]
+GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20, 28, 34]
+RE_GEN_TECH = [1, 9, 10, 11, 12, 17, 18, 34]
+DISP_GEN_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 18, 19, 28, 34]
+RE_DISP_GEN_TECH = [1, 18, 34]
 TRACE_TECH = [11, 12, 13, 17]
-FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 28]
+FUEL_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 16, 19, 28, 34]
 COMMIT_TECH = [2, 3, 4, 5, 6, 7, 19, 28]
 HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21, 24, 25, 26, 27]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
-NOBUILD_TECH = [3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
-SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19]
+NOBUILD_TECH = [1, 3, 4, 5, 6, 7, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
+SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19, 34]
 
 # Variable bounds for numerical solver performance
 # Intended to inform solver of magnitude of varables, not to limit solution values
