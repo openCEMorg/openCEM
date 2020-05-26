@@ -339,9 +339,9 @@ DEFAULT_MAX_CAP_FACTOR_PER_ZONE = {  # tech->zone
 
 DEFAULT_MAX_MWH_PER_ZONE = {
     18: {
-        1: 662262,  # openNEM data shows the 2010-2017 yearly average is 662262
+        1: 0,  # openNEM data shows the 2010-2017 yearly average is 662262
         3: 0,
-        4: 0,
+        4: 662262,
         5:
         2326421,  # openNEM data shows the 2009-2018 yearly average is 2326421
         6: 0,
