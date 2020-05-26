@@ -415,22 +415,22 @@ DEFAULT_TECH_LIFETIME = {  # Source GHD 2018 AEMO cost and technical parameter r
 # Numbers are sum of ISP Build limits plus initial capacity as per capex table
 DEFAULT_BUILD_LIMIT = {
     1: {
-        11: 9250 + 1001,
-        12: 8350 + 0,
-        17: 2785 + 235,
+        11: 19400 + 1029,
+        12: 18500 + 0,
+        17: 6300 + 224,
     },
     2: {
-        11: 6000 + 170,
-        12: 2105,
-        17: 695,
+        11: 17900 + 265,
+        12: 6300 + 0,
+        17: 2200 + 0,
     },
     3: {
-        11: 4000 + 135,
-        12: 2090 + 0,
-        17: 695 + 453,
+        11: 7700 + 424,
+        12: 4200 + 0,
+        17: 1400 + 453,
     },
     4: {
-        11: 0 + 52.5,
+        11: 0 + 142,
         12: 0,
         17: 0,
     },
