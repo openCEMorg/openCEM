@@ -252,7 +252,8 @@ ZONE_INTERCONS = {
 }
 
 DEFAULT_CAPEX = {
-    16: 1588176  # GHD estimates for AEMO based on Barker Inlet
+    16: 1588176,  # GHD estimates for AEMO based on Barker Inlet
+    21: 2549019.607  # 2040MW for $AUD 5.2 Billion
 }
 
 DEFAULT_FUEL_PRICE = {
@@ -511,7 +512,7 @@ DEFAULT_STOR_PROPS = {
     14: {"rt_eff": 0.8, "charge_hours": 6},
     24: {"rt_eff": 0.8, "charge_hours": 3},
     25: {"rt_eff": 0.8, "charge_hours": 12},
-    21: {"rt_eff": 0.8, "charge_hours": 168},
+    21: {"rt_eff": 0.76, "charge_hours": 168},
     15: {"rt_eff": 0.8, "charge_hours": 2},
     26: {"rt_eff": 0.8, "charge_hours": 1},
     27: {"rt_eff": 0.8, "charge_hours": 3},
