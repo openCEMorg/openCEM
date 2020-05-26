@@ -530,7 +530,7 @@ DEFAULT_MODEL_OPT = {
 }
 
 
-GEN_COMMIT = { #TODO update to ISP2020
+GEN_COMMIT = {  # TODO update to ISP2020
     "penalty": {  # Startup fuel cost in GJ/MWh
         2: 19,
         3: 19,
@@ -622,7 +622,8 @@ HYB_TECH = [13, 22, 23]
 STOR_TECH = [14, 15, 21, 24, 25, 26, 27]
 
 RETIRE_TECH = [2, 3, 4, 5, 6, 7, 8, 16, 19]
-NOBUILD_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 18, 19, 21]  # 3, 5 and 7 no build due to incomplete data
+# 3, 5 and 7 no build due to incomplete data
+NOBUILD_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 18, 19, 21]
 SYNC_TECH = [1, 2, 3, 4, 5, 6, 7, 8, 13, 15, 16, 18, 19, 34, 36]
 
 # Variable bounds for numerical solver performance
