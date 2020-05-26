@@ -561,7 +561,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'hyb_cap_exo': 'zonetech',
             'ret_gen_cap_exo': 'zonetech',
         }
-        exogenous_capacity ='\n'
+        exogenous_capacity = '\n'
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
@@ -799,7 +799,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 if (self.tmpdir / (str(y)+'.json')).exists():
                     print("Skipping year %s" % y)
                     continue
-            if self.templatetest and self.Years.index(y)>0:
+            if self.templatetest and self.Years.index(y) > 0:
                 continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
