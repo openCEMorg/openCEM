@@ -382,7 +382,13 @@ def con_ldbal(model, z, t):
 
 
 def con_maxcap(model, zone, tech):
-    '''Prevent resulting operational capacity to exceed build limits'''
+    '''Prevent resulting operational capacity to exceed build limits.
+
+       Explicitly constraints together solar build limit with PV and CSP'''
+    if tech == 11:
+        return (model.gen_cap_op[zone, tech]
+                + sum(model.hyb_cap_op[zone, itech] for itech in model.hyb_tech_per_zone[zone])
+                <= model.gen_build_limit[zone, tech])
     return model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
 
 
