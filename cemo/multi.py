@@ -68,7 +68,7 @@ def roundup(cap):
         return 0
     if cap < -1e-6:
         return cap
-    return round(cap, 2)
+    return cap
 
 
 def setinstancecapacity(instance, clustercap):
