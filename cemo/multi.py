@@ -112,7 +112,7 @@ class SolveTemplate:
 
     def __init__(self, cfgfile,
                  solver='cbc',
-                 log=False, tmpdir=Path(tempfile.mkdtemp()),
+                 log=False, wrkdir=Path(tempfile.mkdtemp()),
                  resume=False,
                  templatetest=False):
         config = configparser.ConfigParser()
@@ -186,7 +186,7 @@ class SolveTemplate:
         self.all_tech_per_zone = dict(
             json.loads(Advanced['all_tech_per_zone']))
 
-        self.tmpdir = tmpdir
+        self.wrkdir = wrkdir
         self.solver = solver
         self.log = log
         # initialisation functions
@@ -448,7 +448,7 @@ class SolveTemplate:
         in the temporary directory'''
         if self.Years.index(year):
             prevyear = self.Years[self.Years.index(year) - 1]
-            opcap0 = "load '" + str(self.tmpdir / ('gen_cap_op' + str(prevyear) + '.json')) \
+            opcap0 = "load '" + str(self.wrkdir / ('gen_cap_op' + str(prevyear) + '.json')) \
                      + "' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
         else:
             opcap0 = '''#operating capacity for generating techs regions
@@ -492,7 +492,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         if self.Years.index(year):
             carry_fwd_cost = "#Carry forward annualised capital costs\n"
             prevyear = self.Years[self.Years.index(year) - 1]
-            carry_fwd_cost += "load '" + str(self.tmpdir / ('gen_cap_op' + str(prevyear) + '.json'))\
+            carry_fwd_cost += "load '" + str(self.wrkdir / ('gen_cap_op' + str(prevyear) + '.json'))\
                               + "' : cost_cap_carry_forward_sim;\n"
         return carry_fwd_cost
 
@@ -641,7 +641,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             date2 = datetime.datetime(year - 1, 7, 3, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
-        dcfName = self.tmpdir / ('Sim' + str(year) + '.dat')
+        dcfName = self.wrkdir / ('Sim' + str(year) + '.dat')
         fcr = "\n#Discount rate for project\n"\
             + "param all_tech_discount_rate := " + \
             str(self.discountrate) + ";\n"
@@ -796,7 +796,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         """
         for y in self.Years:
             if self.resume:
-                if (self.tmpdir / (str(y)+'.json')).exists():
+                if (self.wrkdir / (str(y)+'.json')).exists():
                     print("Skipping year %s" % y)
                     continue
             if self.templatetest and self.Years.index(y) > 0:
@@ -831,12 +831,12 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Carry forward operating capacity to next Inv period
             opcap = json_carry_forward_cap(inst)
             if y != self.Years[-1]:
-                with open(self.tmpdir / ('gen_cap_op' + str(y) + '.json'), 'w') as op:
+                with open(self.wrkdir / ('gen_cap_op' + str(y) + '.json'), 'w') as op:
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
             if self.log:
                 print("openCEM multi: Saving year %s results into temporary file" % y)
-            with open(self.tmpdir / (str(y) + '.json'), 'w') as json_out:
+            with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
                 json.dump(jsonify(inst, y), json_out)
                 json_out.write('\n')
 
@@ -857,7 +857,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             json.dump(data, out_file)
             out_file.write('\n')
             for year in self.Years:
-                with open(self.tmpdir / (str(year) + '.json'), 'r') as in_file:
+                with open(self.wrkdir / (str(year) + '.json'), 'r') as in_file:
                     copyfileobj(in_file, out_file)
 
     def generate_metadata(self):
