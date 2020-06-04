@@ -83,7 +83,7 @@ if not SIM_DIR.exists():
 X = SolveTemplate(
     cfgfile, solver=args.solver,
     log=args.log,
-    tmpdir=SIM_DIR,
+    wrkdir=SIM_DIR,
     resume=args.resume,
     templatetest = args.templatetest
 )

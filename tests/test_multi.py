@@ -93,14 +93,14 @@ def test_multi_template_first():
     '''Tests generate first year template by comparing to known good result'''
     multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
     multi_sim.generateyeartemplate(multi_sim.Years[0], test=True)
-    assert filecmp.cmp(multi_sim.tmpdir / 'Sim2020.dat', 'tests/Sim2020.dat')
+    assert filecmp.cmp(multi_sim.wrkdir / 'Sim2020.dat', 'tests/Sim2020.dat')
 
 
 def test_multi_template_second(delete_sim2025_dat):
     '''Tests generate second (and later) year template by comparing to known good result'''
     multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg', tmpdir=Path(''))
     multi_sim.generateyeartemplate(multi_sim.Years[1], test=True)
-    assert filecmp.cmp(str(multi_sim.tmpdir / 'Sim2025.dat'), 'tests/Sim2025.dat')
+    assert filecmp.cmp(str(multi_sim.wrkdir / 'Sim2025.dat'), 'tests/Sim2025.dat')
 
 
 def test_multi_metadata():
