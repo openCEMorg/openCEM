@@ -434,8 +434,7 @@ class ClusterRun:
         self._gen_ref_model()  # generate reference model for runef
         cmd = [
             "runef", "-m", self.tmpdir, "-s", self.tmpdir, "--solve",
-            "--solver=" + self.solver, "--symbolic-solver-labels",
-            "--keep-solver-files",
+            "--solver=" + self.solver, 
             "--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter"
         ]
         stdout = subprocess.DEVNULL
