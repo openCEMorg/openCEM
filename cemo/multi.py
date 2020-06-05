@@ -71,9 +71,8 @@ def roundup(cap):
     return cap
 
 
-def setinstancecapacity(instance, clustercap):
+def setinstancecapacity(instance, data):
     ''' Fix capacity varibles from cluster results to speed up dispatch calculation'''
-    data = clustercap.data
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
             key = str(z) + ',' + str(n)
@@ -819,7 +818,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     model_options=self.get_model_options(y),
                     solver=self.solver,
                     log=self.log).run_cluster()
-                inst = setinstancecapacity(inst, ccap)
+                inst = setinstancecapacity(inst, ccap.data)
 
             # Solve the model (or just dispatch if capacity has been solved)
             opt = SolverFactory(self.solver)
