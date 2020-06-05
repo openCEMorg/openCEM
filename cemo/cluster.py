@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -351,6 +352,9 @@ class ClusterRun:
         # Internal variables to class
         self.data = None
         self.tmpdir = tempfile.mkdtemp()
+        self.wrkdir = Path(self.template).resolve().parent
+        self.year =Path(self.template).resolve().stem[-4:]
+        print(self.year)
 
     def _gen_dat_files(self):
         # generate a 1 week timestamp range for each cluster member
@@ -430,7 +434,8 @@ class ClusterRun:
         self._gen_ref_model()  # generate reference model for runef
         cmd = [
             "runef", "-m", self.tmpdir, "-s", self.tmpdir, "--solve",
-            "--solver=" + self.solver,
+            "--solver=" + self.solver, "--symbolic-solver-labels",
+            "--keep-solver-files",
             "--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter"
         ]
         stdout = subprocess.DEVNULL
@@ -442,11 +447,11 @@ class ClusterRun:
 
         proc = subprocess.run(cmd, stdout=stdout)
         if proc.returncode == 0:
-            shutil.move("ef_solution.json", self.tmpdir)
+            shutil.move("ef_solution.json", self.wrkdir / ('ef_sol'+self.year+'.json'))
         else:
             sys.exit(proc.returncode)
 
-        with open(self.tmpdir + '/ef_solution.json') as f:
+        with open(self.wrkdir / ('ef_sol'+ self.year+'.json')) as f:
             clusterresult = json.load(f)
 
         self.data = clusterresult['node solutions']['Root']['variables']
