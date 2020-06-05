@@ -249,7 +249,7 @@ class CreateModel():
         self.m.gen_build_limit = Param(
             self.m.gen_tech_in_zones, initialize=init_gen_build_limit)
         self.m.gen_cap_initial = Param(
-            self.m.gen_tech_in_zones, default=0)  # operating capacity
+            self.m.gen_tech_in_zones, default=0, mutable=True)  # operating capacity
         self.m.stor_cap_initial = Param(
             self.m.stor_tech_in_zones, default=0)  # operating capacity
         self.m.hyb_cap_initial = Param(
