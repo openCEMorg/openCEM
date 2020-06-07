@@ -283,15 +283,15 @@ def con_max_trans(model, zone_source, zone_dest, time):
     '''constrain hourly transmission per link to be less than capacity
     It includes hard coded constraints for Murray/Tumit limitations on interconnectors'''
     if zone_source == 5 and zone_dest == 12:
-        return 1e3*model.intercon_disp[zone_source, zone_dest, time] \
-            <= model.intercon_cap_op[zone_source, zone_dest] \
-            - (1350 - 400) / 2303 * 1e3*model.gen_disp[5, 18, time]
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= 1e-3*model.intercon_cap_op[zone_source, zone_dest] \
+            - (1350 - 400) / 2303 * model.gen_disp[5, 18, time]
     if zone_source == 12 and zone_dest == 5:
-        return 1e3*model.intercon_disp[zone_source, zone_dest, time] \
-            <= model.intercon_cap_op[zone_source, zone_dest] \
-            - (1600 - 700) / 2222 * 1e3*model.gen_disp[12, 18, time]
-    return 1e3*model.intercon_disp[zone_source, zone_dest, time] \
-        <= model.intercon_cap_op[zone_source, zone_dest]
+        return model.intercon_disp[zone_source, zone_dest, time] \
+            <= 1e-3*model.intercon_cap_op[zone_source, zone_dest] \
+            - (1600 - 700) / 2222 * model.gen_disp[12, 18, time]
+    return model.intercon_disp[zone_source, zone_dest, time] \
+        <= 1e-3*model.intercon_cap_op[zone_source, zone_dest]
 
 
 def con_intercon_cap(model, zone_source, zone_dest):
