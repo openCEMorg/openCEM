@@ -319,76 +319,75 @@ class CreateModel():
         self.m.hyb_cap_op = Var(self.m.hyb_tech_in_zones,
                                 within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
 
-        intercon_bounds = cemo.const.CAP_BOUNDS
+        intercon_bounds = None
         if self.model_options.build_intercon_manual:
             intercon_bounds = (0, 0)
 
         self.m.intercon_cap_new = Var(
             self.m.intercons_in_zones, within=NonNegativeReals, bounds=intercon_bounds)
         self.m.intercon_cap_op = Var(
-            self.m.intercons_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.intercons_in_zones, within=NonNegativeReals)
         self.m.gen_cap_ret = Var(
             self.m.retire_gen_tech_in_zones,
-            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # retireable capacity
+            within=NonNegativeReals)  # retireable capacity
         # dispatched power
         self.m.gen_disp = Var(
             self.m.gen_tech_in_zones,
-            self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
         # Variables for committed power constraints
         self.m.gen_disp_com = Var(
             self.m.commit_gen_tech_in_zones,
-            self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
         self.m.gen_disp_com_p = Var(
             self.m.commit_gen_tech_in_zones,
-            self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
         self.m.gen_disp_com_m = Var(
             self.m.commit_gen_tech_in_zones,
-            self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
         self.m.gen_disp_com_s = Var(
             self.m.commit_gen_tech_in_zones,
-            self.m.t, within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
 
         self.m.stor_disp = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)  # dispatch from storage
+            within=NonNegativeReals)  # dispatch from storage
         self.m.stor_reserve = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # dispatched power from storage
+            within=NonNegativeReals)  # dispatched power from storage
         self.m.stor_charge = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # power to charge storage
+            within=NonNegativeReals)  # power to charge storage
 
         self.m.hyb_disp = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.SCALED_DISP_BOUNDS)  # dispatch from hybrid
+            within=NonNegativeReals)  # dispatch from hybrid
 
         self.m.hyb_reserve = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # reserve capacity for hybrids
+            within=NonNegativeReals)  # reserve capacity for hybrids
 
         self.m.hyb_charge = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)  # charging power from hybrid
+            within=NonNegativeReals)  # charging power from hybrid
 
         self.m.stor_level = Var(
             self.m.stor_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.STOR_BOUNDS)  # Charge level for storage
+            within=NonNegativeReals)  # Charge level for storage
 
         self.m.hyb_level = Var(
             self.m.hyb_tech_in_zones, self.m.t,
-            within=NonNegativeReals, bounds=cemo.const.STOR_BOUNDS)  # Charge level for storage
+            within=NonNegativeReals)  # Charge level for storage
 
         # Numerical relaxation to load balance and capacity decisions
         self.m.unserved = Var(self.m.zones, self.m.t,
-                              within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)
+                              within=NonNegativeReals)
         self.m.surplus = Var(self.m.zones, self.m.t,
-                             within=NonNegativeReals, bounds=cemo.const.DISP_BOUNDS)
+                             within=NonNegativeReals)
 
         # Interconnector flow
         self.m.intercon_disp = Var(
             self.m.intercons_in_zones,
-            self.m.t, within=NonNegativeReals,
-            bounds=cemo.const.SCALED_DISP_BOUNDS)
+            self.m.t, within=NonNegativeReals)
 
     def create_constraints(self):
         # @@ Constraints
