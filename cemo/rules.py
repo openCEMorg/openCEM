@@ -369,16 +369,17 @@ def con_maxchargehy(model, z, h, t):
 
 def con_ldbal(model, z, t):
     """Provides a rule defining a load balance constraint for the model"""
-    return sum(1e3*model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
-        + sum(1e3*model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
-        + sum(1e3*model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
-        + sum(1e3*model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
-        + model.unserved[z, t]\
-        == model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
-        + sum((1.0 + model.intercon_loss_factor[z, p]) * 1e3*model.intercon_disp[z, p, t]
+    return sum(1*model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
+        + sum(1*model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
+        + sum(1*model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + sum(1*model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
+        + sum(1e-3*model.dsp[z, b, t] for b in model.dsp_bands)\
+        + 1e-3*model.unserved[z, t]\
+        == 1e-3*model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
+        + sum((1.0 + model.intercon_loss_factor[z, p]) * 1*model.intercon_disp[z, p, t]
               for p in model.intercon_per_zone[z])\
-        + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
-        + model.surplus[z, t]
+        + sum(1e-3*model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + 1e-3*model.surplus[z, t]
 
 
 def con_maxcap(model, zone, tech):
