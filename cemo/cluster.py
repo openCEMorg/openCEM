@@ -434,7 +434,7 @@ class ClusterRun:
         self._gen_ref_model()  # generate reference model for runef
         cmd = [
             "runef", "-m", self.tmpdir, "-s", self.tmpdir, "--solve",
-            "--solver=" + self.solver, 
+            "--solver=" + self.solver,
             "--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter"
         ]
         stdout = subprocess.DEVNULL
@@ -442,7 +442,7 @@ class ClusterRun:
         if self.log:
             cmd.append("--output-solver-log")
             cmd.append("--traceback")
-            stdout = subprocess.PIPE
+            stdout = None
 
         proc = subprocess.run(cmd, stdout=stdout)
         if proc.returncode == 0:
