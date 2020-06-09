@@ -180,7 +180,7 @@ def con_operating_reserve(model, region, time):
               for zone in model.zones_per_region[region]
               for store_tech in model.stor_tech_per_zone[zone]
               )\
-        + sum(model.hyb_reserve[zone, hyb_tech, time]
+        + sum(1e3*model.hyb_reserve[zone, hyb_tech, time]
               for zone in model.zones_per_region[region]
               for hyb_tech in model.hyb_tech_per_zone[zone]
               )\
@@ -335,17 +335,17 @@ def con_storcharge(model, z, s, t):
 
 def con_hybcharge(model, z, h, t):
     '''Hybrid charge dynamic'''
-    return model.hyb_level[z, h, t] \
-        == model.hyb_level[z, h, model.t.prevw(t)] \
+    return 1e3*model.hyb_level[z, h, t] \
+        == 1e3*model.hyb_level[z, h, model.t.prevw(t)] \
         - 1e3*model.hyb_disp[z, h, t] \
-        + model.hyb_charge[z, h, t]
+        + 1e3*model.hyb_charge[z, h, t]
 
 
 def con_hyb_level_max(model, z, h, t):
     '''Hybrid storage charge is limted by collector output.
 
     '''
-    return model.hyb_charge[z, h, t] \
+    return 1e3*model.hyb_charge[z, h, t] \
         <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * model.hyb_cap_op[z, h]
 
 
@@ -353,7 +353,7 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
     '''Hybrid storage charge/discharge flow is limited by plant capacity.
 
     In the case of CSP, storage can charge faster than power block'''
-    return 1e3*model.hyb_disp[zone, hyb_tech, time] + model.hyb_reserve[zone, hyb_tech, time] \
+    return 1e3*model.hyb_disp[zone, hyb_tech, time] + 1e3*model.hyb_reserve[zone, hyb_tech, time] \
         <= model.hyb_cap_op[zone, hyb_tech]
 
 
@@ -364,16 +364,16 @@ def con_hyb_reserve_lim(model, zone, hyb_tech, time):
 
 def con_maxchargehy(model, z, h, t):
     '''Hybrid storage cannot charge beyond its maximum charge capacity'''
-    return model.hyb_level[z, h, t] \
+    return 1e3*model.hyb_level[z, h, t] \
         <= model.hyb_cap_op[z, h] * model.hyb_charge_hours[h]
 
 
 def con_ldbal(model, z, t):
     """Provides a rule defining a load balance constraint for the model"""
-    return sum(1*model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
-        + sum(1*model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
-        + sum(1*model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
-        + sum(1*model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
+    return sum(model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
+        + sum(model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
+        + sum(model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
         + sum(1e-3*model.dsp[z, b, t] for b in model.dsp_bands)\
         + 1e-3*model.unserved[z, t]\
         == 1e-3*model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
