@@ -179,7 +179,7 @@ def con_operating_reserve(model, region, time):
               for zone in model.zones_per_region[region]
               for store_tech in model.stor_tech_per_zone[zone]
               )\
-        + sum(model.hyb_reserve[zone, hyb_tech, time]
+        + sum(1e3*model.hyb_reserve[zone, hyb_tech, time]
               for zone in model.zones_per_region[region]
               for hyb_tech in model.hyb_tech_per_zone[zone]
               )\
@@ -334,17 +334,17 @@ def con_storcharge(model, z, s, t):
 
 def con_hybcharge(model, z, h, t):
     '''Hybrid charge dynamic'''
-    return model.hyb_level[z, h, t] \
-        == model.hyb_level[z, h, model.t.prevw(t)] \
+    return 1e3*model.hyb_level[z, h, t] \
+        == 1e3*model.hyb_level[z, h, model.t.prevw(t)] \
         - 1e3*model.hyb_disp[z, h, t] \
-        + model.hyb_charge[z, h, t]
+        + 1e3*model.hyb_charge[z, h, t]
 
 
 def con_hyb_level_max(model, z, h, t):
     '''Hybrid storage charge is limted by collector output.
 
     '''
-    return model.hyb_charge[z, h, t] \
+    return 1e3*model.hyb_charge[z, h, t] \
         <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * model.hyb_cap_op[z, h]
 
 
@@ -352,18 +352,19 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
     '''Hybrid storage charge/discharge flow is limited by plant capacity.
 
     In the case of CSP, storage can charge faster than power block'''
-    return 1e3*model.hyb_disp[zone, hyb_tech, time] + model.hyb_reserve[zone, hyb_tech, time] \
+    return 1e3*model.hyb_disp[zone, hyb_tech, time] + 1e3*model.hyb_reserve[zone, hyb_tech, time] \
         <= model.hyb_cap_op[zone, hyb_tech]
 
 
 def con_hyb_reserve_lim(model, zone, hyb_tech, time):
     '''limit hybrid reserves to be within storage charge. '''
-    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[zone, hyb_tech, time]
+    return 1e3*model.hyb_reserve[zone, hyb_tech, time] <= 1e3*model.hyb_level[
+        zone, hyb_tech, time]
 
 
 def con_maxchargehy(model, z, h, t):
     '''Hybrid storage cannot charge beyond its maximum charge capacity'''
-    return model.hyb_level[z, h, t] \
+    return 1e3*model.hyb_level[z, h, t] \
         <= model.hyb_cap_op[z, h] * model.hyb_charge_hours[h]
 
 
