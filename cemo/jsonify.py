@@ -203,13 +203,13 @@ def jsonify(inst, year):
                 inst.stor_disp.name:
                 fill_complex_var(inst.stor_disp, 1e3),
                 inst.stor_charge.name:
-                fill_complex_var(inst.stor_charge),
+                fill_complex_var(inst.stor_charge, 1e3),
                 inst.hyb_disp.name:
                 fill_complex_var(inst.hyb_disp, 1e3),
                 inst.hyb_charge.name:
                 fill_complex_var(inst.hyb_charge),
                 inst.stor_level.name:
-                fill_complex_var(inst.stor_level),
+                fill_complex_var(inst.stor_level, 1e3),
                 inst.hyb_level.name:
                 fill_complex_var(inst.hyb_level),
                 inst.unserved.name:
