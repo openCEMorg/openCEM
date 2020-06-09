@@ -472,10 +472,10 @@ def con_hyb_cap(model, z, h):  # z and n come both from TechinZones
 def con_caplim(model, z, n, t):  # z and n come both from TechinZones
     '''Dispatch within the hourly limit on capacity factor for operating capacity'''
     if cemo.const.GEN_COMMIT['penalty'].get(n) is not None:
-        return 1e3*model.gen_disp_com[
-            z, n, t] <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
-    return 1e3*model.gen_disp[z, n, t] \
-        <= model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+        return model.gen_disp_com[
+            z, n, t] <= 1e-3 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+    return model.gen_disp[z, n, t] \
+        <= 1e-3 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
 
 
 def con_min_load_commit(model, z, n, t):
