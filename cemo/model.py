@@ -287,7 +287,8 @@ class CreateModel():
                 if cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get("index", None) is None:
                     setattr(self.m,
                             option,
-                            Param(default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                            Param(default=cemo.const.DEFAULT_MODEL_OPT.get(
+                                option, {}).get('value', 0))
                             )
                 else:
                     setattr(self.m,

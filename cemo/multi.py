@@ -490,8 +490,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         carry_fwd_cost = ''
         if self.Years.index(year):
             carry_fwd_cost = "#Carry forward annualised capital costs\n"
-            prevyear = self.Years[self.Years.index(year) - 1]
-            carry_fwd_cost += "load '" + str(self.wrkdir / ('gen_cap_op' + str(prevyear) + '.json'))\
+            prvyear = self.Years[self.Years.index(year) - 1]
+            carry_fwd_cost += "load '" + str(self.wrkdir / ('gen_cap_op' + str(prvyear) + '.json'))\
                               + "' : cost_cap_carry_forward_sim;\n"
         return carry_fwd_cost
 

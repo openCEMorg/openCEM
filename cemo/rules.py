@@ -171,7 +171,8 @@ def con_operating_reserve(model, region, time):
                for gen_tech in set(model.disp_gen_tech_per_zone[zone])
                - set(model.commit_gen_tech_per_zone[zone])
                )\
-        + sum(1e3*model.gen_disp_com[zone, gen_tech, time] - 1e3*model.gen_disp[zone, gen_tech, time]
+        + sum(1e3*model.gen_disp_com[zone, gen_tech, time]
+              - 1e3*model.gen_disp[zone, gen_tech, time]
               for zone in model.zones_per_region[region]
               for gen_tech in model.commit_gen_tech_per_zone[zone]
               )\
@@ -406,11 +407,12 @@ def build_adjust_exo_cap(model):
     In the case of exogenous builds, that they do not violate build limits
     '''
     for zone, tech in model.gen_tech_in_zones:
-        if value(model.gen_cap_initial[zone, tech]) >  value(model.gen_build_limit[zone, tech]):
-                 model.gen_cap_initial[zone, tech]= value(model.gen_build_limit[zone, tech])
+        if value(model.gen_cap_initial[zone, tech]) > value(model.gen_build_limit[zone, tech]):
+            model.gen_cap_initial[zone, tech] = value(model.gen_build_limit[zone, tech])
         if value(model.gen_cap_initial[zone, tech]
                  + model.gen_cap_exo[zone, tech]) > value(model.gen_build_limit[zone, tech]):
-            model.gen_cap_exo[zone, tech] = value(model.gen_build_limit[zone, tech]-model.gen_cap_initial[zone, tech])
+            model.gen_cap_exo[zone, tech] = value(
+                model.gen_build_limit[zone, tech]-model.gen_cap_initial[zone, tech])
 
 
 def build_adjust_exo_ret(model):
