@@ -175,7 +175,7 @@ def con_operating_reserve(model, region, time):
               for zone in model.zones_per_region[region]
               for gen_tech in model.commit_gen_tech_per_zone[zone]
               )\
-        + sum(model.stor_reserve[zone, store_tech, time]
+        + sum(1e3*model.stor_reserve[zone, store_tech, time]
               for zone in model.zones_per_region[region]
               for store_tech in model.stor_tech_per_zone[zone]
               )\
@@ -308,28 +308,28 @@ def con_intercon_cap(model, zone_source, zone_dest):
 
 def con_stor_flow_lim(model, z, s, t):
     '''limit flow of charge/discharge to storage to be less than storage nameplate capacity'''
-    return (model.stor_charge[z, s, t]
+    return (1e3*model.stor_charge[z, s, t]
             + 1e3*model.stor_disp[z, s, t]
-            + model.stor_reserve[z, s, t]) <= model.stor_cap_op[z, s]
+            + 1e3*model.stor_reserve[z, s, t]) <= model.stor_cap_op[z, s]
 
 
 def con_stor_reserve_lim(model, z, s, t):
     '''limit flow of energy out of storage to be less than its nameplate capacity'''
-    return model.stor_reserve[z, s, t] <= model.stor_level[z, s, t]
+    return 1e3*model.stor_reserve[z, s, t] <= 1e3*model.stor_level[z, s, t]
 
 
 def con_maxcharge(model, z, s, t):
     '''Storage charge must not exceed maximum capacity'''
-    return model.stor_level[z, s, t] \
+    return 1e3*model.stor_level[z, s, t] \
         <= model.stor_cap_op[z, s] * model.stor_charge_hours[s]
 
 
 def con_storcharge(model, z, s, t):
     '''Storage charge dynamic'''
-    return model.stor_level[z, s, t] \
-        == model.stor_level[z, s, model.t.prevw(t)] \
+    return 1e3*model.stor_level[z, s, t] \
+        == 1e3*model.stor_level[z, s, model.t.prevw(t)] \
         - 1e3*model.stor_disp[z, s, t] + \
-        model.stor_rt_eff[s] * model.stor_charge[z, s, t]
+        model.stor_rt_eff[s] * 1e3*model.stor_charge[z, s, t]
 
 
 def con_hybcharge(model, z, h, t):
@@ -377,7 +377,7 @@ def con_ldbal(model, z, t):
         == 1e-3*model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
         + sum((1.0 + model.intercon_loss_factor[z, p]) * 1*model.intercon_disp[z, p, t]
               for p in model.intercon_per_zone[z])\
-        + sum(1e-3*model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
+        + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
         + 1e-3*model.surplus[z, t]
 
 
