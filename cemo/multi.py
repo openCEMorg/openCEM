@@ -637,7 +637,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         strd1 = "'" + str(date1) + "'"
         date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
         if test:
-            date2 = datetime.datetime(year - 1, 7, 3, 23, 0, 0)
+            date2 = datetime.datetime(year - 1, 7, 7, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.wrkdir / ('Sim' + str(year) + '.dat')
