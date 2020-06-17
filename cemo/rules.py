@@ -359,12 +359,7 @@ def con_hyb_flow_lim(model, zone, hyb_tech, time):
 
 def con_hyb_reserve_lim(model, zone, hyb_tech, time):
     '''limit hybrid reserves to be within storage charge. '''
-<<<<<<< HEAD
     return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[zone, hyb_tech, time]
-=======
-    return model.hyb_reserve[zone, hyb_tech, time] <= model.hyb_level[
-        zone, hyb_tech, time]
->>>>>>> 221f66b... Tidy up of scaling coefficients for constraints
 
 
 def con_maxchargehy(model, z, h, t):
