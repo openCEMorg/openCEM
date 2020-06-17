@@ -16,7 +16,7 @@ RUN conda install -y -c conda-forge coincbc
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
-RUN git clone https://github.com/openCEMorg/openCEM.git .
+COPY . .
 
 # Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
