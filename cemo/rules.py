@@ -405,7 +405,8 @@ def build_adjust_exo_cap(model):
             model.gen_cap_initial[zone, tech] = value(model.gen_build_limit[zone, tech])
         if value(model.gen_cap_initial[zone, tech]
                  + model.gen_cap_exo[zone, tech]) > value(model.gen_build_limit[zone, tech]):
-            model.gen_cap_exo[zone, tech] = value(model.gen_build_limit[zone, tech]-model.gen_cap_initial[zone, tech])
+            model.gen_cap_exo[zone, tech] = value(
+                model.gen_build_limit[zone, tech]-model.gen_cap_initial[zone, tech])
 
 
 def build_adjust_exo_ret(model):
