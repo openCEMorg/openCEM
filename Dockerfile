@@ -16,7 +16,9 @@ RUN conda install -y -c conda-forge coincbc
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
-COPY . .
+ADD requirements.txt .
 
 # Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .

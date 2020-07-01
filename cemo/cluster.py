@@ -353,7 +353,7 @@ class ClusterRun:
         self.data = None
         self.tmpdir = tempfile.mkdtemp()
         self.wrkdir = Path(self.template).resolve().parent
-        self.year =Path(self.template).resolve().stem[-4:]
+        self.year = Path(self.template).resolve().stem[-4:]
         print(self.year)
 
     def _gen_dat_files(self):
@@ -450,7 +450,7 @@ class ClusterRun:
         else:
             sys.exit(proc.returncode)
 
-        with open(self.wrkdir / ('ef_sol'+ self.year+'.json')) as f:
+        with open(self.wrkdir / ('ef_sol' + self.year+'.json')) as f:
             clusterresult = json.load(f)
 
         self.data = clusterresult['node solutions']['Root']['variables']

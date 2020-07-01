@@ -3,7 +3,7 @@
 import json
 
 from cemo.jsonify import (json_readr, json_readr_meta, json_readr_year,
-     jsoninit, jsonify, json_carry_forward_cap, jsonopcap0)
+                          jsoninit, jsonify, json_carry_forward_cap, jsonopcap0)
 
 
 def sort_func(item):
@@ -54,7 +54,7 @@ def test_jsonopcap0(solution):
     '''Assert jsonopcap0 matches known output'''
     data = jsonopcap0(solution)
     with open('tests/jsonopcap0_test.json') as known:
-        data2 =json.load(known)
+        data2 = json.load(known)
     for key in data:
         assert dumped_data(data[key]) == dumped_data(data2[key])
 

@@ -300,7 +300,8 @@ def plotcluster(cluster, row=3, col=4, ylim=None, show=False):  # pragma: no cov
                    - 1].plot(t, cluster.X[i][:cluster.nplen], '0.01', alpha=0.3, linewidth=0.75)
 
     # Add mean and nearest incluster for each cluster plit
-    plotrange = cluster.max_d - 2 if isinstance(cluster,cemo.cluster.InstanceCluster) else cluster.max_d
+    plotrange = cluster.max_d - \
+        2 if isinstance(cluster, cemo.cluster.InstanceCluster) else cluster.max_d
     for j in range(plotrange):
 
         axarr.flat[j].plot(t, cluster.Xsynth[j], 'r')  # mean

@@ -287,13 +287,15 @@ class CreateModel():
                 if cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get("index", None) is None:
                     setattr(self.m,
                             option,
-                            Param(default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                            Param(default=cemo.const.DEFAULT_MODEL_OPT.get(
+                                option, {}).get('value', 0))
                             )
                 else:
                     setattr(self.m,
                             option,
                             Param(eval(cemo.const.DEFAULT_MODEL_OPT[option].get("index", None)),
-                                  default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                                  default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value',
+                                                                                           0))
                             )
         # Build action to prevent exogenous buids to exceed build limits
         self.m.build_adjust_exo_cap = BuildAction(rule=build_adjust_exo_cap)
