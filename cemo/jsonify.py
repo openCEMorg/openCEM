@@ -220,7 +220,7 @@ def jsonify(inst, year):
                 fill_complex_var(inst.intercon_disp, 1e3)
             },
             'duals': {
-                'srmc': fill_dual_suffix(inst.dual, inst.ldbal)
+                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1e-3)
             },
             'objective_value': value(system_cost(inst))
         }
@@ -395,11 +395,11 @@ def fill_complex_var(var, scale=1):
     return out
 
 
-def fill_dual_suffix(dual, name):
+def fill_dual_suffix(dual, name, scale=1):
     '''Return dual suffix dictionary'''
     out = []
     for i in name:
-        out.append({'index': i, 'value': dual[name[i]]})
+        out.append({'index': i, 'value': scale * dual[name[i]]})
 
     return out
 
