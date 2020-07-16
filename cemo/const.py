@@ -483,7 +483,7 @@ DEFAULT_HYB_PROPS = {
 }
 
 DEFAULT_COSTS = {
-    "unserved": 980000,
+    "unserved": 98000,
     "trans": 0.02339,  # AEMO 2018-2019 budget
     "emit": 0,
 }
