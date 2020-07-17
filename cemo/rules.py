@@ -715,4 +715,4 @@ def obj_cost(model):
             + cost_fixed(model) + cost_unserved(model) + cost_operating(model)
             + cost_trans_build_model(model)
             + cost_trans_flow(model) + cost_emissions(model)
-            + cost_retirement_model(model) + cost_shadow(model)) / model.year_correction_factor
+            + cost_retirement_model(model) + cost_shadow(model))
