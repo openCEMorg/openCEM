@@ -396,9 +396,9 @@ def con_maxcap(model, zone, tech):
 
 def con_emissions(model):
     '''Emission constraint for the NEM in MT/y for total emissions'''
-    return 1e-6*sum(
+    return 1e-8*sum(
         emissions(model, region)
-        for region in model.regions) <= 1e3 * model.nem_emit_limit / model.year_correction_factor
+        for region in model.regions) <= 1e1 * model.nem_emit_limit / model.year_correction_factor
 
 
 def build_adjust_exo_cap(model):
