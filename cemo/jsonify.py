@@ -177,50 +177,50 @@ def jsonify(inst, year):
             },
             'vars': {
                 inst.gen_cap_new.name:
-                fill_complex_var(inst.gen_cap_new),
+                fill_complex_var(inst.gen_cap_new, 1e-3),
                 inst.gen_cap_op.name:
-                fill_complex_var(inst.gen_cap_op),
+                fill_complex_var(inst.gen_cap_op, 1e-3),
                 inst.stor_cap_new.name:
-                fill_complex_var(inst.stor_cap_new),
+                fill_complex_var(inst.stor_cap_new, 1e-3),
                 inst.stor_cap_op.name:
-                fill_complex_var(inst.stor_cap_op),
+                fill_complex_var(inst.stor_cap_op, 1e-3),
                 inst.hyb_cap_new.name:
-                fill_complex_var(inst.hyb_cap_new),
+                fill_complex_var(inst.hyb_cap_new, 1e-3),
                 inst.hyb_cap_op.name:
-                fill_complex_var(inst.hyb_cap_op),
+                fill_complex_var(inst.hyb_cap_op, 1e-3),
                 inst.intercon_cap_new.name:
-                fill_complex_var(inst.intercon_cap_new),
+                fill_complex_var(inst.intercon_cap_new, 1e-3),
                 inst.intercon_cap_op.name:
-                fill_complex_var(inst.intercon_cap_op),
+                fill_complex_var(inst.intercon_cap_op, 1e-3),
                 inst.gen_cap_ret.name:
-                fill_complex_var(inst.gen_cap_ret),
+                fill_complex_var(inst.gen_cap_ret, 1e-3),
                 inst.gen_disp.name:
-                fill_complex_var(inst.gen_disp, 1e3),
+                fill_complex_var(inst.gen_disp),
                 inst.gen_disp_com.name:
-                fill_complex_var(inst.gen_disp_com, 1e3),
+                fill_complex_var(inst.gen_disp_com),
                 inst.gen_disp_com_p.name:
-                fill_complex_var(inst.gen_disp_com_p, 1e3),
+                fill_complex_var(inst.gen_disp_com_p),
                 inst.stor_disp.name:
-                fill_complex_var(inst.stor_disp, 1e3),
+                fill_complex_var(inst.stor_disp),
                 inst.stor_charge.name:
-                fill_complex_var(inst.stor_charge, 1e3),
+                fill_complex_var(inst.stor_charge),
                 inst.hyb_disp.name:
-                fill_complex_var(inst.hyb_disp, 1e3),
+                fill_complex_var(inst.hyb_disp),
                 inst.hyb_charge.name:
-                fill_complex_var(inst.hyb_charge, 1e3),
+                fill_complex_var(inst.hyb_charge),
                 inst.stor_level.name:
-                fill_complex_var(inst.stor_level, 1e3),
+                fill_complex_var(inst.stor_level),
                 inst.hyb_level.name:
-                fill_complex_var(inst.hyb_level, 1e3),
+                fill_complex_var(inst.hyb_level),
                 inst.unserved.name:
                 fill_complex_var(inst.unserved),
                 inst.surplus.name:
                 fill_complex_var(inst.surplus),
                 inst.intercon_disp.name:
-                fill_complex_var(inst.intercon_disp, 1e3)
+                fill_complex_var(inst.intercon_disp)
             },
             'duals': {
-                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1e-3)
+                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1)
             },
             'objective_value': value(system_cost(inst))
         }

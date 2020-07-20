@@ -72,12 +72,12 @@ param : stor_rt_eff stor_charge_hours :=
 ;
 
 param : cost_stor_build:=
-16 14 1355080
-9 15 1010060
+16 14 1355.080
+9 15 1010.060
 ;
 
 param : cost_stor_fom cost_stor_vom :=
-14 5000 5
+14 5.000 5
 15 0 0
 ;
 
@@ -89,12 +89,12 @@ set hyb_tech_in_zones :=
 ;
 
 param : cost_hyb_build :=
-10 13 4431590
-16 13 4431590
+10 13 4431.590
+16 13 4431.590
 ;
 
 param : cost_hyb_fom cost_hyb_vom :=
-13 75600 5.99
+13 75.600 5.99
 ;
 
 param : nem_emit_limit := 140;
@@ -104,7 +104,7 @@ param : hyb_col_mult hyb_charge_hours :=
 ;
 
 # Cost of unserved power $/MW
-param cost_unserved:= 980000;
+param cost_unserved:= 98000;
 
 # Cost of transmission $/MW
 param cost_trans:= 0.00001;
