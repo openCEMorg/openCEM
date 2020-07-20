@@ -387,11 +387,13 @@ def con_maxcap(model, zone, tech):
     '''Prevent resulting operational capacity to exceed build limits.
 
        Explicitly constraints together solar build limit with PV and CSP'''
-    if tech == 11:
-        return (model.gen_cap_op[zone, tech]
-                + sum(model.hyb_cap_op[zone, itech] for itech in model.hyb_tech_per_zone[zone])
-                <= model.gen_build_limit[zone, tech])
-    return model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
+    if cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech) is not None:
+        if tech == 11:
+            return (model.gen_cap_op[zone, tech]
+                    + sum(model.hyb_cap_op[zone, itech] for itech in model.hyb_tech_per_zone[zone])
+                    <= model.gen_build_limit[zone, tech])
+        return model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
+    return Constraint.Skip
 
 
 def con_emissions(model):
