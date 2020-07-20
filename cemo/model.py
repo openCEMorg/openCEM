@@ -306,20 +306,20 @@ class CreateModel():
         # @@ Variables
         # New capacity
         self.m.gen_cap_new = Var(
-            self.m.gen_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.gen_tech_in_zones, within=NonNegativeReals)
         self.m.gen_cap_op = Var(
             self.m.gen_tech_in_zones,
-            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total generation capacity
+            within=NonNegativeReals)  # Total generation capacity
         # New storage capacity
         self.m.stor_cap_new = Var(
-            self.m.stor_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.stor_tech_in_zones, within=NonNegativeReals)
         self.m.stor_cap_op = Var(
             self.m.stor_tech_in_zones,
-            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total storage capacity
+            within=NonNegativeReals)  # Total storage capacity
         self.m.hyb_cap_new = Var(
-            self.m.hyb_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.hyb_tech_in_zones, within=NonNegativeReals)
         self.m.hyb_cap_op = Var(self.m.hyb_tech_in_zones,
-                                within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+                                within=NonNegativeReals)
 
         intercon_bounds = None
         if self.model_options.build_intercon_manual:
