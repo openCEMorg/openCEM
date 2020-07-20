@@ -345,8 +345,8 @@ def con_hyb_level_max(model, z, h, t):
     '''Hybrid storage charge is limted by collector output.
 
     '''
-    return model.hyb_charge[z, h, t] \
-        <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * 1e-3 * model.hyb_cap_op[z, h]
+    return 1e3*model.hyb_charge[z, h, t] \
+        <= model.hyb_cap_factor[z, h, t] * model.hyb_col_mult[h] * 1e0 * model.hyb_cap_op[z, h]
 
 
 def con_hyb_flow_lim(model, zone, hyb_tech, time):
@@ -470,10 +470,10 @@ def con_hyb_cap(model, z, h):  # z and n come both from TechinZones
 def con_caplim(model, z, n, t):  # z and n come both from TechinZones
     '''Dispatch within the hourly limit on capacity factor for operating capacity'''
     if cemo.const.GEN_COMMIT['penalty'].get(n) is not None:
-        return model.gen_disp_com[
-            z, n, t] <= 1e-3 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
-    return model.gen_disp[z, n, t] \
-        <= 1e-3 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+        return 1e3*model.gen_disp_com[
+            z, n, t] <= 1e0 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
+    return 1e3*model.gen_disp[z, n, t] \
+        <= 1e0 * model.gen_cap_factor[z, n, t] * model.gen_cap_op[z, n]
 
 
 def con_min_load_commit(model, z, n, t):
