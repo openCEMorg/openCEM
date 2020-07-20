@@ -21,7 +21,7 @@ import pandas as pd
 from scipy.cluster.hierarchy import fcluster, linkage
 from scipy.spatial.distance import pdist
 
-from cemo.jsonify import fill_complex_param, fill_complex_mutable_param
+from cemo.jsonify import fill_complex_mutable_param
 from cemo.const import GEN_TECH, HYB_TECH, TRACE_TECH
 
 
