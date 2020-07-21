@@ -279,13 +279,13 @@ def json_carry_forward_cap(inst):
     '''Produce JSON output of capacity data to carry forward to next investment period'''
     out = {
         inst.gen_cap_initial.name:
-        fill_complex_var(inst.gen_cap_op),
+        fill_complex_var(inst.gen_cap_op, 1e-3),
         inst.stor_cap_initial.name:
-        fill_complex_var(inst.stor_cap_op),
+        fill_complex_var(inst.stor_cap_op, 1e-3),
         inst.hyb_cap_initial.name:
-        fill_complex_var(inst.hyb_cap_op),
+        fill_complex_var(inst.hyb_cap_op, 1e-3),
         inst.intercon_cap_initial.name:
-        fill_complex_var(inst.intercon_cap_op),
+        fill_complex_var(inst.intercon_cap_op, 1e-3),
         inst.cost_cap_carry_forward_sim.name: [{
             "index":
             zone,

@@ -599,8 +599,8 @@ def cost_trans_build_per_zone_exo(model, zone):
 
 def cost_retirement(model):
     '''Calculate total retirment costs for all retired capacity'''
-    return sum(model.cost_retire[n] * 1e-3
-               * (model.gen_cap_ret[z, n] + model.ret_gen_cap_exo[z, n])
+    return sum(model.cost_retire[n]
+               * (1e-3 * model.gen_cap_ret[z, n] + model.ret_gen_cap_exo[z, n])
                for z in model.zones for n in model.retire_gen_tech_per_zone[z])
 
 
