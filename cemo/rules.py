@@ -557,15 +557,15 @@ def cost_build_per_zone_model(model, zone):
 def cost_build_per_zone_exo(model, zone):
     '''calculate exogenous build costs per zone'''
     return sum(model.cost_gen_build[zone, tech]
-               * (1e-3 * model.gen_cap_exo[zone, tech])
+               * (1e3 * model.gen_cap_exo[zone, tech])
                * model.fixed_charge_rate[tech]
                for tech in model.gen_tech_per_zone[zone])\
         + sum(model.cost_stor_build[zone, tech]
-              * (1e-3 * model.stor_cap_exo[zone, tech])
+              * (1e3 * model.stor_cap_exo[zone, tech])
               * model.fixed_charge_rate[tech]
               for tech in model.stor_tech_per_zone[zone])\
         + sum(model.cost_hyb_build[zone, tech]
-              * (1e-3 * model.hyb_cap_exo[zone, tech])
+              * (1e3 * model.hyb_cap_exo[zone, tech])
               * model.fixed_charge_rate[tech]
               for tech in model.hyb_tech_per_zone[zone])
 
@@ -591,7 +591,7 @@ def cost_trans_build_per_zone_model(model, zone):
 
 def cost_trans_build_per_zone_exo(model, zone):
     '''Tally exogenous transmission build costs from a zone'''
-    return sum(model.cost_intercon_build[zone, dest] * 1e-3
+    return sum(model.cost_intercon_build[zone, dest]
                * (model.intercon_cap_exo[zone, dest])
                * model.intercon_fixed_charge_rate
                for dest in model.intercon_per_zone[zone])
