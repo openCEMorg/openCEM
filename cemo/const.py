@@ -247,7 +247,11 @@ ZONE_INTERCONS = {
 }
 
 DEFAULT_CAPEX = {
-    16: 1588176  # GHD estimates for AEMO based on Barker Inlet
+    10: 1850.141,  # Avg value NTNDP 2016 demand scenario 1
+    16: 1588.176,  # GHD estimates for AEMO based on Barker Inlet
+    17: 2100,  # Default value from ISP 2018 to cover ADE until traces are remapped
+    18: 9000,  # Placeholder value, tech is in NOBUILD list
+    19: 9000,  # Placeholder value, tech is in NOBUILD list
 }
 
 DEFAULT_FUEL_PRICE = {
@@ -462,6 +466,7 @@ GEN_CAP_FACTOR = {
     10: 0,
     11: 0,
     12: 0,
+    17: 0,
 }
 
 CAP_FACTOR_THRES = 1e-4
