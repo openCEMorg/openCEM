@@ -166,9 +166,9 @@ class CreateModel():
         self.m.cost_gen_build = Param(
             self.m.gen_tech_in_zones, initialize=init_default_capex)
         self.m.cost_stor_build = Param(
-            self.m.stor_tech_in_zones, initialize=init_default_capex)  # Capital costs storage
+            self.m.stor_tech_in_zones)  # Capital costs storage
         self.m.cost_hyb_build = Param(
-            self.m.hyb_tech_in_zones,  initialize=init_default_capex)  # Capital costs hybrid
+            self.m.hyb_tech_in_zones)  # Capital costs hybrid
         # Capital costs $/MW/km trans
         self.m.cost_intercon_build = Param(
             self.m.intercons_in_zones, initialize=init_intercon_build_cost)
@@ -202,7 +202,7 @@ class CreateModel():
         # Per year cost adjustment for sims shorter than 1 year of dispatch
         self.m.year_correction_factor = Param(
             initialize=init_year_correction_factor)
-        # TODO, make this initialise from database
+
         self.m.cost_retire = Param(
             self.m.retire_gen_tech, initialize=init_cost_retire)
         self.m.cost_unserved = Param(
@@ -294,7 +294,8 @@ class CreateModel():
                     setattr(self.m,
                             option,
                             Param(eval(cemo.const.DEFAULT_MODEL_OPT[option].get("index", None)),
-                                  default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value', 0))
+                                  default=cemo.const.DEFAULT_MODEL_OPT.get(option, {}).get('value',
+                                                                                           0))
                             )
         # Build action to prevent exogenous buids to exceed build limits
         self.m.build_adjust_exo_cap = BuildAction(rule=build_adjust_exo_cap)
@@ -305,20 +306,20 @@ class CreateModel():
         # @@ Variables
         # New capacity
         self.m.gen_cap_new = Var(
-            self.m.gen_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.gen_tech_in_zones, within=NonNegativeReals)
         self.m.gen_cap_op = Var(
             self.m.gen_tech_in_zones,
-            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total generation capacity
+            within=NonNegativeReals)  # Total generation capacity
         # New storage capacity
         self.m.stor_cap_new = Var(
-            self.m.stor_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.stor_tech_in_zones, within=NonNegativeReals)
         self.m.stor_cap_op = Var(
             self.m.stor_tech_in_zones,
-            within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)  # Total storage capacity
+            within=NonNegativeReals)  # Total storage capacity
         self.m.hyb_cap_new = Var(
-            self.m.hyb_tech_in_zones, within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+            self.m.hyb_tech_in_zones, within=NonNegativeReals)
         self.m.hyb_cap_op = Var(self.m.hyb_tech_in_zones,
-                                within=NonNegativeReals, bounds=cemo.const.CAP_BOUNDS)
+                                within=NonNegativeReals)
 
         intercon_bounds = None
         if self.model_options.build_intercon_manual:

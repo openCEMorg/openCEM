@@ -255,8 +255,11 @@ ZONE_INTERCONS = {
 }
 
 DEFAULT_CAPEX = {
-    16: 1588176,  # GHD estimates for AEMO based on Barker Inlet
-    21: 2549019.607  # 2040MW for $AUD 5.2 Billion
+    10: 1850.141,  # Avg value NTNDP 2016 demand scenario 1
+    16: 1588.176,  # GHD estimates for AEMO based on Barker Inlet
+    17: 2100,  # Default value from ISP 2018 to cover ADE until traces are remapped
+    18: 9000,  # Placeholder value, tech is in NOBUILD list
+    19: 9000,  # Placeholder value, tech is in NOBUILD list
 }
 
 DEFAULT_FUEL_PRICE = {
@@ -535,7 +538,7 @@ DEFAULT_HYB_PROPS = {
 }
 
 DEFAULT_COSTS = {
-    "unserved": 14700,
+    "unserved": 98000,
     "trans": 0.02339,  # AEMO 2018-2019 budget
     "emit": 0,
 }

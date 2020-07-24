@@ -9,9 +9,7 @@ from cemo.const import ZONE_DEMAND_PCT
 
 
 @pytest.mark.parametrize("zone,tech", [
-    (16, 1),
-    (16, 2),
-    (16, 8),
+    (11, 11),
     (16, 12),
 ])
 def test_con_maxcap(solution, zone, tech):
