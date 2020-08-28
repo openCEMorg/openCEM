@@ -14,6 +14,7 @@ import subprocess
 import sys
 import tempfile
 from collections import deque
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -346,6 +347,8 @@ class ClusterRun:
             # Force unserved constraint for cluster run
             self.model_options = model_options._replace(unslim=True)
         self.template = template
+        self.wrkdir = Path(self.template).resolve().parent
+        self.year = Path(self.template).resolve().stem[-4:]
         self.solver = solver
         self.log = log
         # Internal variables to class
@@ -442,11 +445,11 @@ class ClusterRun:
 
         proc = subprocess.run(cmd, stdout=stdout)
         if proc.returncode == 0:
-            shutil.move("ef_solution.json", self.tmpdir)
+            shutil.move("ef_solution.json", self.wrkdir / ('ef_sol'+self.year+'.json'))
         else:
             sys.exit(proc.returncode)
 
-        with open(self.tmpdir + '/ef_solution.json') as f:
+        with open(self.wrkdir / ('ef_sol' + self.year+'.json')) as f:
             clusterresult = json.load(f)
 
         self.data = clusterresult['node solutions']['Root']['variables']
