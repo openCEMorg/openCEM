@@ -9,7 +9,7 @@ __email__ = "jose.zapata@itpau.com.au"
 import configparser
 import datetime
 import json
-import os.path
+from pathlib import Path
 import tempfile
 
 import pandas as pd
@@ -22,6 +22,13 @@ from cemo.model import CreateModel, model_options
 from cemo.utils import printstats
 
 from shutil import copyfileobj
+
+
+def make_file_path(pathstring, cfgroot):
+    '''Return a full path for a file reference in cfg file, whether relative or absolute'''
+    if Path(pathstring).is_absolute():
+        return Path(pathstring)
+    return cfgroot.parent / pathstring
 
 
 def sql_tech_pairs(techset):
@@ -105,14 +112,14 @@ class SolveTemplate:
 
     def __init__(self, cfgfile,
                  solver='cbc',
-                 log=False, tmpdir=tempfile.mkdtemp() + '/',
+                 log=False, wrkdir=Path(tempfile.mkdtemp()),
                  resume=False,
                  templatetest=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
                 config.read_file(f)
-            self.cfgfile = cfgfile
+            self.cfgfile = Path(cfgfile)
         except FileNotFoundError:
             raise FileNotFoundError('openCEM Scenario config file not found')
 
@@ -146,19 +153,19 @@ class SolveTemplate:
             self.description = Scenario['Description']
         # Advanced configuration options
         Advanced = config['Advanced']
-        self.Template = Advanced['Template']
+        self.Template = make_file_path(Advanced['Template'], self.cfgfile)
 
         self.custom_costs = None
         if config.has_option('Advanced', 'custom_costs'):
-            self.custom_costs = Advanced['custom_costs']
+            self.custom_costs = make_file_path(Advanced['custom_costs'], self.cfgfile)
 
         self.exogenous_capacity = None
         if config.has_option('Advanced', 'exogenous_capacity'):
-            self.exogenous_capacity = Advanced['exogenous_capacity']
+            self.exogenous_capacity = make_file_path(Advanced['exogenous_capacity'], self.cfgfile)
 
         self.exogenous_transmission = None
         if config.has_option('Advanced', 'exogenous_transmission'):
-            self.exogenous_transmission = Advanced['exogenous_transmission']
+            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'], self.cfgfile)
 
         self.cluster = Advanced.getboolean('cluster')
 
@@ -178,7 +185,7 @@ class SolveTemplate:
         self.all_tech_per_zone = dict(
             json.loads(Advanced['all_tech_per_zone']))
 
-        self.tmpdir = tmpdir
+        self.wrkdir = wrkdir
         self.solver = solver
         self.log = log
         # initialisation functions
@@ -352,7 +359,7 @@ class SolveTemplate:
 
     @Template.setter
     def Template(self, a):
-        if not os.path.isfile(a):
+        if not a.exists():
             raise OSError("openCEM-Template: File not found")
         self._Template = a
 
@@ -364,7 +371,7 @@ class SolveTemplate:
     @custom_costs.setter
     def custom_costs(self, a):
         if a is not None:
-            if not os.path.isfile(a):
+            if not Path(a).exists():
                 raise OSError("openCEM-custom_costs: File not found")
         self._custom_costs = a
 
@@ -376,7 +383,7 @@ class SolveTemplate:
     @exogenous_capacity.setter
     def exogenous_capacity(self, a):
         if a is not None:
-            if not os.path.isfile(a):
+            if not Path(a).exists():
                 raise OSError("openCEM-exogenous_capacity: File not found")
         self._exogenous_capacity = a
 
@@ -388,7 +395,7 @@ class SolveTemplate:
     @exogenous_transmission.setter
     def exogenous_transmission(self, a):
         if a is not None:
-            if not os.path.isfile(a):
+            if not Path(a).exists():
                 raise OSError("openCEM-exogenous_transmission: File not found")
         self._exogenous_transmission = a
 
@@ -440,9 +447,8 @@ class SolveTemplate:
         in the temporary directory'''
         if self.Years.index(year):
             prevyear = self.Years[self.Years.index(year) - 1]
-            opcap0 = "load '" + self.tmpdir + "gen_cap_op" + \
-                str(prevyear) + \
-                ".json' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
+            opcap0 = "load '" + str(self.wrkdir / ('gen_cap_op' + str(prevyear) + '.json')) \
+                     + "' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
         else:
             opcap0 = '''#operating capacity for generating techs regions
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
@@ -485,9 +491,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         if self.Years.index(year):
             carry_fwd_cost = "#Carry forward annualised capital costs\n"
             prevyear = self.Years[self.Years.index(year) - 1]
-            carry_fwd_cost += "load '" + self.tmpdir + "gen_cap_op" + \
-                str(prevyear) + \
-                ".json' : cost_cap_carry_forward_sim;\n"
+            carry_fwd_cost += "load '" + str(self.wrkdir / ('gen_cap_op' + str(prevyear) + '.json'))\
+                              + "' : cost_cap_carry_forward_sim;\n"
         return carry_fwd_cost
 
     def produce_custom_costs(self, y):
@@ -635,7 +640,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             date2 = datetime.datetime(year - 1, 7, 12, 23, 0, 0)
         strd2 = "'" + str(date2) + "'"
         drange = "BETWEEN " + strd1 + " AND " + strd2
-        dcfName = self.tmpdir + 'Sim' + str(year) + '.dat'
+        dcfName = self.wrkdir / ('Sim' + str(year) + '.dat')
         fcr = "\n#Discount rate for project\n"\
             + "param all_tech_discount_rate := " + \
             str(self.discountrate) + ";\n"
@@ -762,7 +767,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 fo.write(nem_emit_limit)
                 fo.write(nem_disp_ratio)
                 fo.write(nem_re_disp_ratio)
-        return dcfName
+        return str(dcfName)
 
     def get_model_options(self, year):
         '''Return model options appropriate for each year based on cfg'''
@@ -789,7 +794,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         """
         for y in self.Years:
             if self.resume:
-                if os.path.exists(self.tmpdir+str(y)+'.json'):
+                if (self.wrkdir / (str(y)+'.json')).exists():
                     print("Skipping year %s" % y)
                     continue
             if self.log:
@@ -828,7 +833,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Dump simulation result in JSON forma
             if self.log:
                 print("openCEM multi: Saving year %s results into temporary file" % y)
-            with open(self.tmpdir + str(y) + '.json', 'w') as json_out:
+            with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
                 json.dump(jsonify(inst, y), json_out)
                 json_out.write('\n')
 
@@ -844,11 +849,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         '''Merge the full year JSON output for each simulated year in a single dictionary'''
         data = self.generate_metadata()
         # Save json output named after .cfg file
-        with open(self.cfgfile.split(".")[0] + '.json', 'w') as out_file:
+        with open(self.cfgfile.with_name(self.cfgfile.stem + '.json'), 'w') as out_file:
             json.dump(data, out_file)
             out_file.write('\n')
             for year in self.Years:
-                with open(self.tmpdir + str(year) + '.json', 'r') as in_file:
+                with open(self.wrkdir / (str(year) + '.json'), 'r') as in_file:
                     copyfileobj(in_file, out_file)
 
     def generate_metadata(self):
@@ -856,7 +861,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         meta = {
             "Name": self.Name,
             "Years": self.Years,
-            "Template": self.Template,
+            "Template": str(self.Template),
             "Clustering": self.cluster,
             "Cluster_number":  self.cluster_max_d if self.cluster else 0,
             "Solver": self.solver,
