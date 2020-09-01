@@ -827,7 +827,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Carry forward operating capacity to next Inv period
             opcap = json_carry_forward_cap(inst)
             if y != self.Years[-1]:
-                with open(self.tmpdir + 'gen_cap_op' + str(y) + '.json',
+                with open(self.wrkdir + 'gen_cap_op' + str(y) + '.json',
                           'w') as op:
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
