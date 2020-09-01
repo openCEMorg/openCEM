@@ -104,7 +104,7 @@ def jsonify(inst, year):
                 inst.gen_build_limit.name:
                 fill_complex_param(inst.gen_build_limit),
                 inst.gen_cap_initial.name:
-                fill_complex_param(inst.gen_cap_initial),
+                fill_complex_mutable_param(inst.gen_cap_initial),
                 inst.stor_cap_initial.name:
                 fill_complex_param(inst.stor_cap_initial),
                 inst.hyb_cap_initial.name:
@@ -295,7 +295,7 @@ def json_carry_forward_cap(inst):
 def jsonopcap0(inst):
     '''Produce JSON of starting capacity for current period from instance'''
     out = {
-        inst.gen_cap_initial.name: fill_complex_param(inst.gen_cap_initial),
+        inst.gen_cap_initial.name: fill_complex_mutable_param(inst.gen_cap_initial),
         inst.stor_cap_initial.name: fill_complex_param(inst.stor_cap_initial),
         inst.hyb_cap_initial.name: fill_complex_param(inst.hyb_cap_initial)
     }
