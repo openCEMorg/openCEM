@@ -21,6 +21,8 @@ from cemo.rules import (cost_build_per_zone_model,
                         cost_trans_build_per_zone_model,
                         cost_trans_build_per_zone_exo)
 
+from cemo import const
+
 
 def jsonify(inst, year):
     '''Produce full JSON model output for one year'''
@@ -155,6 +157,10 @@ def jsonify(inst, year):
                 fill_scalar_key_param(inst.fuel_emit_rate),
                 inst.cost_cap_carry_forward.name:
                 fill_scalar_key_mutable_param(inst.cost_cap_carry_forward),
+                'gen_com_mincap': const.GEN_COMMIT['mincap'],
+                'gen_com_penalty': const.GEN_COMMIT['penalty'],
+                'gen_com_effrate': const.GEN_COMMIT['effrate'],
+
 
                 # params with scalar value
                 inst.cost_unserved.name:
