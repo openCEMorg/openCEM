@@ -71,9 +71,8 @@ def roundup(cap):
     return cap
 
 
-def setinstancecapacity(instance, clustercap):
+def setinstancecapacity(instance, data):
     ''' Fix capacity varibles from cluster results to speed up dispatch calculation'''
-    data = clustercap.data
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
             key = str(z) + ',' + str(n)
@@ -165,7 +164,8 @@ class SolveTemplate:
 
         self.exogenous_transmission = None
         if config.has_option('Advanced', 'exogenous_transmission'):
-            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'], self.cfgfile)
+            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'],
+                                                         self.cfgfile)
 
         self.cluster = Advanced.getboolean('cluster')
 
@@ -560,7 +560,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'hyb_cap_exo': 'zonetech',
             'ret_gen_cap_exo': 'zonetech',
         }
-        exogenous_capacity ='\n'
+        exogenous_capacity = '\n'
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
@@ -815,7 +815,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     model_options=self.get_model_options(y),
                     solver=self.solver,
                     log=self.log).run_cluster()
-                inst = setinstancecapacity(inst, ccap)
+                inst = setinstancecapacity(inst, ccap.data)
 
             # Solve the model (or just dispatch if capacity has been solved)
             opt = SolverFactory(self.solver)
