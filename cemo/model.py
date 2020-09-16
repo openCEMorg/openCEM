@@ -45,7 +45,7 @@ from cemo.rules import (ScanForHybridperZone, ScanForStorageperZone,
 
 def model_options(**kwargs):
     '''Container for model options'''
-    FIELDS = {'unslim': True,
+    FIELDS = {'unslim': False,
               'nem_emit_limit': False,
               'nem_ret_ratio': False,
               'nem_ret_gwh': False,
