@@ -164,7 +164,8 @@ class SolveTemplate:
 
         self.exogenous_transmission = None
         if config.has_option('Advanced', 'exogenous_transmission'):
-            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'], self.cfgfile)
+            self.exogenous_transmission = make_file_path(Advanced['exogenous_transmission'],
+                                                         self.cfgfile)
 
         self.cluster = Advanced.getboolean('cluster')
 
@@ -559,7 +560,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'hyb_cap_exo': 'zonetech',
             'ret_gen_cap_exo': 'zonetech',
         }
-        exogenous_capacity ='\n'
+        exogenous_capacity = '\n'
         if self.exogenous_capacity is not None:
             capacity = pd.read_csv(
                 self.exogenous_capacity, skipinitialspace=True)
