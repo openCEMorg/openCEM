@@ -347,13 +347,13 @@ class ClusterRun:
             # Force unserved constraint for cluster run
             self.model_options = model_options._replace(unslim=True)
         self.template = template
-        self.wrkdir = Path(self.template).resolve().parent
-        self.year = Path(self.template).resolve().stem[-4:]
         self.solver = solver
         self.log = log
         # Internal variables to class
         self.data = None
         self.tmpdir = tempfile.mkdtemp()
+        self.wrkdir = Path(self.template).resolve().parent
+        self.year = Path(self.template).resolve().stem[-4:]
 
     def _gen_dat_files(self):
         # generate a 1 week timestamp range for each cluster member
@@ -441,7 +441,7 @@ class ClusterRun:
         if self.log:
             cmd.append("--output-solver-log")
             cmd.append("--traceback")
-            stdout = subprocess.PIPE
+            stdout = None
 
         proc = subprocess.run(cmd, stdout=stdout)
         if proc.returncode == 0:
