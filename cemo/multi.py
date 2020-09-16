@@ -577,6 +577,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     & (capacity['zone'].isin(self.zones))
                 ]
                 if not cap.empty:
+                    cap = cap.groupby(by=['zone', 'tech']).sum().reset_index()
                     # TODO reject entries for techs that are not in techs_in_zones
                     exogenous_capacity += '# Exogenous capacity entry ' + key + '\n'
                     exogenous_capacity += 'param ' + key + ':=\n'
@@ -613,6 +614,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     & (capacity['zone_dest'].isin(self.zones))
                     ]
                 if not cap.empty:
+                    cap = cap.groupby(by=['zone_source', 'zone_dest']).sum().reset_index()
                     # remove entries that violate intercon link list
                     for row in cap.itertuples():
                         if row.zone_dest not in self.intercons[row.zone_source]:
