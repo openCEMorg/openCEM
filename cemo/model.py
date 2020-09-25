@@ -166,7 +166,7 @@ class CreateModel():
         self.m.cost_gen_build = Param(
             self.m.gen_tech_in_zones, initialize=init_default_capex)
         self.m.cost_stor_build = Param(
-            self.m.stor_tech_in_zones)  # Capital costs storage
+            self.m.stor_tech_in_zones, initialize=init_default_capex)  # Capital costs storage
         self.m.cost_hyb_build = Param(
             self.m.hyb_tech_in_zones)  # Capital costs hybrid
         # Capital costs $/MW/km trans

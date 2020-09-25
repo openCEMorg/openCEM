@@ -259,7 +259,8 @@ DEFAULT_CAPEX = {
     16: 1588.176,  # GHD estimates for AEMO based on Barker Inlet
     17: 2100,  # Default value from ISP 2018 to cover ADE until traces are remapped
     18: 9000,  # Placeholder value, tech is in NOBUILD list
-    19: 9000,  # Placeholder value, tech is in NOBUILD list
+    19: 9000,  # Placeholder value, tech is in NOBUILD list,
+    21: 2500,  #Snowy 2.0 on the basis of a 5.1 Billion contract
 }
 
 DEFAULT_FUEL_PRICE = {
