@@ -199,9 +199,9 @@ SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.tim
 FROM wind_and_solar_traces t1
 INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_id, timestamp
             FROM wind_and_solar_traces
-            WHERE timestamp [timerange]
+            WHERE timestamp [athena_timerange]
                 AND MINUTE(timestamp)=0
-                AND (ntndp_zone_id, technology_type_id) IN [gentechdb]
+                AND (ntndp_zone_id, technology_type_id) IN [athena_gentechdb]
             GROUP BY ntndp_zone_id, technology_type_id, timestamp) as t2
     on t1.ntndp_zone_id = t2.ntndp_zone_id
        AND t1.technology_type_id = t2.technology_type_id

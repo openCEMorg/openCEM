@@ -32,7 +32,7 @@ def make_file_path(pathstring, cfgroot):
 
 
 def sql_tech_pairs(techset):
-    """Format zone,tech pairs as a set for SQL query statement"""
+    """Format zone,tech pairs as a set for MySQL query statement"""
     out = []
     for i in techset.keys():
         for j in techset[i]:
@@ -40,6 +40,30 @@ def sql_tech_pairs(techset):
     if not out:
         out.append((99, 99))  # return non empty set to preserve query syntax if list is empty
     return "(" + ", ".join(map(str, out)) + ")"
+
+
+def athena_tech_pairs(techset):
+    """Format zone,tech pairs as a set for AthenaDB SQL query statement"""
+    out = []
+    for i in techset.keys():
+        for j in techset[i]:
+            out.append((i, j))
+    if not out:
+        out.append((99, 99))  # return non empty set to preserve query syntax if list is empty
+    return "(" + ", ".join(["ROW(CAST(%d as bigint), CAST(%d as bigint))" % x for x in out]) + ")"
+
+
+def gen_timerange(year, test=False, athena=False):
+    """Generate a time range for mysql and athena queries"""
+    date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
+    strd1 = "'" + str(date1) + "'"
+    date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
+    if test:
+        date2 = datetime.datetime(year - 1, 7, 7, 23, 0, 0)
+    strd2 = "'" + str(date2) + "'"
+    if athena:
+        return "BETWEEN " + "CAST(" + strd1 + " AS timestamp)" + " AND " + "CAST(" + strd2 + " AS timestamp)"
+    return "BETWEEN " + strd1 + " AND " + strd2
 
 
 def sql_list(list):
@@ -635,13 +659,6 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
     def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
-        date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
-        strd1 = "'" + str(date1) + "'"
-        date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
-        if test:
-            date2 = datetime.datetime(year - 1, 7, 7, 23, 0, 0)
-        strd2 = "'" + str(date2) + "'"
-        drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.wrkdir / ('Sim' + str(year) + '.dat')
         fcr = "\n#Discount rate for project\n"\
             + "param all_tech_discount_rate := " + \
@@ -716,6 +733,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))
                     line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
+                    line = line.replace('[athena_gentechdb]', athena_tech_pairs(self.gentech))
                     line = line.replace('[gentechlist]',
                                         sql_list([tech for tech in cemo.const.GEN_TECH
                                                   if tech in self.all_tech]))
@@ -756,7 +774,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         '[nobuildset]', " ".join(
                             str(i) for i in cemo.const.NOBUILD_TECH))
                     line = line.replace('[carryforwardcap]', opcap0)
-                    line = line.replace('[timerange]', drange)
+                    line = line.replace('[timerange]', gen_timerange(year, test))
+                    line = line.replace('[athena_timerange]', gen_timerange(year, test, athena=True))
                     fo.write(line)
                 fo.write(custom_costs)
                 fo.write(exogenous_capacity)

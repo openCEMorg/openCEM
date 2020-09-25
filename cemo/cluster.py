@@ -357,8 +357,9 @@ class ClusterRun:
         print(self.year)
 
     def _gen_dat_files(self):
-        # generate a 1 week timestamp range for each cluster member
-        # and produce a data control file for each member
+        """generate a 1 week timestamp range for each cluster member.
+
+         and produce a data control file for each member, must be athena compliant"""
         for k in range(self.cluster.max_d):
             date1 = self.cluster.Xcluster['date'][k]
             date2 = date1 + datetime.timedelta(
@@ -366,11 +367,15 @@ class ClusterRun:
             sdate1 = "'" + str(date1) + "'"
             sdate2 = "'" + str(date2) + "'\n"
             drange = "WHERE timestamp BETWEEN " + sdate1 + " AND " + sdate2
+            athena_drange = "WHERE timestamp BETWEEN " + "CAST(" + sdate1 + " AS timestamp)" " AND " + "CAST(" + sdate2 + "AS timestamp)"
             with open(self.template, 'rt') as fin:
                 with open(self.tmpdir + '/S' + str(k + 1) + '.dat', 'w') as fo:
                     for line in fin:
                         if 'WHERE timestamp BETWEEN' in line:
-                            line = drange
+                            if 'AS timestamp' in line:
+                                line = athena_drange
+                            else:
+                                line = drange
                         fo.write(line)
 
     def _gen_scen_struct(self):
