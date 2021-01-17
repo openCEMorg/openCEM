@@ -84,11 +84,11 @@ def dclist(techset):
 
 def roundup(cap):
     '''
-    Round results to 2 signigicant digits.
-    Catching small negative numbers due to solver numerical tolerance.
+    Round capacity results. 
+    Catching small numbers due to solver numerical tolerance.
     Let bigger negative numners pass to raise exceptions.
     '''
-    if -1e-6 < cap < 0:
+    if -1e-6 < cap < 1:
         return 0
     if cap < -1e-6:
         return cap

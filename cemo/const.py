@@ -349,15 +349,13 @@ DEFAULT_MAX_MWH_PER_ZONE = {
         1: 0,  # openNEM data shows the 2010-2017 yearly average is 662262
         3: 0,
         4: 662262,
-        5:
-        2326421,  # openNEM data shows the 2009-2018 yearly average is 2326421
+        5: 2326421,  # openNEM data shows the 2009-2018 yearly average is 2326421
         6: 0,
         7: 0,
         8: 0,
         9: 0,
         10: 0,
-        12:
-        2747264,  # openNEM data shows the 2009-2018 yearly average to be 2747264
+        12: 2747264,  # openNEM data shows the 2009-2018 yearly average to be 2747264
         14: 0,
         16: 9165993  # openNEM 2009-2018 LTA is 9165993
     }
@@ -533,13 +531,13 @@ DEFAULT_STOR_PROPS = {
 }
 
 DEFAULT_HYB_PROPS = {
-    13: {"col_mult": 2.5, "charge_hours": 8},
-    22: {"col_mult": 2.1, "charge_hours": 3},
-    23: {"col_mult": 3.1, "charge_hours": 12},
+    13: {"col_mult": 2.98, "charge_hours": 8},
+    22: {"col_mult": 2.25, "charge_hours": 3},
+    23: {"col_mult": 3.35, "charge_hours": 12},
 }
 
 DEFAULT_COSTS = {
-    "unserved": 98000,
+    "unserved": 14700,
     "trans": 0.02339,  # AEMO 2018-2019 budget
     "emit": 0,
 }

@@ -6,7 +6,7 @@ __license__ = "GPLv3"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 
-from pyomo.environ import Constraint, value
+from pyomo.environ import Constraint, value, sqrt
 
 import cemo.const
 
@@ -389,10 +389,10 @@ def con_maxcap(model, zone, tech):
        Explicitly constraints together solar build limit with PV and CSP'''
     if cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech) is not None:
         if tech == 11:
-            return (1e-3 * model.gen_cap_op[zone, tech]
-                    + sum(1e-3 * model.hyb_cap_op[zone, itech] for itech in model.hyb_tech_per_zone[zone])
-                    <= model.gen_build_limit[zone, tech])
-        return 1e-3 * model.gen_cap_op[zone, tech] <= model.gen_build_limit[zone, tech]
+            return (1e-4 * model.gen_cap_op[zone, tech]
+                    + sum(1e-4 * model.hyb_cap_op[zone, itech] for itech in model.hyb_tech_per_zone[zone])
+                    <= 1e-1*model.gen_build_limit[zone, tech])
+        return 1e-4 * model.gen_cap_op[zone, tech] <= 1e-1*model.gen_build_limit[zone, tech]
     return Constraint.Skip
 
 
@@ -626,7 +626,7 @@ def cost_fixed(model):
 
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
-    return model.year_correction_factor * model.cost_unserved * sum(model.unserved[z, t]
+    return sqrt(model.year_correction_factor) * model.cost_unserved * sum(model.unserved[z, t]
                                                                     for z in model.zones
                                                                     for t in model.t)
 
@@ -698,7 +698,7 @@ def cost_emissions(model):
 def cost_shadow(model):
     '''Calculate shadow costs, i.e. penalties applied to
     ensure numerical stability of model'''
-    return model.year_correction_factor * (model.cost_unserved + 10) * sum(model.surplus[z, t]
+    return sqrt(model.year_correction_factor) * (model.cost_unserved + 1) * sum(model.surplus[z, t]
                                                                            for z in model.zones
                                                                            for t in model.t)
 

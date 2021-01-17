@@ -82,7 +82,7 @@ class CreateModel():
             initialize=cemo.const.RETIRE_TECH) & self.m.all_tech
         # set of retireable technologies
         self.m.nobuild_gen_tech = Set(
-            initialize=cemo.const.NOBUILD_TECH) & self.m.all_tech
+            initialize=cemo.const.NOBUILD_TECH)
         # Set of storage technologies
         self.m.stor_tech = Set(
             initialize=cemo.const.STOR_TECH) & self.m.all_tech
