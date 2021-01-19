@@ -32,7 +32,7 @@ def make_file_path(pathstring, cfgroot):
 
 
 def sql_tech_pairs(techset):
-    """Format zone,tech pairs as a set for SQL query statement"""
+    """Format zone,tech pairs as a set for MySQL query statement"""
     out = []
     for i in techset.keys():
         for j in techset[i]:
@@ -706,6 +706,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 for line in fin:
                     line = line.replace('[regions]', " ".join(
                         str(i) for i in self.regions))
+                    line = line.replace('[regionslist]', sql_list(self.regions))
                     line = line.replace('[zones]', " ".join(
                         str(i) for i in self.zones))
                     line = line.replace('[zoneslist]', sql_list(self.zones))
@@ -799,6 +800,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 if (self.wrkdir / (str(y)+'.json')).exists():
                     print("Skipping year %s" % y)
                     continue
+            if self.templatetest and self.Years.index(y) > 0:
+                continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
@@ -829,8 +832,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             # Carry forward operating capacity to next Inv period
             opcap = json_carry_forward_cap(inst)
             if y != self.Years[-1]:
-                with open(self.wrkdir + 'gen_cap_op' + str(y) + '.json',
-                          'w') as op:
+                with open(self.wrkdir / ('gen_cap_op' + str(y) + '.json'), 'w') as op:
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
             if self.log:
@@ -845,7 +847,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         # Merge JSON output for all investment periods
         if self.log:
             print("openCEM multi: Saving final results to JSON file")
-        self.mergejsonyears()
+        if not self.templatetest:
+            self.mergejsonyears()
 
     def mergejsonyears(self):
         '''Merge the full year JSON output for each simulated year in a single dictionary'''
