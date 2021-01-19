@@ -6,7 +6,7 @@ __license__ = "GPLv3"
 __maintainer__ = "José Zapata"
 __email__ = "jose.zapata@itpau.com.au"
 
-from pyomo.environ import Constraint, value
+from pyomo.environ import Constraint, value, sqrt
 
 import cemo.const
 
@@ -616,7 +616,7 @@ def cost_fixed(model):
 
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
-    return model.year_correction_factor * model.cost_unserved * sum(model.unserved[z, t]
+    return sqrt(model.year_correction_factor) * model.cost_unserved * sum(model.unserved[z, t]
                                                                     for z in model.zones
                                                                     for t in model.t)
 
@@ -688,7 +688,7 @@ def cost_emissions(model):
 def cost_shadow(model):
     '''Calculate shadow costs, i.e. penalties applied to
     ensure numerical stability of model'''
-    return model.year_correction_factor * (model.cost_unserved + 10) * sum(model.surplus[z, t]
+    return sqrt(model.year_correction_factor) * (model.cost_unserved + 1) * sum(model.surplus[z, t]
                                                                            for z in model.zones
                                                                            for t in model.t)
 
@@ -707,4 +707,4 @@ def obj_cost(model):
             + cost_fixed(model) + cost_unserved(model) + cost_operating(model)
             + cost_trans_build_model(model)
             + cost_trans_flow(model) + cost_emissions(model)
-            + cost_retirement_model(model) + cost_shadow(model)) / model.year_correction_factor
+            + cost_retirement_model(model) + cost_shadow(model))
