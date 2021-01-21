@@ -84,7 +84,7 @@ def dclist(techset):
 
 def roundup(cap):
     '''
-    Round capacity results. 
+    Round capacity results.
     Catching small numbers due to solver numerical tolerance.
     Let bigger negative numners pass to raise exceptions.
     '''
