@@ -501,7 +501,7 @@ load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_in
 user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
-1000*capex AS cost_gen_build
+capex AS cost_gen_build
 FROM capex
 WHERE year=2025
 AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
@@ -518,7 +518,7 @@ load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_in
 user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
-1000*capex AS cost_stor_build
+capex AS cost_stor_build
 FROM capex
 WHERE year=2025
 AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
@@ -535,7 +535,7 @@ load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_in
 user=select password=select_password1 using=pymysql
 query="
 SELECT ntndp_zone_id AS zones,technology_type_id AS all_tech,
-1000*capex AS cost_hyb_build
+capex AS cost_hyb_build
 FROM capex
 WHERE year=2025
 AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
@@ -551,7 +551,7 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="
-SELECT technology_type_id AS all_tech, 1000*fom AS cost_gen_fom, vom AS cost_gen_vom
+SELECT technology_type_id AS all_tech, fom AS cost_gen_fom, vom AS cost_gen_vom
 FROM opex WHERE (source_id, technology_type_id) in
   (SELECT MAX(source_id),technology_type_id
    FROM opex where technology_type_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 16, 17, 18, 19, 20) GROUP BY technology_type_id);": [all_tech] cost_gen_fom cost_gen_vom;
@@ -559,7 +559,7 @@ FROM opex WHERE (source_id, technology_type_id) in
 # FOM VOM costs for stortech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
-query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_stor_fom, vom AS cost_stor_vom
+query="SELECT technology_type_id AS all_tech, fom AS cost_stor_fom, vom AS cost_stor_vom
 FROM opex WHERE (source_id, technology_type_id) in
   (SELECT MAX(source_id),technology_type_id
    FROM opex where technology_type_id in (14, 15, 21) GROUP BY technology_type_id);": [all_tech] cost_stor_fom cost_stor_vom;
@@ -567,7 +567,7 @@ FROM opex WHERE (source_id, technology_type_id) in
 # FOM VOM costs for hybtech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
-query="SELECT technology_type_id AS all_tech, 1000*fom AS cost_hyb_fom, vom AS cost_hyb_vom
+query="SELECT technology_type_id AS all_tech, fom AS cost_hyb_fom, vom AS cost_hyb_vom
 FROM opex WHERE (source_id, technology_type_id) in
   (SELECT MAX(source_id),technology_type_id
    FROM opex where technology_type_id in (13) GROUP BY technology_type_id);": [all_tech] cost_hyb_fom cost_hyb_vom;
@@ -665,7 +665,7 @@ AND MINUTE(timestamp)=0
 AND demand_scenario_id =3) roof
 ON poe.timestamp = roof.timestamp AND poe.region_id = roof.region_id
 AND poe.demand_scenario_id =3
-AND poe.region_id in (SELECT id FROM region WHERE text_id in ('NSW','SA','QLD','VIC','TAS'))
+AND poe.region_id in (1, 2, 3, 4, 5)
 order BY regions,t;": [regions,t] region_net_demand;
 
 #Custom cost entry for cost_gen_build

@@ -161,7 +161,6 @@ def jsonify(inst, year):
                 'gen_com_penalty': const.GEN_COMMIT['penalty'],
                 'gen_com_effrate': const.GEN_COMMIT['effrate'],
 
-
                 # params with scalar value
                 inst.cost_unserved.name:
                 inst.cost_unserved.value,
@@ -178,31 +177,35 @@ def jsonify(inst, year):
             },
             'vars': {
                 inst.gen_cap_new.name:
-                fill_complex_var(inst.gen_cap_new),
+                fill_complex_var(inst.gen_cap_new, 1e-3),
                 inst.gen_cap_op.name:
-                fill_complex_var(inst.gen_cap_op),
+                fill_complex_var(inst.gen_cap_op, 1e-3),
                 inst.stor_cap_new.name:
-                fill_complex_var(inst.stor_cap_new),
+                fill_complex_var(inst.stor_cap_new, 1e-3),
                 inst.stor_cap_op.name:
-                fill_complex_var(inst.stor_cap_op),
+                fill_complex_var(inst.stor_cap_op, 1e-3),
                 inst.hyb_cap_new.name:
-                fill_complex_var(inst.hyb_cap_new),
+                fill_complex_var(inst.hyb_cap_new, 1e-3),
                 inst.hyb_cap_op.name:
-                fill_complex_var(inst.hyb_cap_op),
+                fill_complex_var(inst.hyb_cap_op, 1e-3),
                 inst.intercon_cap_new.name:
-                fill_complex_var(inst.intercon_cap_new),
+                fill_complex_var(inst.intercon_cap_new, 1e-3),
                 inst.intercon_cap_op.name:
-                fill_complex_var(inst.intercon_cap_op),
+                fill_complex_var(inst.intercon_cap_op, 1e-3),
                 inst.gen_cap_ret.name:
-                fill_complex_var(inst.gen_cap_ret),
+                fill_complex_var(inst.gen_cap_ret, 1e-3),
                 inst.gen_disp.name:
-                fill_complex_var(inst.gen_disp, 1e3),
+                fill_complex_var(inst.gen_disp),
+                inst.gen_disp_com.name:
+                fill_complex_var(inst.gen_disp_com),
+                inst.gen_disp_com_p.name:
+                fill_complex_var(inst.gen_disp_com_p),
                 inst.stor_disp.name:
-                fill_complex_var(inst.stor_disp, 1e3),
+                fill_complex_var(inst.stor_disp),
                 inst.stor_charge.name:
                 fill_complex_var(inst.stor_charge),
                 inst.hyb_disp.name:
-                fill_complex_var(inst.hyb_disp, 1e3),
+                fill_complex_var(inst.hyb_disp),
                 inst.hyb_charge.name:
                 fill_complex_var(inst.hyb_charge),
                 inst.stor_level.name:
@@ -214,10 +217,10 @@ def jsonify(inst, year):
                 inst.surplus.name:
                 fill_complex_var(inst.surplus),
                 inst.intercon_disp.name:
-                fill_complex_var(inst.intercon_disp, 1e3)
+                fill_complex_var(inst.intercon_disp)
             },
             'duals': {
-                'srmc': fill_dual_suffix(inst.dual, inst.ldbal)
+                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1)
             },
             'objective_value': value(system_cost(inst))
         }
@@ -276,13 +279,13 @@ def json_carry_forward_cap(inst):
     '''Produce JSON output of capacity data to carry forward to next investment period'''
     out = {
         inst.gen_cap_initial.name:
-        fill_complex_var(inst.gen_cap_op),
+        fill_complex_var(inst.gen_cap_op, 1e-3),
         inst.stor_cap_initial.name:
-        fill_complex_var(inst.stor_cap_op),
+        fill_complex_var(inst.stor_cap_op, 1e-3),
         inst.hyb_cap_initial.name:
-        fill_complex_var(inst.hyb_cap_op),
+        fill_complex_var(inst.hyb_cap_op, 1e-3),
         inst.intercon_cap_initial.name:
-        fill_complex_var(inst.intercon_cap_op),
+        fill_complex_var(inst.intercon_cap_op, 1e-3),
         inst.cost_cap_carry_forward_sim.name: [{
             "index":
             zone,
@@ -392,11 +395,11 @@ def fill_complex_var(var, scale=1):
     return out
 
 
-def fill_dual_suffix(dual, name):
+def fill_dual_suffix(dual, name, scale=1):
     '''Return dual suffix dictionary'''
     out = []
     for i in name:
-        out.append({'index': i, 'value': dual[name[i]]})
+        out.append({'index': i, 'value': scale * dual[name[i]]})
 
     return out
 

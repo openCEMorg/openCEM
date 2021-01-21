@@ -90,15 +90,15 @@ def plotresults(instance):  # pragma: no cover
         for z in instance.zones_per_region[r]:
             for n in instance.gen_tech_per_zone[z]:
                 q_z_r[pos[n], :] = q_z_r[pos[n], :] + \
-                    np.array([value(1e3 * instance.gen_disp[z, n, t])
+                    np.array([value(instance.gen_disp[z, n, t])
                               for t in instance.t])
             for s in instance.stor_tech_per_zone[z]:
                 q_z_r[pos[s], :] = q_z_r[pos[s], :] + \
-                    np.array([value(1e3 * instance.stor_disp[z, s, t])
+                    np.array([value(instance.stor_disp[z, s, t])
                               for t in instance.t])
             for h in instance.hyb_tech_per_zone[z]:
                 q_z_r[pos[h], :] = q_z_r[pos[h], :] + \
-                    np.array([value(1e3 * instance.hyb_disp[z, h, t])
+                    np.array([value(instance.hyb_disp[z, h, t])
                               for t in instance.t])
         # Plotting instructions
         # pick respective subplot
@@ -144,19 +144,19 @@ def plotcapacity(instance):  # pragma: no cover
         for z in instance.zones_per_region[r]:
             for n in instance.gen_tech_per_zone[z]:
                 gen_cap_op_r[pos[n]] = gen_cap_op_r[pos[n]] + \
-                    np.array([value(instance.gen_cap_op[z, n])])
+                    np.array([value(1e-3 * instance.gen_cap_op[z, n])])
                 gen_cap_new_r[pos[n]] = gen_cap_new_r[pos[n]] + \
-                    np.array([value(instance.gen_cap_new[z, n])])
+                    np.array([value(1e-3 * instance.gen_cap_new[z, n])])
             for s in instance.stor_tech_per_zone[z]:
                 gen_cap_op_r[pos[s]] = gen_cap_op_r[pos[s]] + \
-                    np.array([value(instance.stor_cap_op[z, s])])
+                    np.array([value(1e-3 * instance.stor_cap_op[z, s])])
                 gen_cap_new_r[pos[s]] = gen_cap_new_r[pos[s]] + \
-                    np.array([value(instance.stor_cap_new[z, s])])
+                    np.array([value(1e-3 * instance.stor_cap_new[z, s])])
             for h in instance.hyb_tech_per_zone[z]:
                 gen_cap_op_r[pos[h]] = gen_cap_op_r[pos[h]] + \
-                    np.array([value(instance.hyb_cap_op[z, h])])
+                    np.array([value(1e-3 * instance.hyb_cap_op[z, h])])
                 gen_cap_new_r[pos[h]] = gen_cap_new_r[pos[h]] + \
-                    np.array([value(instance.hyb_cap_new[z, h])])
+                    np.array([value(1e-3 * instance.hyb_cap_new[z, h])])
 
         N = np.arange(len(techsinregion))
         ExCap_r = gen_cap_op_r - gen_cap_new_r
@@ -241,22 +241,22 @@ def _printcapacity(instance):
     idx = list(instance.all_tech)
     for z in instance.zones:
         for n in instance.gen_tech_per_zone[z]:
-            techtotal[idx.index(n)] += value(instance.gen_cap_op[z, n])
-            disptotal[idx.index(n)] += value(sum(1e3 * instance.gen_disp[z, n, t]
+            techtotal[idx.index(n)] += value(1e-3 * instance.gen_cap_op[z, n])
+            disptotal[idx.index(n)] += value(sum(instance.gen_disp[z, n, t]
                                                  for t in instance.t))
             capftotal[idx.index(n)] += value(sum(instance.gen_cap_factor[z, n, t]
                                                  for t in instance.t))
             nperz[idx.index(n)] += 1
         for s in instance.stor_tech_per_zone[z]:
-            techtotal[idx.index(s)] += value(instance.stor_cap_op[z, s])
-            disptotal[idx.index(s)] += value(sum(1e3 * instance.stor_disp[z, s, t]
+            techtotal[idx.index(s)] += value(1e-3 * instance.stor_cap_op[z, s])
+            disptotal[idx.index(s)] += value(sum(instance.stor_disp[z, s, t]
                                                  for t in instance.t))
             capftotal[idx.index(s)] += 0.5 * hours
             nperz[idx.index(s)] += 1
 
         for h in instance.hyb_tech_per_zone[z]:
-            techtotal[idx.index(h)] += value(instance.hyb_cap_op[z, h])
-            disptotal[idx.index(h)] += value(sum(1e3 * instance.hyb_disp[z, h, t]
+            techtotal[idx.index(h)] += value(1e-3 * instance.hyb_cap_op[z, h])
+            disptotal[idx.index(h)] += value(sum(instance.hyb_disp[z, h, t]
                                                  for t in instance.t))
             capftotal[idx.index(h)] += value(sum(instance.hyb_cap_factor[z, h, t]
                                                  for t in instance.t))
@@ -300,7 +300,8 @@ def plotcluster(cluster, row=3, col=4, ylim=None, show=False):  # pragma: no cov
                    - 1].plot(t, cluster.X[i][:cluster.nplen], '0.01', alpha=0.3, linewidth=0.75)
 
     # Add mean and nearest incluster for each cluster plit
-    plotrange = cluster.max_d - 2 if isinstance(cluster,cemo.cluster.InstanceCluster) else cluster.max_d
+    plotrange = cluster.max_d - \
+        2 if isinstance(cluster, cemo.cluster.InstanceCluster) else cluster.max_d
     for j in range(plotrange):
 
         axarr.flat[j].plot(t, cluster.Xsynth[j], 'r')  # mean

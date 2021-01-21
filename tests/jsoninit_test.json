@@ -502,156 +502,156 @@
 10,
 8
 ],
-"value": 1097878.865
+"value": 1097.878865
 },
 {
 "index": [
 11,
 10
 ],
-"value": 1749521.469
+"value": 1749.521469
 },
 {
 "index": [
 9,
 7
 ],
-"value": 8434276.508000001
+"value": 8434.276508
 },
 {
 "index": [
 12,
 1
 ],
-"value": 5468688.213
+"value": 5468.688213
 },
 {
 "index": [
 11,
 11
 ],
-"value": 2063484.99
+"value": 2063.48499
 },
 {
 "index": [
 9,
 2
 ],
-"value": 1557882.868
+"value": 1557.882868
 },
 {
 "index": [
 11,
 8
 ],
-"value": 1097878.865
+"value": 1097.878865
 },
 {
 "index": [
 9,
 8
 ],
-"value": 1081810.2650000001
+"value": 1081.810265
 },
 {
 "index": [
 9,
 3
 ],
-"value": 3203840.4869999997
+"value": 3203.8404869999995
 },
 {
 "index": [
 16,
 8
 ],
-"value": 1107129.0650000002
+"value": 1107.1290650000003
 },
 {
 "index": [
 16,
 2
 ],
-"value": 1583201.6679999998
+"value": 1583.2016679999997
 },
 {
 "index": [
 11,
 9
 ],
-"value": 2556856.2369999997
+"value": 2556.8562369999995
 },
 {
 "index": [
 10,
 12
 ],
-"value": 2606557.03
+"value": 2606.55703
 },
 {
 "index": [
 16,
 1
 ],
-"value": 5492629.4399999995
+"value": 5492.62944
 },
 {
 "index": [
 12,
 8
 ],
-"value": 1083187.838
+"value": 1083.187838
 },
 {
 "index": [
 9,
 6
 ],
-"value": 3965351.431
+"value": 3965.351431
 },
 {
 "index": [
 11,
 12
 ],
-"value": 2606557.03
+"value": 2606.55703
 },
 {
 "index": [
 16,
 18
 ],
-"value": 9999999
+"value": 9999.999
 },
 {
 "index": [
 9,
 12
 ],
-"value": 2616557.03
+"value": 2616.55703
 },
 {
 "index": [
 16,
 12
 ],
-"value": 2616557.03
+"value": 2616.55703
 }
 ],
 "cost_stor_build": [
 {
 "index": [
-16,
-14
-],
-"value": 1355080
-},
-{
-"index": [
 9,
 15
 ],
-"value": 1010060
+"value": 1010.06
+},
+{
+"index": [
+16,
+14
+],
+"value": 1355.08
 }
 ],
 "cost_hyb_build": [
@@ -660,14 +660,14 @@
 10,
 13
 ],
-"value": 4431590
+"value": 4431.59
 },
 {
 "index": [
 16,
 13
 ],
-"value": 4431590
+"value": 4431.59
 }
 ],
 "cost_intercon_build": [
@@ -19997,55 +19997,55 @@
 "cost_gen_fom": [
 {
 "index": 1,
-"value": 125000.0
+"value": 125.0
 },
 {
 "index": 2,
-"value": 10000.0
+"value": 10.0
 },
 {
 "index": 3,
-"value": 17000.0
+"value": 17.0
 },
 {
 "index": 4,
-"value": 50500.0
+"value": 50.5
 },
 {
 "index": 5,
-"value": 73200.0
+"value": 73.2
 },
 {
 "index": 6,
-"value": 65500.0
+"value": 65.5
 },
 {
 "index": 7,
-"value": 96500.0
+"value": 96.5
 },
 {
 "index": 8,
-"value": 4000.0
+"value": 4.0
 },
 {
 "index": 9,
-"value": 39000.0
+"value": 39.0
 },
 {
 "index": 10,
-"value": 25000.0
+"value": 25.0
 },
 {
 "index": 11,
-"value": 30000.0
+"value": 30.0
 },
 {
 "index": 12,
-"value": 45000.0
+"value": 45.0
 },
 {
 "index": 18,
-"value": 500
+"value": 0.5
 }
 ],
 "cost_gen_vom": [
@@ -20105,7 +20105,7 @@
 "cost_stor_fom": [
 {
 "index": 14,
-"value": 5000
+"value": 5.0
 },
 {
 "index": 15,
@@ -20125,7 +20125,7 @@
 "cost_hyb_fom": [
 {
 "index": 13,
-"value": 75600
+"value": 75.6
 }
 ],
 "cost_hyb_vom": [
@@ -20526,7 +20526,7 @@
 "value": 0.85
 }
 ],
-"cost_unserved": 980000,
+"cost_unserved": 98000,
 "cost_emit": 0.0,
 "cost_trans": 1e-05,
 "all_tech_discount_rate": 0.05,

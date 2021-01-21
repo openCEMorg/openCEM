@@ -88,7 +88,7 @@ def init_default_capex(model, zone, tech):
 
        Defaults can catch gaps in data sources in a manner that is
        numerically safer than declaring a very big number'''
-    return cemo.const.DEFAULT_CAPEX.get(tech, 9e6)
+    return cemo.const.DEFAULT_CAPEX.get(tech, 9999)
 
 
 def init_default_fuel_price(model, zone, tech):
