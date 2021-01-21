@@ -619,8 +619,8 @@ def cost_fixed(model):
 def cost_unserved(model):
     '''Calculate yearly adjusted USE costs'''
     return sqrt(model.year_correction_factor) * model.cost_unserved * sum(model.unserved[z, t]
-                                                                    for z in model.zones
-                                                                    for t in model.t)
+                                                                          for z in model.zones
+                                                                          for t in model.t)
 
 
 def cost_operating(model):
@@ -691,8 +691,8 @@ def cost_shadow(model):
     '''Calculate shadow costs, i.e. penalties applied to
     ensure numerical stability of model'''
     return sqrt(model.year_correction_factor) * (model.cost_unserved + 1) * sum(model.surplus[z, t]
-                                                                           for z in model.zones
-                                                                           for t in model.t)
+                                                                                for z in model.zones
+                                                                                for t in model.t)
 
 
 def system_cost(model):

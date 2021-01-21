@@ -81,12 +81,11 @@ if not SIM_DIR.exists():
 
 # create Multi year simulation
 X = SolveTemplate(
-    cfgfile,
-    solver=args.solver,
+    cfgfile, solver=args.solver,
     log=args.log,
     wrkdir=SIM_DIR,
     resume=args.resume,
-    templatetest=args.templatetest
+    templatetest = args.templatetest
 )
 
 
