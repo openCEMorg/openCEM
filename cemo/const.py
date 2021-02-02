@@ -260,7 +260,7 @@ DEFAULT_CAPEX = {
     17: 2100,  # Default value from ISP 2018 to cover ADE until traces are remapped
     18: 9000,  # Placeholder value, tech is in NOBUILD list
     19: 9000,  # Placeholder value, tech is in NOBUILD list,
-    21: 2500,  #Snowy 2.0 on the basis of a 5.1 Billion contract
+    21: 2500,  # Snowy 2.0 on the basis of a 5.1 Billion contract
 }
 
 DEFAULT_FUEL_PRICE = {
@@ -514,6 +514,45 @@ GEN_CAP_FACTOR = {  # prevents cap factors of 1 in the absence of traces
     17: 0,
     30: 0,
 }
+
+AUX_LOAD = {
+    1: 6.10,
+    2: 3.0,
+    3: 3.0,
+    4: 6.0,
+    5: 6.0,
+    6: 8.3,
+    7: 8.3,
+    8: 0.7,
+    9: 0.4,
+    10: 0.4,
+    11: 2.0,
+    12: 2.0,
+    13: 10,
+    14: 1.0,
+    15: 0,
+    16: 0.7,
+    17: 2.0,
+    18: 0.3,
+    19: 3.0,
+    20: 0,
+    21: 1,
+    22: 10,
+    23: 10,
+    24: 1,
+    25: 1,
+    26: 0,
+    27: 0,
+    28: 4,
+    29: 6,
+    30: 2,
+    31: 1,
+    32: 1,
+    33: 0,
+    34: 6.10,
+    35: 1.53,
+    36: 2.51
+    }
 
 CAP_FACTOR_THRES = 1e-4
 
