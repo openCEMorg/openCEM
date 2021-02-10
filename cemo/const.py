@@ -21,7 +21,7 @@ TECH_TYPE = {
     10: 'solar_pv_ffp',
     11: 'solar_pv_sat',
     12: 'wind',
-    13: 'cst_6h',
+    13: 'cst_8h',
     14: 'phes_6h',
     15: 'battery_2h',
     16: 'recip_engine',

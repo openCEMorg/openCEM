@@ -50,7 +50,7 @@ def athena_tech_pairs(techset):
             out.append((i, j))
     if not out:
         out.append((99, 99))  # return non empty set to preserve query syntax if list is empty
-    return "(" + ", ".join(["ROW(CAST(%d as bigint), CAST(%d as bigint))" % x for x in out]) + ")"
+    return "(" + ", ".join(["ROW(CAST(%d as INTEGER), CAST(%d as INTEGER))" % x for x in out]) + ")"
 
 
 def gen_timerange(year, test=False, athena=False):
@@ -209,8 +209,22 @@ class SolveTemplate:
         self.all_tech_per_zone = dict(
             json.loads(Advanced['all_tech_per_zone']))
 
+        # Specify solver and options in cfg file as well
+        if config.has_option('Solver', 'solver'):
+            self.solver = config['Solver']['solver']
+        else:
+            self.solver = solver
+
+        if config.has_option('Solver', 'cluster_solver_options'):
+            self.cluster_solver_options = config['Solver']['cluster_solver_options']
+        else:
+            self.cluster_solver_options = None
+        if config.has_option('Solver', 'dispatch_solver_options'):
+            self.dispatch_solver_options = config['Solver']['dispatch_solver_options']
+        else:
+            self.dispatch_solver_options = None
+
         self.wrkdir = wrkdir
-        self.solver = solver
         self.log = log
         # initialisation functions
         self.tracetechs()  # TODO refactor this
@@ -434,7 +448,8 @@ class SolveTemplate:
         self.gentech = {}
         self.stortech = {}
         self.retiretech = {}
-        self.intercons = {i: [j for j in cemo.const.ZONE_INTERCONS[i].keys()] for i in cemo.const.ZONE_INTERCONS.keys()}
+        self.intercons = {i: [j for j in cemo.const.ZONE_INTERCONS[i].keys()]
+                          for i in cemo.const.ZONE_INTERCONS.keys()}
         for i in self.all_tech_per_zone:
             self.fueltech.update({
                 i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.FUEL_TECH]
@@ -775,7 +790,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                             str(i) for i in cemo.const.NOBUILD_TECH))
                     line = line.replace('[carryforwardcap]', opcap0)
                     line = line.replace('[timerange]', gen_timerange(year, test))
-                    line = line.replace('[athena_timerange]', gen_timerange(year, test, athena=True))
+                    line = line.replace('[athena_timerange]',
+                                        gen_timerange(year, test, athena=True))
                     fo.write(line)
                 fo.write(custom_costs)
                 fo.write(exogenous_capacity)
@@ -797,7 +813,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         for option in self.model_options._fields:
             OPTIONS.update({option: getattr(self.model_options, option)})
 
-        manual_intercon_build = self.manual_intercon_build[self.Years.index(year)] if self.manual_intercon_build is not None else False
+        manual_intercon_build = self.manual_intercon_build[self.Years.index(
+            year)] if self.manual_intercon_build is not None else False
 
         OPTIONS.update(
          {'build_intercon_manual': manual_intercon_build}
@@ -838,6 +855,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     year_template,
                     model_options=self.get_model_options(y),
                     solver=self.solver,
+                    solver_options=self.cluster_solver_options,
                     log=self.log).run_cluster()
                 inst = setinstancecapacity(inst, ccap.data)
 

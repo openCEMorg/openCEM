@@ -17924,140 +17924,140 @@
 10,
 8
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 11,
 10
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 9,
 7
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 12,
 1
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 11,
 11
 ],
-"value": 100000
+"value": 1068
 },
 {
 "index": [
 9,
 2
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 11,
 8
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 9,
 8
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 9,
 3
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 16,
 8
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 16,
 2
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 11,
 9
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 10,
 12
 ],
-"value": 2945
+"value": 2900
 },
 {
 "index": [
 16,
 1
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 12,
 8
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 9,
 6
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 11,
 12
 ],
-"value": 2865
+"value": 2100
 },
 {
 "index": [
 16,
 18
 ],
-"value": 100000
+"value": 50000
 },
 {
 "index": [
 9,
 12
 ],
-"value": 550
+"value": 1500
 },
 {
 "index": [
 16,
 12
 ],
-"value": 3928
+"value": 7200
 }
 ],
 "gen_cap_initial": [
@@ -20544,8 +20544,7 @@
 {
 "index": 28,
 "value": 0.85
-}
-,
+},
 {
 "index": 29,
 "value": 0.85

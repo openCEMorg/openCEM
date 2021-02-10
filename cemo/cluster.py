@@ -340,6 +340,7 @@ class ClusterRun:
                  template,
                  model_options,
                  solver='cbc',
+                 solver_options=None,
                  log=False):
         self.cluster = cluster
         self.model_options = model_options
@@ -348,6 +349,7 @@ class ClusterRun:
             self.model_options = model_options._replace(unslim=True)
         self.template = template
         self.solver = solver
+        self.solver_options = solver_options
         self.log = log
         # Internal variables to class
         self.data = None
@@ -367,7 +369,8 @@ class ClusterRun:
             sdate1 = "'" + str(date1) + "'"
             sdate2 = "'" + str(date2) + "'\n"
             drange = "WHERE timestamp BETWEEN " + sdate1 + " AND " + sdate2
-            athena_drange = "WHERE timestamp BETWEEN " + "CAST(" + sdate1 + " AS timestamp)" " AND " + "CAST(" + sdate2 + "AS timestamp)"
+            athena_drange = "WHERE timestamp BETWEEN " + \
+                "CAST(" + sdate1 + " AS timestamp)" " AND " + "CAST(" + sdate2 + "AS timestamp)"
             with open(self.template, 'rt') as fin:
                 with open(self.tmpdir + '/S' + str(k + 1) + '.dat', 'w') as fo:
                     for line in fin:
@@ -440,9 +443,11 @@ class ClusterRun:
         cmd = [
             "runef", "-m", self.tmpdir, "-s", self.tmpdir, "--solve",
             "--solver=" + self.solver,
-            "--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter"
+            "--solution-writer=pyomo.pysp.plugins.jsonsolutionwriter",
         ]
         stdout = subprocess.DEVNULL
+        if self.solver_options is not None:
+            cmd.append("--solver-options='"+self.solver_options+"'")
 
         if self.log:
             cmd.append("--output-solver-log")

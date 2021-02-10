@@ -272,10 +272,10 @@ def con_max_mwh_nem_wide(model, tech):
 
        Results scaled to yearly MWH using year correction factor'''
     if cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) is not None:
-        return sum(1e-1 * model.gen_disp[zone, tech, time]
+        return sum(1e-2 * model.gen_disp[zone, tech, time]
                    for zone in model.zones if tech in model.gen_tech_per_zone[zone]
                    for time in model.t)\
-            <= 1e-1 * cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
+            <= 1e-2 * cemo.const.DEFAULT_MAX_MWH_NEM_WIDE.get(tech) /\
             model.year_correction_factor
     return Constraint.Skip
 
@@ -371,19 +371,18 @@ def con_maxchargehy(model, z, h, t):
 
 def con_ldbal(model, z, t):
     """Provides a rule defining a load balance constraint for the model"""
-    return 1e2*(sum(model.gen_disp[z, n, t] for n in model.gen_tech_per_zone[z])\
-        + sum(model.hyb_disp[z, h, t] for h in model.hyb_tech_per_zone[z])\
-        + sum(model.stor_disp[z, s, t] for s in model.stor_tech_per_zone[z])\
-        + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])\
-        + model.unserved[z, t])\
-        == 1e2*(model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]\
-        + sum((1.0 + model.intercon_loss_factor[z, p]) * 1*model.intercon_disp[z, p, t]
-              for p in model.intercon_per_zone[z])\
-        + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])\
-        + model.surplus[z, t])\
-        + sum(model.gen_cap_op[z, n]*1e-3*cemo.const.AUX_LOAD.get(n) for n in model.gen_tech_per_zone[z])\
-        + sum(model.hyb_cap_op[z, h]*1e-3*cemo.const.AUX_LOAD.get(h) for h in model.hyb_tech_per_zone[z])\
-        + sum(model.stor_cap_op[z, s]*1e-3*cemo.const.AUX_LOAD.get(s) for s in model.stor_tech_per_zone[z])
+    return 1e-1*(sum(model.gen_disp[z, n, t]*(1-cemo.const.AUX_LOAD.get(n)/100) for n in model.gen_tech_per_zone[z])
+              + sum(model.hyb_disp[z, h, t]*(1-cemo.const.AUX_LOAD.get(h)/100)
+                    for h in model.hyb_tech_per_zone[z])
+              + sum(model.stor_disp[z, s, t]*(1-cemo.const.AUX_LOAD.get(s)/100)
+                    for s in model.stor_tech_per_zone[z])
+              + sum(model.intercon_disp[p, z, t] for p in model.intercon_per_zone[z])
+              + model.unserved[z, t])\
+        == 1e-1*(model.region_net_demand[region_in_zone(z), t] * model.zone_demand_factor[z, t]
+              + sum((1.0 + model.intercon_loss_factor[z, p]) * 1*model.intercon_disp[z, p, t]
+                    for p in model.intercon_per_zone[z])
+              + sum(model.stor_charge[z, s, t] for s in model.stor_tech_per_zone[z])
+              + model.surplus[z, t])
 
 
 def con_maxcap(model, zone, tech):
@@ -392,11 +391,11 @@ def con_maxcap(model, zone, tech):
        Explicitly constraints together solar build limit with PV and CSP'''
     if cemo.const.DEFAULT_BUILD_LIMIT.get(zone).get(tech) is not None:
         if tech == 11:
-            return (1e-3 * model.gen_cap_op[zone, tech]
-                    + sum(1e-3 * model.hyb_cap_op[zone, itech]
+            return (1e-4 * model.gen_cap_op[zone, tech]
+                    + sum(1e-4 * model.hyb_cap_op[zone, itech]
                           for itech in model.hyb_tech_per_zone[zone])
-                    <= 1*model.gen_build_limit[zone, tech])
-        return 1e-3 * model.gen_cap_op[zone, tech] <= 1*model.gen_build_limit[zone, tech]
+                    <= 1e-1*model.gen_build_limit[zone, tech])
+        return 1e-4 * model.gen_cap_op[zone, tech] <= 1e-1*model.gen_build_limit[zone, tech]
     return Constraint.Skip
 
 
