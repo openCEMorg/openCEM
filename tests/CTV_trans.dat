@@ -14,6 +14,30 @@ load 'tests/CTV_trans.json': [zones,all_tech,t] gen_cap_factor hyb_cap_factor;
 #Demand for for all regions for the given time interval
 load 'tests/CTV_trans.json': [regions,t] region_net_demand;
 
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, cost_factor as regional_cost_factor
+FROM regional_cost_factor
+WHERE source_id = 3
+AND ntndp_zone_id in (9,10,11,12,16)
+and technology_type_id in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)" :[zones, all_tech] regional_cost_factor;
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, connection_cost
+FROM isp_connection_costs
+WHERE source_id = 3
+AND ntndp_zone_id in (9,10,11,12,16)
+and technology_type_id in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)" :[zones, all_tech] connection_cost;
+
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT technology_type_id as all_tech, capex as build_cost
+FROM isp_capex
+WHERE source_id = 3 and year = 2020 and build_cost_scenario_id = 7
+and technology_type_id in (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19)" : [all_tech] build_cost;
+
 
 set fuel_gen_tech := 1 2 3 4 5 6 7 8 16;
 
@@ -63,6 +87,8 @@ set stor_tech := 14 15;
 #Set of storage technologies in each zones
 set stor_tech_in_zones :=
 9 15
+9 14
+11 14
 16 14
 ;
 # Roundt trip efficiency for storage technology_type_id
