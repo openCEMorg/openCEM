@@ -86,11 +86,11 @@ def jsonify(inst, year):
             'params': {
                 # params with complex tuple keys
                 inst.cost_gen_build.name:
-                fill_complex_param(inst.cost_gen_build),
+                fill_complex_mutable_param(inst.cost_gen_build),
                 inst.cost_stor_build.name:
-                fill_complex_param(inst.cost_stor_build),
+                fill_complex_mutable_param(inst.cost_stor_build),
                 inst.cost_hyb_build.name:
-                fill_complex_param(inst.cost_hyb_build),
+                fill_complex_mutable_param(inst.cost_hyb_build),
                 inst.cost_intercon_build.name:
                 fill_complex_param(inst.cost_intercon_build),
                 inst.cost_fuel.name:
