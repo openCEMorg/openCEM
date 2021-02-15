@@ -82,7 +82,7 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
-def init_default_capex(model, zone, tech):
+def init_default_capex(model, tech):
     # pylint: disable=unused-argument
     '''Initialise capex with default values per technology
 

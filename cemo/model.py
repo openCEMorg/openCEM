@@ -12,7 +12,7 @@ from pyomo.environ import (AbstractModel, BuildAction, Constraint, Expression,
                            Var)
 import cemo.const
 from cemo.initialisers import (init_cap_factor, init_cost_retire,
-                               init_default_capex,
+                               build_capex, init_default_capex,
                                init_default_fuel_emit_rate,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
@@ -163,6 +163,10 @@ class CreateModel():
         # @@ Parameters
         # Capital costs generators
         # Build costs for generators
+        self.m.regional_cost_factor = Param(self.m.zones, self.m.all_tech, default=1)
+        self.m.connection_cost = Param(self.m.zones, self.m.all_tech, default=100)
+        self.m.build_cost = Param(self.m.all_tech, initialize=init_default_capex)
+
         self.m.cost_gen_build = Param(
             self.m.gen_tech_in_zones, initialize=init_default_capex)
         self.m.cost_stor_build = Param(
