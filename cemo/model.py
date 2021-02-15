@@ -168,11 +168,12 @@ class CreateModel():
         self.m.build_cost = Param(self.m.all_tech, initialize=init_default_capex)
 
         self.m.cost_gen_build = Param(
-            self.m.gen_tech_in_zones, initialize=init_default_capex)
+            self.m.gen_tech_in_zones, initialize=[], mutable=True)
         self.m.cost_stor_build = Param(
-            self.m.stor_tech_in_zones, initialize=init_default_capex)  # Capital costs storage
+            self.m.stor_tech_in_zones, initialize=[], mutable=True)  # Capital costs storage
         self.m.cost_hyb_build = Param(
-            self.m.hyb_tech_in_zones)  # Capital costs hybrid
+            self.m.hyb_tech_in_zones, initialize=[], mutable=True)  # Capital costs hybrid
+        self.m.build_capex = BuildAction(rule=build_capex)
         # Capital costs $/MW/km trans
         self.m.cost_intercon_build = Param(
             self.m.intercons_in_zones, initialize=init_intercon_build_cost)
