@@ -8,9 +8,10 @@ __email__ = "jose.zapata@itpau.com.au"
 
 import calendar
 import datetime
-
 import cemo.const
 import holidays
+
+from pyomo.core.base.param import _NotValid
 
 
 def init_year_correction_factor(model):
@@ -89,6 +90,26 @@ def init_default_capex(model, tech):
        Defaults can catch gaps in data sources in a manner that is
        numerically safer than declaring a very big number'''
     return cemo.const.DEFAULT_CAPEX.get(tech, 9999)
+
+
+def build_capex(model):
+    # pylint: disable=unused-argument
+    '''Build capex numbers from regional cost factors and connection costs
+
+       Build cost times regional cost factor plus connection cost'''
+    for zone in model.zones:
+        for tech in model.gen_tech_per_zone[zone]:
+            if model.cost_gen_build[zone, tech]._value is _NotValid:
+                model.cost_gen_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
+        for tech in model.stor_tech_per_zone[zone]:
+            if model.cost_stor_build[zone, tech]._value is _NotValid:
+                model.cost_stor_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
+        for tech in model.hyb_tech_per_zone[zone]:
+            if model.cost_hyb_build[zone, tech]._value is _NotValid:
+                model.cost_hyb_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
 
 
 def init_default_fuel_price(model, zone, tech):
