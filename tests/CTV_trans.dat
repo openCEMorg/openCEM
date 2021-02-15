@@ -88,11 +88,6 @@ set hyb_tech_in_zones :=
 16 13
 ;
 
-param : cost_hyb_build :=
-10 13 4431.590
-16 13 4431.590
-;
-
 param : cost_hyb_fom cost_hyb_vom :=
 13 75.600 5.99
 ;
