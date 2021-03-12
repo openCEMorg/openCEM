@@ -549,6 +549,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'cost_hyb_build': 'zonetech',
             'cost_stor_build': 'zonetech',
             'cost_fuel': 'zonetech',
+            'build_cost': 'tech',
             'cost_gen_fom': 'tech',
             'cost_gen_vom': 'tech',
             'cost_hyb_fom': 'tech',
@@ -573,7 +574,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                                        index=False,
                                                                        formatters={
                                                                            'tech': lambda x: '%i' % x,  # noqa
-                                                                           year: lambda x: '%10.2f' % x,  # noqa
+                                                                           year: lambda x: '%12.6f' % x,  # noqa
                                                                        })
                     else:
                         cost = cost[cost[['zone', 'tech']].apply(tuple, 1).isin([
@@ -584,7 +585,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                          formatters={
                                                              'zone': lambda x: '%i' % x,
                                                              'tech': lambda x: '%i' % x,
-                                                             year: lambda x: '%10.2f' % x,
+                                                             year: lambda x: '%12.6f' % x,
                                                          })
                     custom_costs += '\n;\n'
 
@@ -687,7 +688,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         cemit = ""
         if self.cost_emit:
-            cemit = "#Cost of emissions $/Mhw\n"\
+            cemit = "#Cost of emissions $/Ton\n"\
                 + "param cost_emit:= " + \
                     str(self.cost_emit[self.Years.index(year)]) + ";\n"
 
@@ -744,6 +745,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('[zoneslist]', sql_list(self.zones))
                     line = line.replace('[alltech]', " ".join(
                         str(i) for i in self.all_tech))
+                    line = line.replace('[alltechlist]', sql_list(self.all_tech))
                     line = line.replace('XXXX', str(year))
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))

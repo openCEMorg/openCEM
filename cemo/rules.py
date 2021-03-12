@@ -694,7 +694,7 @@ def cost_trans_flow(model):
 def cost_emissions(model):
     '''Calculate emission costs from all fuel based generators
     times their respective emissions rate'''
-    return model.year_correction_factor * model.cost_emit * sum(
+    return model.year_correction_factor * model.cost_emit * 1e-3*sum(
         emissions(model, r) for r in model.regions)
 
 
