@@ -220,7 +220,7 @@ def jsonify(inst, year):
                 fill_complex_var(inst.intercon_disp)
             },
             'duals': {
-                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1)
+                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1e-1)
             },
             'objective_value': value(system_cost(inst))
         }
