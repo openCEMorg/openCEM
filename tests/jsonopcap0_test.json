@@ -1,1 +1,190 @@
-{"gen_cap_initial": [{"index": [12, 1], "value": 55}, {"index": [11, 11], "value": 55}, {"index": [9, 8], "value": 0}, {"index": [16, 2], "value": 210}, {"index": [10, 8], "value": 0}, {"index": [11, 10], "value": 0}, {"index": [10, 12], "value": 0}, {"index": [16, 18], "value": 2280}, {"index": [9, 7], "value": 0}, {"index": [9, 3], "value": 0}, {"index": [11, 9], "value": 0}, {"index": [11, 12], "value": 1680}, {"index": [9, 6], "value": 4730}, {"index": [16, 12], "value": 311}, {"index": [9, 2], "value": 500}, {"index": [11, 8], "value": 1950}, {"index": [16, 8], "value": 375}, {"index": [16, 1], "value": 0}, {"index": [9, 12], "value": 0}, {"index": [12, 8], "value": 0}], "stor_cap_initial": [{"index": [16, 14], "value": 0}, {"index": [9, 15], "value": 0}], "hyb_cap_initial": [{"index": [10, 13], "value": 0}, {"index": [16, 13], "value": 0}]}
+{
+"gen_cap_initial": [
+{
+"index": [
+10,
+8
+],
+"value": 0
+},
+{
+"index": [
+11,
+10
+],
+"value": 0
+},
+{
+"index": [
+9,
+7
+],
+"value": 0
+},
+{
+"index": [
+12,
+1
+],
+"value": 55
+},
+{
+"index": [
+11,
+11
+],
+"value": 55
+},
+{
+"index": [
+9,
+2
+],
+"value": 500
+},
+{
+"index": [
+11,
+8
+],
+"value": 1950
+},
+{
+"index": [
+9,
+8
+],
+"value": 0
+},
+{
+"index": [
+9,
+3
+],
+"value": 0
+},
+{
+"index": [
+16,
+8
+],
+"value": 375
+},
+{
+"index": [
+16,
+2
+],
+"value": 210
+},
+{
+"index": [
+11,
+9
+],
+"value": 0
+},
+{
+"index": [
+10,
+12
+],
+"value": 0
+},
+{
+"index": [
+16,
+1
+],
+"value": 0
+},
+{
+"index": [
+12,
+8
+],
+"value": 0
+},
+{
+"index": [
+9,
+6
+],
+"value": 4730
+},
+{
+"index": [
+11,
+12
+],
+"value": 1680
+},
+{
+"index": [
+16,
+18
+],
+"value": 2280
+},
+{
+"index": [
+9,
+12
+],
+"value": 0
+},
+{
+"index": [
+16,
+12
+],
+"value": 311
+}
+],
+"stor_cap_initial": [
+{
+"index": [
+9,
+15
+],
+"value": 0
+},
+{
+"index": [
+9,
+14
+],
+"value": 0
+},
+{
+"index": [
+11,
+14
+],
+"value": 0
+},
+{
+"index": [
+16,
+14
+],
+"value": 0
+}
+],
+"hyb_cap_initial": [
+{
+"index": [
+10,
+13
+],
+"value": 0
+},
+{
+"index": [
+16,
+13
+],
+"value": 0
+}
+]
+}

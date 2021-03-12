@@ -547,6 +547,29 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
   GROUP BY ntndp_zone_id,technology_type_id
   );": [zones,all_tech] cost_hyb_build;
 
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, cost_factor as regional_cost_factor
+FROM regional_cost_factor
+WHERE source_id = 3
+AND ntndp_zone_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+and technology_type_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)" :[zones, all_tech] regional_cost_factor;
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, connection_cost
+FROM isp_connection_costs
+WHERE source_id = 3
+AND ntndp_zone_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)
+and technology_type_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)" :[zones, all_tech] connection_cost;
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT technology_type_id as all_tech, capex as build_cost
+FROM isp_capex
+WHERE source_id = 3 and year = 2020 and build_cost_scenario_id = 7
+and technology_type_id in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21)" : [all_tech] build_cost;
+
 # FOM VOM costs for gentech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
@@ -702,26 +725,30 @@ order BY regions,t;": [regions,t] region_net_demand;
 
 #Custom cost entry for cost_stor_build
 param cost_stor_build:=
-13 14  999999.00
- 5 21 2000000.00
+13 14  999999.000000
+ 5 21 2000000.000000
+;
+#Custom cost entry for build_cost
+param build_cost:=
+13  6677.000000
 ;
 #Custom cost entry for cost_gen_fom
 param cost_gen_fom:=
-1    1111.00
-2    2222.00
+1  1111.000000
+2  2222.000000
 ;
 #Custom cost entry for cost_gen_vom
 param cost_gen_vom:=
-1    5555.00
-2    6666.00
+1  5555.000000
+2  6666.000000
 ;
 #Custom cost entry for cost_stor_fom
 param cost_stor_fom:=
-21    5000.00
+21  5000.000000
 ;
 #Custom cost entry for cost_stor_vom
 param cost_stor_vom:=
-21       5.00
+21     5.000000
 ;
 
 # Exogenous capacity entry gen_cap_exo
@@ -737,7 +764,7 @@ param intercon_cap_exo:=
 
 #Discount rate for project
 param all_tech_discount_rate := 0.06;
-#Cost of emissions $/Mhw
+#Cost of emissions $/Ton
 param cost_emit:= 0.023;
 
  # NEM wide RET
