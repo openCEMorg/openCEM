@@ -32,4 +32,5 @@ docker_deploy:
     only: 
         - master
     script:
+        - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
         - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
