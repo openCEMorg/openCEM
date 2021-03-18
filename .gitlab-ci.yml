@@ -27,13 +27,11 @@ testing:
     script: 
         - docker run $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA pytest
 
-docker_deploy:
+deploy_isp2020:
     stage: deploy
     only: 
-        - pushes
-        - master
         - dev/isp2020
     script:
         - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
-        - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH
-        - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH'
+        - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:isp2020
+        - docker push $CI_REGISTRY_IMAGE:isp2020
