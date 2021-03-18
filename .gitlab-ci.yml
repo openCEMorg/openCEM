@@ -29,9 +29,12 @@ testing:
 
 docker_deploy:
     stage: deploy
+    rules:
+        - if: '$CI_COMMIT_BRANCH'
     only: 
         - master
+        - dev/isp2020
     script:
         - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
         - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
-        - docker push $CI_REGISTRY_IMAGE:latest
+        - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH'
