@@ -1,5 +1,5 @@
 # Miniconda with Python 3
-FROM continuumio/miniconda3:latest
+FROM continuumio/miniconda3:4.8.2
 
 # build new locales
 RUN apt-get clean && apt-get update && apt-get install -y locales

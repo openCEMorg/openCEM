@@ -1,16 +1,37 @@
-# Miniconda image 
+# Docker in Docker settings
+image: docker:19.03.12
+
+variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+
+services:
+    - docker:19.03.12-dind
 
 stages: 
     - build
     - test
+    - deploy
 
 before_script:
   - docker info
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
 docker_build:
     stage: build
-    script: docker build -f Dockerfile -t opencem .
+    script: 
+        - docker build -f Dockerfile -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+        - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
 
 testing:
     stage: test
-    script: docker run opencem:latest pytest
+    script: 
+        - docker run $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA pytest
+
+deploy_isp2020:
+    stage: deploy
+    only: 
+        - dev/isp2020
+    script:
+        - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+        - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:isp2020
+        - docker push $CI_REGISTRY_IMAGE:isp2020
