@@ -839,7 +839,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         """
         for y in self.Years:
             if self.resume:
-                if self.json:
+                if self.json_output:
                     if (self.wrkdir / (str(y)+'.json')).exists():
                         print("Skipping year %s" % y)
                         continue
