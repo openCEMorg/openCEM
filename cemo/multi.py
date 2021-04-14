@@ -18,6 +18,7 @@ from pyomo.opt import SolverFactory
 import cemo.const
 from cemo.cluster import ClusterRun, InstanceCluster
 from cemo.jsonify import json_carry_forward_cap, jsonify
+from cemo.parquetify import parquetify
 from cemo.model import CreateModel, model_options
 from cemo.utils import printstats
 
@@ -137,7 +138,8 @@ class SolveTemplate:
                  solver='cbc',
                  log=False, wrkdir=Path(tempfile.mkdtemp()),
                  resume=False,
-                 templatetest=False):
+                 templatetest=False,
+                 json_output=False):
         config = configparser.ConfigParser()
         try:
             with open(cfgfile) as f:
@@ -226,6 +228,7 @@ class SolveTemplate:
 
         self.wrkdir = wrkdir
         self.log = log
+        self.json_output = json_output
         # initialisation functions
         self.tracetechs()  # TODO refactor this
 
@@ -875,19 +878,27 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
             if self.log:
-                print("openCEM multi: Saving year %s results into temporary file" % y)
-            with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
-                json.dump(jsonify(inst, y), json_out)
-                json_out.write('\n')
+                print("openCEM multi: Saving year %s results to directory" % y)
+            if self.json_output:
+                with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
+                    json.dump(jsonify(inst, y), json_out)
+                    json_out.write('\n')
+            else:
+                parquetify(inst, self.wrkdir, y)
 
-            printstats(inst)
+            printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
 
             del inst  # to keep memory down
-        # Merge JSON output for all investment periods
-        if self.log:
-            print("openCEM multi: Saving final results to JSON file")
-        if not self.templatetest:
-            self.mergejsonyears()
+        if self.json_output:
+            # Merge JSON output for all investment periods
+            if self.log:
+                print("openCEM multi: Saving final results to JSON file")
+            if not self.templatetest:
+                self.mergejsonyears()
+        else:
+            meta = self.generate_metadata()
+            with open(self.wrkdir / self.cfgfile.stem + '_meta.json', 'w') as metadata:
+                json.dump(meta, metadata, indent=0)
 
     def mergejsonyears(self):
         '''Merge the full year JSON output for each simulated year in a single dictionary'''
