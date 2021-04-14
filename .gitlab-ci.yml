@@ -2,7 +2,8 @@
 image: docker:19.03.12
 
 variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: "overlay2"
 
 services:
     - docker:19.03.12-dind
@@ -27,7 +28,16 @@ testing:
     script: 
         - docker run $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA pytest
 
-deploy_isp2020:
+docker_deploy:
+    stage: deploy
+    only: 
+        - master
+    script:
+        - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+        - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
+        - docker push $CI_REGISTRY_IMAGE:latest
+
+docker_deploy_isp2020:
     stage: deploy
     only: 
         - dev/isp2020
