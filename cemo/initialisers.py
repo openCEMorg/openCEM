@@ -49,6 +49,24 @@ def init_stor_rt_eff(model, tech):
     return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("rt_eff", 0)
 
 
+def init_mincap(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return mincap for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('mincap').get(tech, 0)
+
+
+def init_penalty(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return penalty for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('penalty').get(tech, 0)
+
+
+def init_effrate(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return effrate for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('effrate').get(tech, 0)
+
+
 def init_stor_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for storage tech'''

@@ -19,7 +19,7 @@ from cemo.initialisers import (init_cap_factor, init_cost_retire,
                                init_gen_build_limit, init_hyb_charge_hours,
                                init_hyb_col_mult, init_intercon_build_cost,
                                init_intercon_cap_initial, init_intercon_fcr,
-                               init_intercon_loss_factor,
+                               init_intercon_loss_factor, init_mincap, init_effrate, init_penalty,
                                init_intercons_in_zones, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
                                init_zone_demand_factors, init_zones_in_regions)
@@ -282,6 +282,10 @@ class CreateModel():
         self.m.cost_cap_carry_forward_hist = Param(self.m.zones, default=0)
         # carry forward capital costs total
         self.m.cost_cap_carry_forward = Param(self.m.zones, mutable=True)
+
+        self.m.gen_com_mincap = Param(self.m.commit_gen_tech,  initialize=init_mincap)
+        self.m.gen_com_penalty = Param(self.m.commit_gen_tech, initialize=init_penalty)
+        self.m.gen_com_effrate = Param(self.m.commit_gen_tech, initialize=init_effrate)
 
         # Build action to Compute carry forward costs
         self.m.cost_carry_forward_build = BuildAction(
