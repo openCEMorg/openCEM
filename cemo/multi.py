@@ -906,7 +906,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                 self.mergejsonyears()
         else:
             meta = self.generate_metadata()
-            with open(self.wrkdir / self.cfgfile.stem + '_meta.json', 'w') as metadata:
+            with open(self.wrkdir / (self.cfgfile.stem + '_meta.json'), 'w') as metadata:
                 json.dump(meta, metadata, indent=0)
 
     def mergejsonyears(self):
