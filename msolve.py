@@ -93,7 +93,7 @@ X = SolveTemplate(
     wrkdir=SIM_DIR,
     resume=args.resume,
     templatetest=args.templatetest,
-    json=args.json
+    json_output=args.json
 )
 
 
