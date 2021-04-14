@@ -11,6 +11,7 @@ import datetime
 import json
 from pathlib import Path
 import tempfile
+import shutil
 
 import pandas as pd
 from pyomo.opt import SolverFactory
@@ -833,14 +834,22 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         Calcualte capacity using clustering and dispatch with full year.
         Alternatively caculate capacity and dispatch simultanteously using full year instance
         Save capacity results for carry forward in json file.
-        Save full results for year in JSON file.
-        Assemble full simulation output as metadata+ full year results in each simulated year
+        Save full results for year in parquet/JSON file.
+        Assemble full simulation output as metadata + full year results in each simulated year
         """
         for y in self.Years:
             if self.resume:
-                if (self.wrkdir / (str(y)+'.json')).exists():
-                    print("Skipping year %s" % y)
-                    continue
+                if self.json:
+                    if (self.wrkdir / (str(y)+'.json')).exists():
+                        print("Skipping year %s" % y)
+                        continue
+                else:
+                    if (self.wrkdir / (str(y))).exists():
+                        print("Skipping year %s" % y)
+                        continue
+            else:
+                shutil.rmtree(self.wrkdir/str(y))
+
             if self.templatetest and self.Years.index(y) > 0:
                 continue
             if self.log:
