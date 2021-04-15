@@ -849,7 +849,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         print("Skipping year %s" % y)
                         continue
             else:
-                shutil.rmtree(self.wrkdir/str(y))
+                shutil.rmtree(self.wrkdir/str(y), ignore_errors=True)
 
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
@@ -896,7 +896,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
             if self.json_output:
                 printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
-            [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False)
+            [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False).get_summary()
             cdu.to_parquet(self.wrkdir/("cdeu.parquet"))
             cost.to_parquet(self.wrkdir/("cost.parquet"))
 
