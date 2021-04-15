@@ -22,7 +22,7 @@ class BaseSummary():
 
     def __init__(self, datasource, YEARS, cache=True, save=True):
         self.years = YEARS
-        self.scen = datasource
+        self.scen = Path(datasource)
         self.cache = cache
         self.save = save
         self.check_cache()
@@ -30,7 +30,7 @@ class BaseSummary():
     def _load_data(self, VAR):
         for idx, year in enumerate(self.years):
             if idx == 0:
-                print("Loading %s %s" % (self.scen, VAR))
+                #print("Loading %s %s" % (self.scen, VAR))
                 data = pd.DataFrame()
             # Load a bunch of data into a dictionary for easy access
             path = self.scen / Path(str(year)) / VAR
@@ -60,9 +60,9 @@ class TransSummary(BaseSummary):
     def check_cache(self):
         if self.cache:
             try:
-                self.summary = pd.read_parquet(self.scen+"_trans_summary.parquet")
+                self.summary = pd.read_parquet(self.scen/"trans_summary.parquet")
                 if set(self.summary.year.unique()) != set(self.years):
-                    print("Not equal!")
+                    #print("Not equal!")
                     raise Exception
             except Exception as e:
                 print(e)
@@ -73,7 +73,7 @@ class TransSummary(BaseSummary):
             self.save_cache()
 
     def save_cache(self):
-        self.summary.to_parquet(self.scen+"_trans_summary.parquet")
+        self.summary.to_parquet(self.scen/"trans_summary.parquet")
 
     def process_data(self):
         self._misc()
@@ -127,9 +127,9 @@ class CapSummary(BaseSummary):
     def check_cache(self):
         if self.cache:
             try:
-                self.summary = pd.read_parquet(self.scen+"_cap_summary.parquet")
+                self.summary = pd.read_parquet(self.scen/"cap_summary.parquet")
                 if set(self.summary.year.unique()) != set(self.years):
-                    print("Not equal!")
+                    #print("Not equal!")
                     raise Exception
             except Exception as e:
                 print(e)
@@ -140,7 +140,7 @@ class CapSummary(BaseSummary):
             self.save_cache()
 
     def save_cache(self):
-        self.summary.to_parquet(self.scen+"_cap_summary.parquet")
+        self.summary.to_parquet(self.scen/"cap_summary.parquet")
 
     def process_data(self):
         self._capacity()
@@ -216,9 +216,9 @@ class ZoneSummary(BaseSummary):
     def check_cache(self):
         if self.cache:
             try:
-                self.summary = pd.read_parquet(self.scen+"_zone_summary.parquet")
+                self.summary = pd.read_parquet(self.scen/"zone_summary.parquet")
                 if set(self.summary.year.unique()) != set(self.years):
-                    print("Not equal!")
+                    #print("Not equal!")
                     raise Exception
             except Exception as e:
                 print(e)
@@ -229,7 +229,7 @@ class ZoneSummary(BaseSummary):
             self.save_cache()
 
     def save_cache(self):
-        self.summary.to_parquet(self.scen+"_zone_summary.parquet")
+        self.summary.to_parquet(self.scen/"zone_summary.parquet")
 
     def process_data(self):
         self._carry_fwd_costs()
@@ -249,9 +249,9 @@ class RegSummary(BaseSummary):
     def check_cache(self):
         if self.cache:
             try:
-                self.summary = pd.read_parquet(self.scen+"_dual_summary.parquet")
+                self.summary = pd.read_parquet(self.scen/"dual_summary.parquet")
                 if set(self.summary.year.unique()) != set(self.years):
-                    print("Not equal!")
+                    #print("Not equal!")
                     raise Exception
             except Exception as e:
                 print(e)
@@ -263,7 +263,7 @@ class RegSummary(BaseSummary):
             self.save_cache()
 
     def save_cache(self):
-        self.summary.to_parquet(self.scen+"_dual_summary.parquet")
+        self.summary.to_parquet(self.scen/"dual_summary.parquet")
 
     def process_data(self):
         self._duals()
