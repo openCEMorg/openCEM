@@ -240,6 +240,7 @@ def convert_duals(instance, folder, year):
             try:
                 parq = pyomo_to_parquet_dual(instance, var, MAP['duals'][key]['cols'])
                 parq[key] = parq[key]*MAP['duals'][key].get('scale', 1)
+                parq = parq.astype({key: float})
                 p = Path(folder) / str(year) / key
                 parq.to_parquet(p,
                                 partition_cols=MAP['duals'][key]['part'],
@@ -256,6 +257,7 @@ def convert_complex(instance, folder, year):
             if getattr(instance, var, None) is not None:
                 parq = pyomo_to_parquet_complex(instance, var, MAP['complex'][key]['cols'])
                 parq[key] = parq[key]*MAP['complex'][key].get('scale', 1)
+                parq = parq.astype({key: float})
                 p = Path(folder) / str(year) / key
                 parq.to_parquet(p,
                                 partition_cols=MAP['complex'][key]['part'],
