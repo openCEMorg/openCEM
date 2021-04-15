@@ -850,8 +850,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             else:
                 shutil.rmtree(self.wrkdir/str(y))
 
-            if self.templatetest and self.Years.index(y) > 0:
-                continue
+            #if self.templatetest and self.Years.index(y) > 0:
+            #    continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
