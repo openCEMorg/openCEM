@@ -22,6 +22,7 @@ from cemo.jsonify import json_carry_forward_cap, jsonify
 from cemo.parquetify import parquetify
 from cemo.model import CreateModel, model_options
 from cemo.utils import printstats
+from cemo.summary import Summary
 
 from shutil import copyfileobj
 
@@ -850,8 +851,6 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             else:
                 shutil.rmtree(self.wrkdir/str(y))
 
-            #if self.templatetest and self.Years.index(y) > 0:
-            #    continue
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
@@ -895,7 +894,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             else:
                 parquetify(inst, self.wrkdir, y)
 
-            printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
+            if self.json_output:
+                printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
+            [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False)
+            cdu.to_parquet(self.wrkdir/("cdeu.parquet"))
+            cost.to_parquet(self.wrkdir/("cost.parquet"))
 
             del inst  # to keep memory down
         if self.json_output:
