@@ -919,8 +919,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.json_output:
                 printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
             [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False).get_summary()
-            cdu.to_parquet(self.wrkdir/("cdeu.parquet"))
-            cost.to_parquet(self.wrkdir/("cost.parquet"))
+            cdu.to_csv(self.wrkdir/("cdeu.csv.zip"), compression="zip")
+            cost.to_csv(self.wrkdir/("cost.csv.zip"), compression="zip")
 
             del inst  # to keep memory down
         if self.json_output:
