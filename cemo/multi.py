@@ -32,7 +32,7 @@ from shutil import copyfileobj
 def parse_solver_options(option_string):
     """Turn solver options in string format into JSON"""
     # parse options in the form 'key=value key=value' into a [(key, value)]
-    r = re.compile(r'\b(\w[\w_]*)\b\s*=\s*\b(\w[\w\-_]*)\b')
+    r = re.compile(r'\b(\w[\w_.]*)\b\s*=\s*\b(\w[\w\-_.]*)\b')
     dispatch_opts = r.findall(option_string)
     option_dict = dict()
     for key, val in dispatch_opts:

@@ -141,7 +141,11 @@ def test_multi_get_model_options(year, value):
 @pytest.mark.parametrize(
     "value,result",
     [('solver_option1=10 solver_option2=smile option3_is_a_float=1e-3', {'solver_option1': 10, 'solver_option2': 'smile',
-                                                 'option3_is_a_float': 1e-3})])
+                                                 'option3_is_a_float': 1e-3}),
+    ('iparam.intpnt_basis=0 iparam.log_ana_pro=5 iparam.sim_max_num_setbacks=1000 iparam.infeas_report_auto=0 iparam.license_wait=1', 
+    {'iparam.intpnt_basis': 0, 'iparam.log_ana_pro': 5, 'iparam.sim_max_num_setbacks':1000, 'iparam.infeas_report_auto': 0, 'iparam.license_wait': 1})
+    ]
+)
 def test_parse_solver_options(value, result):
     '''Test behaviour of sql_tech_pairs'''
     assert parse_solver_options(value) == result
