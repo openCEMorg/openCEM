@@ -6,7 +6,7 @@ import tempfile
 from pathlib import Path
 import pytest
 
-from cemo.multi import SolveTemplate, sql_tech_pairs, sql_list, roundup
+from cemo.multi import SolveTemplate, sql_tech_pairs, sql_list, roundup, parse_solver_options
 
 
 @pytest.mark.parametrize(
@@ -136,3 +136,12 @@ def test_multi_get_model_options(year, value):
     multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
     options = multi_sim.get_model_options(year)
     assert options.build_intercon_manual == value
+
+
+@pytest.mark.parametrize(
+    "value,result",
+    [('solver_option1=10 solver_option2=smile option3_is_a_float=1e-3', {'solver_option1': 10, 'solver_option2': 'smile',
+                                                 'option3_is_a_float': 1e-3})])
+def test_parse_solver_options(value, result):
+    '''Test behaviour of sql_tech_pairs'''
+    assert parse_solver_options(value) == result

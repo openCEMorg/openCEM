@@ -11,6 +11,8 @@ import datetime
 import json
 from pathlib import Path
 import tempfile
+import re
+import ast
 import shutil
 
 import pandas as pd
@@ -25,6 +27,23 @@ from cemo.utils import printstats
 from cemo.summary import Summary
 
 from shutil import copyfileobj
+
+
+def parse_solver_options(option_string):
+    """Turn solver options in string format into JSON"""
+    # parse options in the form 'key=value key=value' into a [(key, value)]
+    r = re.compile(r'\b(\w[\w_]*)\b\s*=\s*\b(\w[\w\-_]*)\b')
+    dispatch_opts = r.findall(option_string)
+    option_dict = dict()
+    for key, val in dispatch_opts:
+        try:
+            value = ast.literal_eval(val)
+        except ValueError:
+            value = val
+
+        option_dict[key] = value
+
+    return option_dict
 
 
 def make_file_path(pathstring, cfgroot):
@@ -223,8 +242,10 @@ class SolveTemplate:
             self.cluster_solver_options = config['Solver']['cluster_solver_options']
         else:
             self.cluster_solver_options = None
+
         if config.has_option('Solver', 'dispatch_solver_options'):
-            self.dispatch_solver_options = config['Solver']['dispatch_solver_options']
+            self.dispatch_solver_options = parse_solver_options(config['Solver']['dispatch_solver_options'])
+
         else:
             self.dispatch_solver_options = None
 
@@ -874,6 +895,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
             # Solve the model (or just dispatch if capacity has been solved)
             opt = SolverFactory(self.solver)
+            opt.options = self.dispatch_solver_options
             if self.log:
                 print("openCEM multi: Starting full year dispatch simulation")
             opt.solve(inst, tee=self.log, keepfiles=False)
