@@ -247,7 +247,7 @@ class SolveTemplate:
             self.dispatch_solver_options = parse_solver_options(config['Solver']['dispatch_solver_options'])
 
         else:
-            self.dispatch_solver_options = None
+            self.dispatch_solver_options = {}
 
         self.wrkdir = wrkdir
         self.log = log
@@ -919,8 +919,8 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             if self.json_output:
                 printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
             [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False).get_summary()
-            cdu.to_csv(self.wrkdir/("cdeu.csv.zip"), compression="zip")
-            cost.to_csv(self.wrkdir/("cost.csv.zip"), compression="zip")
+            cdu.to_csv(self.wrkdir/("cdeu.zip"), compression={'method': 'zip', 'archive_name': 'cdeu.csv'})
+            cost.to_csv(self.wrkdir/("cost.zip"), compression={'mehthod': 'zip', 'archive_name': 'cost.csv'})
 
             del inst  # to keep memory down
         if self.json_output:
