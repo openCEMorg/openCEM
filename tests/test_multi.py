@@ -55,7 +55,7 @@ def test_multi_conf_file_not_found():
      ('cost_emit', 'cost_emit = [-11,2,3,4,5,6,8]'),
      ('nem_disp_ratio', 'nem_disp_ratio=[0,0,0,2,0,0,0]'),
      ('nem_re_disp_ratio', 'nem_re_disp_ratio=[0,0,0,0,0,0]'),
-     ('manual_intercon_build', 'manual_intercon_build=[0.1,false,true,false,true,false,true]')])
+     ('auto_intercon_build', 'auto_intercon_build=[0.1,false,true,false,true,false,true]')])
 def test_multi_bad_cfg(option, value):
     ''' Assert validate bad config option by replacing known bad options in sample file'''
     with open('tests/testConfig.cfg') as sample:
@@ -127,22 +127,26 @@ def test_multi_metadata():
 
 
 @pytest.mark.parametrize("year, value", [
-    (2020, True),
-    (2025, False),
-    (2030, True),
+    (2020, False),
+    (2025, True),
+    (2030, False),
+    (2035, False),
+    (2040, True),
+    (2045, True),
+    (2050, True),
   ])
 def test_multi_get_model_options(year, value):
     '''Test that model options are generated for each year'''
     multi_sim = SolveTemplate(cfgfile='tests/testConfig.cfg')
     options = multi_sim.get_model_options(year)
-    assert options.build_intercon_manual == value
+    assert options.build_intercon_auto == value
 
 
 @pytest.mark.parametrize(
     "value,result",
     [('solver_option1=10 solver_option2=smile option3_is_a_float=1e-3', {'solver_option1': 10, 'solver_option2': 'smile',
                                                  'option3_is_a_float': 1e-3}),
-    ('iparam.intpnt_basis=0 iparam.log_ana_pro=5 iparam.sim_max_num_setbacks=1000 iparam.infeas_report_auto=0 iparam.license_wait=1', 
+    ('iparam.intpnt_basis=0 iparam.log_ana_pro=5 iparam.sim_max_num_setbacks=1000 iparam.infeas_report_auto=0 iparam.license_wait=1',
     {'iparam.intpnt_basis': 0, 'iparam.log_ana_pro': 5, 'iparam.sim_max_num_setbacks':1000, 'iparam.infeas_report_auto': 0, 'iparam.license_wait': 1})
     ]
 )

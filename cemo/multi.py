@@ -190,9 +190,9 @@ class SolveTemplate:
         if config.has_option('Scenario', 'cost_emit'):
             self.cost_emit = json.loads(Scenario['cost_emit'])
 
-        self.manual_intercon_build = None
-        if config.has_option('Scenario', 'manual_intercon_build'):
-            self.manual_intercon_build = json.loads(Scenario['manual_intercon_build'])
+        self.auto_intercon_build = None
+        if config.has_option('Scenario', 'auto_intercon_build'):
+            self.auto_intercon_build = json.loads(Scenario['auto_intercon_build'])
         # Miscelaneous options
         self.description = None
         if config.has_option('Scenario', 'Description'):
@@ -400,21 +400,21 @@ class SolveTemplate:
         self._nem_re_disp_ratio = data
 
     @property
-    def manual_intercon_build(self):
-        '''Property getter for manual_intercon_build'''
-        return self._manual_intercon_build
+    def auto_intercon_build(self):
+        '''Property getter for auto_intercon_build'''
+        return self._auto_intercon_build
 
-    @manual_intercon_build.setter
-    def manual_intercon_build(self, data):
+    @auto_intercon_build.setter
+    def auto_intercon_build(self, data):
         if data is not None:
             if len(data) != len(self.Years):
                 raise ValueError(
-                    'openCEM-manual_intercon_build: List %s length does not match Years list'
+                    'openCEM-auto_intercon_build: List %s length does not match Years list'
                 )
             if any(not isinstance(x, bool) for x in data):
                 raise ValueError(
-                    'openCEM-manual_intercon_build: Element(s) in list must be boolean')
-        self._manual_intercon_build = data
+                    'openCEM-auto_intercon_build: Element(s) in list must be boolean')
+        self._auto_intercon_build = data
 
     @property
     def Template(self):
@@ -841,11 +841,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         for option in self.model_options._fields:
             OPTIONS.update({option: getattr(self.model_options, option)})
 
-        manual_intercon_build = self.manual_intercon_build[self.Years.index(
-            year)] if self.manual_intercon_build is not None else False
+        auto_intercon_build = self.auto_intercon_build[self.Years.index(
+            year)] if self.auto_intercon_build is not None else True
 
         OPTIONS.update(
-         {'build_intercon_manual': manual_intercon_build}
+         {'build_intercon_auto': auto_intercon_build}
         )
         return model_options(**OPTIONS)
 

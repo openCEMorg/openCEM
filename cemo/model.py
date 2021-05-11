@@ -52,7 +52,7 @@ def model_options(**kwargs):
               'region_ret_ratio': False,
               'nem_disp_ratio': True,
               'nem_re_disp_ratio': False,
-              'build_intercon_manual': False}
+              'build_intercon_auto': True}
     opt = namedtuple('model_options', [i for i in FIELDS])
     opt.__new__.__defaults__ = tuple(FIELDS[i] for i in FIELDS)
     return opt(**kwargs)
@@ -331,7 +331,7 @@ class CreateModel():
                                 within=NonNegativeReals)
 
         intercon_bounds = None
-        if self.model_options.build_intercon_manual:
+        if not self.model_options.build_intercon_auto:
             intercon_bounds = (0, 0)
 
         self.m.intercon_cap_new = Var(
