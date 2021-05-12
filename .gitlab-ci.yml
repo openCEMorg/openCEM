@@ -45,3 +45,9 @@ docker_deploy_isp2020:
         - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
         - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:isp2020
         - docker push $CI_REGISTRY_IMAGE:isp2020
+
+wrapper:
+    stage: trigger-wrapper-rebuild
+    only:
+        - dev/isp2020
+    trigger: analytics/opencem_wrapper
