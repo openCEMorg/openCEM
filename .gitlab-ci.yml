@@ -12,6 +12,7 @@ stages:
     - build
     - test
     - deploy
+    - trigger-wrapper-rebuild
 
 before_script:
   - docker info
