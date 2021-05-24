@@ -161,7 +161,7 @@ class SolveTemplate:
                  resume=False,
                  templatetest=False,
                  json_output=False):
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(interpolation=None)
         try:
             with open(cfgfile) as f:
                 config.read_file(f)
