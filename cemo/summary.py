@@ -5,7 +5,7 @@ from pathlib import Path
 CAPCOLS = ['cap_op', 'cap_new', 'cap_exo', 'cap_ret', 'cap_ret_exo']
 REGIONCOLS_ZT = ['srmc', 'unserved']
 REGIONCOLS_RT = ['region_net_demand']
-EMITCOLS_ZTT = ['disp', 'disp_com', 'disp_com_p']
+EMITCOLS_ZTT = ['disp', 'disp_com', 'disp_com_p', 'charge']
 EMITCOLS_ZT = ['cost_fuel', 'fuel_heat_rate', ]
 EMITCOLS_T = ['gen_com_mincap', 'gen_com_penalty', 'gen_com_effrate', 'fuel_emit_rate']
 COSTCOLS_ZT = ['cost_build']
@@ -189,7 +189,7 @@ class CapSummary(BaseSummary):
         nfuel = nfuel.reset_index()
 
         self.summary = self.summary.merge(
-            nfuel[['zone', 'tech', 'year', 'disp', 'fuel_cost', 'emissions']],
+            nfuel[['zone', 'tech', 'year', 'disp', 'charge', 'fuel_cost', 'emissions']],
             on=['zone', 'tech', 'year'], how='outer')
 
     def _cap_costs(self):
