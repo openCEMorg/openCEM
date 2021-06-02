@@ -2,7 +2,8 @@
 image: docker:19.03.12
 
 variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: "overlay2"
 
 services:
     - docker:19.03.12-dind
@@ -11,6 +12,7 @@ stages:
     - build
     - test
     - deploy
+    - trigger-wrapper-rebuild
 
 before_script:
   - docker info
@@ -35,3 +37,18 @@ docker_deploy:
         - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
         - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:latest
         - docker push $CI_REGISTRY_IMAGE:latest
+
+docker_deploy_isp2020:
+    stage: deploy
+    only: 
+        - dev/isp2020
+    script:
+        - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+        - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:isp2020
+        - docker push $CI_REGISTRY_IMAGE:isp2020
+
+wrapper:
+    stage: trigger-wrapper-rebuild
+    only:
+        - dev/isp2020
+    trigger: analytics/opencem_wrapper

@@ -12,14 +12,14 @@ from pyomo.environ import (AbstractModel, BuildAction, Constraint, Expression,
                            Var)
 import cemo.const
 from cemo.initialisers import (init_cap_factor, init_cost_retire,
-                               init_default_capex,
+                               build_capex, init_default_capex,
                                init_default_fuel_emit_rate,
                                init_default_fuel_price, init_default_heat_rate,
                                init_default_lifetime, init_fcr,
                                init_gen_build_limit, init_hyb_charge_hours,
                                init_hyb_col_mult, init_intercon_build_cost,
                                init_intercon_cap_initial, init_intercon_fcr,
-                               init_intercon_loss_factor,
+                               init_intercon_loss_factor, init_mincap, init_effrate, init_penalty,
                                init_intercons_in_zones, init_stor_charge_hours,
                                init_stor_rt_eff, init_year_correction_factor,
                                init_zone_demand_factors, init_zones_in_regions)
@@ -52,7 +52,7 @@ def model_options(**kwargs):
               'region_ret_ratio': False,
               'nem_disp_ratio': True,
               'nem_re_disp_ratio': False,
-              'build_intercon_manual': False}
+              'build_intercon_auto': True}
     opt = namedtuple('model_options', [i for i in FIELDS])
     opt.__new__.__defaults__ = tuple(FIELDS[i] for i in FIELDS)
     return opt(**kwargs)
@@ -163,12 +163,17 @@ class CreateModel():
         # @@ Parameters
         # Capital costs generators
         # Build costs for generators
+        self.m.regional_cost_factor = Param(self.m.zones, self.m.all_tech, default=1)
+        self.m.connection_cost = Param(self.m.zones, self.m.all_tech, default=100)
+        self.m.build_cost = Param(self.m.all_tech, initialize=init_default_capex)
+
         self.m.cost_gen_build = Param(
-            self.m.gen_tech_in_zones, initialize=init_default_capex)
+            self.m.gen_tech_in_zones, initialize=[], mutable=True)
         self.m.cost_stor_build = Param(
-            self.m.stor_tech_in_zones, initialize=init_default_capex)  # Capital costs storage
+            self.m.stor_tech_in_zones, initialize=[], mutable=True)  # Capital costs storage
         self.m.cost_hyb_build = Param(
-            self.m.hyb_tech_in_zones)  # Capital costs hybrid
+            self.m.hyb_tech_in_zones, initialize=[], mutable=True)  # Capital costs hybrid
+        self.m.build_capex = BuildAction(rule=build_capex)
         # Capital costs $/MW/km trans
         self.m.cost_intercon_build = Param(
             self.m.intercons_in_zones, initialize=init_intercon_build_cost)
@@ -278,6 +283,10 @@ class CreateModel():
         # carry forward capital costs total
         self.m.cost_cap_carry_forward = Param(self.m.zones, mutable=True)
 
+        self.m.gen_com_mincap = Param(self.m.commit_gen_tech,  initialize=init_mincap)
+        self.m.gen_com_penalty = Param(self.m.commit_gen_tech, initialize=init_penalty)
+        self.m.gen_com_effrate = Param(self.m.commit_gen_tech, initialize=init_effrate)
+
         # Build action to Compute carry forward costs
         self.m.cost_carry_forward_build = BuildAction(
             rule=build_carry_fwd_cost_per_zone)
@@ -322,7 +331,7 @@ class CreateModel():
                                 within=NonNegativeReals)
 
         intercon_bounds = None
-        if self.model_options.build_intercon_manual:
+        if not self.model_options.build_intercon_auto:
             intercon_bounds = (0, 0)
 
         self.m.intercon_cap_new = Var(

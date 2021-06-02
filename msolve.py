@@ -69,6 +69,13 @@ parser.add_argument(
     action="store_true",
 )
 
+parser.add_argument(
+    "-j",
+    "--json",
+    help="Store results in openCEM v1.0 JSON format",
+    action="store_true",
+)
+
 # parse arguments into args structure
 args = parser.parse_args()
 
@@ -85,7 +92,8 @@ X = SolveTemplate(
     log=args.log,
     wrkdir=SIM_DIR,
     resume=args.resume,
-    templatetest = args.templatetest
+    templatetest=args.templatetest,
+    json_output=args.json
 )
 
 

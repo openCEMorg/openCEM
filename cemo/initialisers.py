@@ -8,9 +8,10 @@ __email__ = "jose.zapata@itpau.com.au"
 
 import calendar
 import datetime
-
 import cemo.const
 import holidays
+
+from pyomo.core.base.param import _NotValid
 
 
 def init_year_correction_factor(model):
@@ -48,6 +49,24 @@ def init_stor_rt_eff(model, tech):
     return cemo.const.DEFAULT_STOR_PROPS.get(tech).get("rt_eff", 0)
 
 
+def init_mincap(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return mincap for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('mincap').get(tech, 0)
+
+
+def init_penalty(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return penalty for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('penalty').get(tech, 0)
+
+
+def init_effrate(model, tech):
+    # pylint: disable=unused-argument
+    '''Default return effrate for unit commitment techs'''
+    return cemo.const.GEN_COMMIT.get('effrate').get(tech, 0)
+
+
 def init_stor_charge_hours(model, tech):
     # pylint: disable=unused-argument
     '''Default charge hours for storage tech'''
@@ -82,13 +101,33 @@ def init_intercon_loss_factor(model, source, dest):
     return cemo.const.ZONE_INTERCONS.get(source).get(dest).get('loss', 0)
 
 
-def init_default_capex(model, zone, tech):
+def init_default_capex(model, tech):
     # pylint: disable=unused-argument
     '''Initialise capex with default values per technology
 
        Defaults can catch gaps in data sources in a manner that is
        numerically safer than declaring a very big number'''
     return cemo.const.DEFAULT_CAPEX.get(tech, 9999)
+
+
+def build_capex(model):
+    # pylint: disable=unused-argument
+    '''Build capex numbers from regional cost factors and connection costs
+
+       Build cost times regional cost factor plus connection cost'''
+    for zone in model.zones:
+        for tech in model.gen_tech_per_zone[zone]:
+            if model.cost_gen_build[zone, tech]._value is _NotValid:
+                model.cost_gen_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
+        for tech in model.stor_tech_per_zone[zone]:
+            if model.cost_stor_build[zone, tech]._value is _NotValid:
+                model.cost_stor_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
+        for tech in model.hyb_tech_per_zone[zone]:
+            if model.cost_hyb_build[zone, tech]._value is _NotValid:
+                model.cost_hyb_build[zone, tech] = model.build_cost[tech] * \
+                    model.regional_cost_factor[zone, tech]+model.connection_cost[zone, tech]
 
 
 def init_default_fuel_price(model, zone, tech):

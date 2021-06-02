@@ -11,6 +11,9 @@ import datetime
 import json
 from pathlib import Path
 import tempfile
+import re
+import ast
+import shutil
 
 import pandas as pd
 from pyomo.opt import SolverFactory
@@ -18,10 +21,29 @@ from pyomo.opt import SolverFactory
 import cemo.const
 from cemo.cluster import ClusterRun, InstanceCluster
 from cemo.jsonify import json_carry_forward_cap, jsonify
+from cemo.parquetify import parquetify
 from cemo.model import CreateModel, model_options
 from cemo.utils import printstats
+from cemo.summary import Summary
 
 from shutil import copyfileobj
+
+
+def parse_solver_options(option_string):
+    """Turn solver options in string format into JSON"""
+    # parse options in the form 'key=value key=value' into a [(key, value)]
+    r = re.compile(r'\b(\w[\w_.]*)\b\s*=\s*\b(\w[\w\-_.]*)\b')
+    dispatch_opts = r.findall(option_string)
+    option_dict = dict()
+    for key, val in dispatch_opts:
+        try:
+            value = ast.literal_eval(val)
+        except ValueError:
+            value = val
+
+        option_dict[key] = value
+
+    return option_dict
 
 
 def make_file_path(pathstring, cfgroot):
@@ -42,6 +64,30 @@ def sql_tech_pairs(techset):
     return "(" + ", ".join(map(str, out)) + ")"
 
 
+def athena_tech_pairs(techset):
+    """Format zone,tech pairs as a set for AthenaDB SQL query statement"""
+    out = []
+    for i in techset.keys():
+        for j in techset[i]:
+            out.append((i, j))
+    if not out:
+        out.append((99, 99))  # return non empty set to preserve query syntax if list is empty
+    return "(" + ", ".join(["ROW(CAST(%d as INTEGER), CAST(%d as INTEGER))" % x for x in out]) + ")"
+
+
+def gen_timerange(year, test=False, athena=False):
+    """Generate a time range for mysql and athena queries"""
+    date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
+    strd1 = "'" + str(date1) + "'"
+    date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
+    if test:
+        date2 = datetime.datetime(year - 1, 7, 7, 23, 0, 0)
+    strd2 = "'" + str(date2) + "'"
+    if athena:
+        return "BETWEEN " + "CAST(" + strd1 + " AS timestamp)" + " AND " + "CAST(" + strd2 + " AS timestamp)"
+    return "BETWEEN " + strd1 + " AND " + strd2
+
+
 def sql_list(list):
     """Format set lists as a comma separated set for SQL query statement"""
     if not list:
@@ -60,11 +106,11 @@ def dclist(techset):
 
 def roundup(cap):
     '''
-    Round results to 2 signigicant digits.
-    Catching small negative numbers due to solver numerical tolerance.
+    Round capacity results.
+    Catching small numbers due to solver numerical tolerance.
     Let bigger negative numners pass to raise exceptions.
     '''
-    if -1e-6 < cap < 0:
+    if -1e-6 < cap < 1:
         return 0
     if cap < -1e-6:
         return cap
@@ -113,8 +159,9 @@ class SolveTemplate:
                  solver='cbc',
                  log=False, wrkdir=Path(tempfile.mkdtemp()),
                  resume=False,
-                 templatetest=False):
-        config = configparser.ConfigParser()
+                 templatetest=False,
+                 json_output=False):
+        config = configparser.ConfigParser(interpolation=None)
         try:
             with open(cfgfile) as f:
                 config.read_file(f)
@@ -143,9 +190,9 @@ class SolveTemplate:
         if config.has_option('Scenario', 'cost_emit'):
             self.cost_emit = json.loads(Scenario['cost_emit'])
 
-        self.manual_intercon_build = None
-        if config.has_option('Scenario', 'manual_intercon_build'):
-            self.manual_intercon_build = json.loads(Scenario['manual_intercon_build'])
+        self.auto_intercon_build = None
+        if config.has_option('Scenario', 'auto_intercon_build'):
+            self.auto_intercon_build = json.loads(Scenario['auto_intercon_build'])
         # Miscelaneous options
         self.description = None
         if config.has_option('Scenario', 'Description'):
@@ -185,9 +232,26 @@ class SolveTemplate:
         self.all_tech_per_zone = dict(
             json.loads(Advanced['all_tech_per_zone']))
 
+        # Specify solver and options in cfg file as well
+        if config.has_option('Solver', 'solver'):
+            self.solver = config['Solver']['solver']
+        else:
+            self.solver = solver
+
+        if config.has_option('Solver', 'cluster_solver_options'):
+            self.cluster_solver_options = config['Solver']['cluster_solver_options']
+        else:
+            self.cluster_solver_options = None
+
+        if config.has_option('Solver', 'dispatch_solver_options'):
+            self.dispatch_solver_options = parse_solver_options(config['Solver']['dispatch_solver_options'])
+
+        else:
+            self.dispatch_solver_options = {}
+
         self.wrkdir = wrkdir
-        self.solver = solver
         self.log = log
+        self.json_output = json_output
         # initialisation functions
         self.tracetechs()  # TODO refactor this
 
@@ -336,21 +400,21 @@ class SolveTemplate:
         self._nem_re_disp_ratio = data
 
     @property
-    def manual_intercon_build(self):
-        '''Property getter for manual_intercon_build'''
-        return self._manual_intercon_build
+    def auto_intercon_build(self):
+        '''Property getter for auto_intercon_build'''
+        return self._auto_intercon_build
 
-    @manual_intercon_build.setter
-    def manual_intercon_build(self, data):
+    @auto_intercon_build.setter
+    def auto_intercon_build(self, data):
         if data is not None:
             if len(data) != len(self.Years):
                 raise ValueError(
-                    'openCEM-manual_intercon_build: List %s length does not match Years list'
+                    'openCEM-auto_intercon_build: List %s length does not match Years list'
                 )
             if any(not isinstance(x, bool) for x in data):
                 raise ValueError(
-                    'openCEM-manual_intercon_build: Element(s) in list must be boolean')
-        self._manual_intercon_build = data
+                    'openCEM-auto_intercon_build: Element(s) in list must be boolean')
+        self._auto_intercon_build = data
 
     @property
     def Template(self):
@@ -410,7 +474,8 @@ class SolveTemplate:
         self.gentech = {}
         self.stortech = {}
         self.retiretech = {}
-        self.intercons = {i: [j for j in cemo.const.ZONE_INTERCONS[i].keys()] for i in cemo.const.ZONE_INTERCONS.keys()}
+        self.intercons = {i: [j for j in cemo.const.ZONE_INTERCONS[i].keys()]
+                          for i in cemo.const.ZONE_INTERCONS.keys()}
         for i in self.all_tech_per_zone:
             self.fueltech.update({
                 i: [j for j in self.all_tech_per_zone[i] if j in cemo.const.FUEL_TECH]
@@ -451,33 +516,33 @@ class SolveTemplate:
                      + "' : [zones,all_tech] gen_cap_initial stor_cap_initial hyb_cap_initial intercon_cap_initial;"
         else:
             opcap0 = '''#operating capacity for generating techs regions
-load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as gen_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
 ''' + sql_tech_pairs(self.gentech) + '''
-and commissioning_year is NULL
+and commissioning_year is NULL and source_id=3
 group by zones,all_tech;" : [zones,all_tech] gen_cap_initial;
 
 # operating capacity storage techs in regions
-load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as stor_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
 ''' + sql_tech_pairs(self.stortech) + '''
-and commissioning_year is NULL
+and commissioning_year is NULL and source_id=3
 group by zones,all_tech;" : [zones,all_tech] stor_cap_initial;
 
 # operating capacity for hybrid techs in regions
-load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
 query="select ntndp_zone_id as zones, technology_type_id as all_tech, sum(reg_cap) as hyb_cap_initial
 from capacity
 where (ntndp_zone_id,technology_type_id) in
 ''' + sql_tech_pairs(self.hybtech) + '''
-and commissioning_year is NULL
+and commissioning_year is NULL and source_id=3
 group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
 # operating capacity for intercons in nodes
@@ -510,6 +575,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
             'cost_hyb_build': 'zonetech',
             'cost_stor_build': 'zonetech',
             'cost_fuel': 'zonetech',
+            'build_cost': 'tech',
             'cost_gen_fom': 'tech',
             'cost_gen_vom': 'tech',
             'cost_hyb_fom': 'tech',
@@ -534,7 +600,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                                        index=False,
                                                                        formatters={
                                                                            'tech': lambda x: '%i' % x,  # noqa
-                                                                           year: lambda x: '%10.2f' % x,  # noqa
+                                                                           year: lambda x: '%12.6f' % x,  # noqa
                                                                        })
                     else:
                         cost = cost[cost[['zone', 'tech']].apply(tuple, 1).isin([
@@ -545,7 +611,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                                                          formatters={
                                                              'zone': lambda x: '%i' % x,
                                                              'tech': lambda x: '%i' % x,
-                                                             year: lambda x: '%10.2f' % x,
+                                                             year: lambda x: '%12.6f' % x,
                                                          })
                     custom_costs += '\n;\n'
 
@@ -635,13 +701,6 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
     def generateyeartemplate(self, year, test=False):
         """Generate data command file template used for clusters and full runs"""
-        date1 = datetime.datetime(year - 1, 7, 1, 0, 0, 0)
-        strd1 = "'" + str(date1) + "'"
-        date2 = datetime.datetime(year, 6, 30, 23, 0, 0)
-        if test:
-            date2 = datetime.datetime(year - 1, 7, 12, 23, 0, 0)
-        strd2 = "'" + str(date2) + "'"
-        drange = "BETWEEN " + strd1 + " AND " + strd2
         dcfName = self.wrkdir / ('Sim' + str(year) + '.dat')
         fcr = "\n#Discount rate for project\n"\
             + "param all_tech_discount_rate := " + \
@@ -655,7 +714,7 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
 
         cemit = ""
         if self.cost_emit:
-            cemit = "#Cost of emissions $/Mhw\n"\
+            cemit = "#Cost of emissions $/Ton\n"\
                 + "param cost_emit:= " + \
                     str(self.cost_emit[self.Years.index(year)]) + ";\n"
 
@@ -712,10 +771,12 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     line = line.replace('[zoneslist]', sql_list(self.zones))
                     line = line.replace('[alltech]', " ".join(
                         str(i) for i in self.all_tech))
+                    line = line.replace('[alltechlist]', sql_list(self.all_tech))
                     line = line.replace('XXXX', str(year))
                     line = line.replace('WWWW', str(prevyear))
                     line = line.replace('[gentech]', dclist(self.gentech))
                     line = line.replace('[gentechdb]', sql_tech_pairs(self.gentech))
+                    line = line.replace('[athena_gentechdb]', athena_tech_pairs(self.gentech))
                     line = line.replace('[gentechlist]',
                                         sql_list([tech for tech in cemo.const.GEN_TECH
                                                   if tech in self.all_tech]))
@@ -756,7 +817,9 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                         '[nobuildset]', " ".join(
                             str(i) for i in cemo.const.NOBUILD_TECH))
                     line = line.replace('[carryforwardcap]', opcap0)
-                    line = line.replace('[timerange]', drange)
+                    line = line.replace('[timerange]', gen_timerange(year, test))
+                    line = line.replace('[athena_timerange]',
+                                        gen_timerange(year, test, athena=True))
                     fo.write(line)
                 fo.write(custom_costs)
                 fo.write(exogenous_capacity)
@@ -778,10 +841,11 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         for option in self.model_options._fields:
             OPTIONS.update({option: getattr(self.model_options, option)})
 
-        manual_intercon_build = self.manual_intercon_build[self.Years.index(year)] if self.manual_intercon_build is not None else False
+        auto_intercon_build = self.auto_intercon_build[self.Years.index(
+            year)] if self.auto_intercon_build is not None else True
 
         OPTIONS.update(
-         {'build_intercon_manual': manual_intercon_build}
+         {'build_intercon_auto': auto_intercon_build}
         )
         return model_options(**OPTIONS)
 
@@ -792,16 +856,22 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
         Calcualte capacity using clustering and dispatch with full year.
         Alternatively caculate capacity and dispatch simultanteously using full year instance
         Save capacity results for carry forward in json file.
-        Save full results for year in JSON file.
-        Assemble full simulation output as metadata+ full year results in each simulated year
+        Save full results for year in parquet/JSON file.
+        Assemble full simulation output as metadata + full year results in each simulated year
         """
         for y in self.Years:
             if self.resume:
-                if (self.wrkdir / (str(y)+'.json')).exists():
-                    print("Skipping year %s" % y)
-                    continue
-            if self.templatetest and self.Years.index(y) > 0:
-                continue
+                if self.json_output:
+                    if (self.wrkdir / (str(y)+'.json')).exists():
+                        print("Skipping year %s" % y)
+                        continue
+                else:
+                    if (self.wrkdir / (str(y))).exists():
+                        print("Skipping year %s" % y)
+                        continue
+            else:
+                shutil.rmtree(self.wrkdir/str(y), ignore_errors=True)
+
             if self.log:
                 print("openCEM multi: Starting simulation for year %s" % y)
             # Populate template with this inv period's year and timestamps
@@ -819,11 +889,13 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     year_template,
                     model_options=self.get_model_options(y),
                     solver=self.solver,
+                    solver_options=self.cluster_solver_options,
                     log=self.log).run_cluster()
                 inst = setinstancecapacity(inst, ccap.data)
 
             # Solve the model (or just dispatch if capacity has been solved)
             opt = SolverFactory(self.solver)
+            opt.options = self.dispatch_solver_options
             if self.log:
                 print("openCEM multi: Starting full year dispatch simulation")
             opt.solve(inst, tee=self.log, keepfiles=False)
@@ -836,19 +908,31 @@ group by zones,all_tech;" : [zones,all_tech] hyb_cap_initial;
                     json.dump(opcap, op)
             # Dump simulation result in JSON forma
             if self.log:
-                print("openCEM multi: Saving year %s results into temporary file" % y)
-            with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
-                json.dump(jsonify(inst, y), json_out)
-                json_out.write('\n')
+                print("openCEM multi: Saving year %s results to directory" % y)
+            if self.json_output:
+                with open(self.wrkdir / (str(y) + '.json'), 'w') as json_out:
+                    json.dump(jsonify(inst, y), json_out)
+                    json_out.write('\n')
+            else:
+                parquetify(inst, self.wrkdir, y)
 
-            printstats(inst)
+            if self.json_output:
+                printstats(inst)  # REVIEW this summary printing is slow compared to parquet summary
+            [cdu, cost] = Summary(self.wrkdir, [i for i in self.Years if i <= y], cache=False).get_summary()
+            cdu.to_csv(self.wrkdir/("cdeu.csv"))
+            cost.to_csv(self.wrkdir/("cost.csv"))
 
             del inst  # to keep memory down
-        # Merge JSON output for all investment periods
-        if self.log:
-            print("openCEM multi: Saving final results to JSON file")
-        if not self.templatetest:
-            self.mergejsonyears()
+        if self.json_output:
+            # Merge JSON output for all investment periods
+            if self.log:
+                print("openCEM multi: Saving final results to JSON file")
+            if not self.templatetest:
+                self.mergejsonyears()
+        else:
+            meta = self.generate_metadata()
+            with open(self.wrkdir / (self.cfgfile.stem + '_meta.json'), 'w') as metadata:
+                json.dump(meta, metadata, indent=0)
 
     def mergejsonyears(self):
         '''Merge the full year JSON output for each simulated year in a single dictionary'''

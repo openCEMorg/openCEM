@@ -119,6 +119,29 @@ AND (demand_scenario_id,ntndp_zone_id, technology_type_id) in (
   GROUP BY ntndp_zone_id,technology_type_id
   );": [zones,all_tech] cost_hyb_build;
 
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, cost_factor as regional_cost_factor
+FROM regional_cost_factor
+WHERE source_id = 3
+AND ntndp_zone_id in ([zoneslist])
+and technology_type_id in ([alltechlist])" :[zones, all_tech] regional_cost_factor;
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT ntndp_zone_id as zones, technology_type_id as all_tech, connection_cost
+FROM isp_connection_costs
+WHERE source_id = 3
+AND ntndp_zone_id in ([zoneslist])
+and technology_type_id in ([alltechlist])" :[zones, all_tech] connection_cost;
+
+load "opencem-isp2020.cyisekdyolmb.ap-southeast-2.rds.amazonaws.com" database=opencem_input
+user=select password=select_password1 using=pymysql
+query="SELECT technology_type_id as all_tech, capex as build_cost
+FROM isp_capex
+WHERE source_id = 3 and year = XXXX and build_cost_scenario_id = 7
+and technology_type_id in ([alltechlist])" : [all_tech] build_cost;
+
 # FOM VOM costs for gentech
 load "opencem.ckvu5hxg6w5z.ap-southeast-1.rds.amazonaws.com" database=opencem_input
 user=select password=select_password1 using=pymysql
@@ -199,9 +222,9 @@ SELECT t1.ntndp_zone_id AS zones, t1.technology_type_id AS all_tech, cast(t1.tim
 FROM wind_and_solar_traces t1
 INNER JOIN (SELECT max(source_id) as source_id, ntndp_zone_id, technology_type_id, timestamp
             FROM wind_and_solar_traces
-            WHERE timestamp [timerange]
+            WHERE timestamp [athena_timerange]
                 AND MINUTE(timestamp)=0
-                AND (ntndp_zone_id, technology_type_id) IN [gentechdb]
+                AND (ntndp_zone_id, technology_type_id) IN [athena_gentechdb]
             GROUP BY ntndp_zone_id, technology_type_id, timestamp) as t2
     on t1.ntndp_zone_id = t2.ntndp_zone_id
        AND t1.technology_type_id = t2.technology_type_id

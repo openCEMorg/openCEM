@@ -86,11 +86,11 @@ def jsonify(inst, year):
             'params': {
                 # params with complex tuple keys
                 inst.cost_gen_build.name:
-                fill_complex_param(inst.cost_gen_build),
+                fill_complex_mutable_param(inst.cost_gen_build),
                 inst.cost_stor_build.name:
-                fill_complex_param(inst.cost_stor_build),
+                fill_complex_mutable_param(inst.cost_stor_build),
                 inst.cost_hyb_build.name:
-                fill_complex_param(inst.cost_hyb_build),
+                fill_complex_mutable_param(inst.cost_hyb_build),
                 inst.cost_intercon_build.name:
                 fill_complex_param(inst.cost_intercon_build),
                 inst.cost_fuel.name:
@@ -220,7 +220,7 @@ def jsonify(inst, year):
                 fill_complex_var(inst.intercon_disp)
             },
             'duals': {
-                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1)
+                'srmc': fill_dual_suffix(inst.dual, inst.ldbal, scale=1e-1)
             },
             'objective_value': value(system_cost(inst))
         }

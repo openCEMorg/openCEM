@@ -123,9 +123,10 @@ def test_systempeak(inst_lite):
     print(cluster)
     assert cluster.system_peak_week() == '2035-01-16'
 
+
 @pytest.mark.slow
 def test_plot_cluster(inst_lite):
     '''Test cluster plotting function'''
     cluster = cemo.cluster.InstanceCluster(inst_lite, max_d=6)
-    plt = plotcluster(cluster, row=2, col=3, ylim=(0,14000))
+    plt = plotcluster(cluster, row=2, col=3, ylim=(0, 14000))
     assert plt.gcf().number == 1
