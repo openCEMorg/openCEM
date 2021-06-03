@@ -17,7 +17,8 @@ dependencies:
   - pip
   - pluggy=0.9.0
   - ply=3.11
-  - py=1.8.0
+  - py=1.10.0
+  - pyarrow=0.15.1
   - PyMySQL=0.9.3
   - Pyomo=5.6.8
   - pyparsing=2.3.1
